@@ -4,6 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import Home from './src/screens/Home'
 import Email from './src/screens/Email'
 import Address from './src/screens/Address'
+import Group from './src/screens/Group'
 import { useReactNavigationDevTools } from '@dev-plugins/react-navigation'
 
 const RootStack = createNativeStackNavigator({
@@ -11,6 +12,7 @@ const RootStack = createNativeStackNavigator({
     Home,
     Email,
     Address,
+    Group,
   },
 })
 
