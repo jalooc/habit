@@ -28,34 +28,34 @@ const Button = ({ title, onPress, variant = 'primary', disabled }: Props) => (
   </Pressable>
 )
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create(theme => ({
   button: {
-    backgroundColor: '#007AFF',
-    borderRadius: 8,
-    padding: 12,
-    minWidth: 120,
+    backgroundColor: theme.colors.accent,
+    borderRadius: theme.radii.md,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing['2xl'],
     alignItems: 'center',
   },
   buttonSecondary: {
     backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: '#007AFF',
+    borderWidth: 1.5,
+    borderColor: theme.colors.accent,
   },
   buttonDisabled: {
-    backgroundColor: '#A9A9A9',
-    borderColor: '#A9A9A9',
+    backgroundColor: theme.colors.disabled,
+    borderColor: theme.colors.disabled,
   },
   text: {
-    color: '#FFFFFF',
-    fontSize: 16,
+    color: theme.colors.accentText,
+    ...theme.typography.body,
     fontWeight: '600',
   },
   textSecondary: {
-    color: '#007AFF',
+    color: theme.colors.accent,
   },
   textDisabled: {
-    color: '#FFFFFF',
+    color: theme.colors.disabledText,
   },
-})
+}))
 
 export default Button

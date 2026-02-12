@@ -12,12 +12,12 @@ const Box = ({ children, style, ...props }: Props) => (
   </View>
 )
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create(theme => ({
   box: {
-    padding: 20,
-    gap: 20,
-    alignItems: 'center',
+    flex: 1,
+    padding: theme.spacing.xl,
+    backgroundColor: theme.colors.background,
   },
-})
+}))
 
 export default Box

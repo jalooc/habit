@@ -1,66 +1,122 @@
+import { ReactNode } from 'react'
 import { useValue } from '@legendapp/state/react'
 import { groups$ } from '../../stores'
-import { FlatList, Text, Pressable } from 'react-native'
+import { FlatList, Text, Pressable, View, ViewStyle } from 'react-native'
 import { StyleSheet } from 'react-native-unistyles'
 import { useLinkProps } from '@react-navigation/native'
+import { pastels } from '../../theme'
 
-type Props = {}
+type Props = {
+  footer?: ReactNode
+}
 
-const Groups = ({}: Props) => {
+const Groups = ({ footer }: Props) => {
   const groups = useValue(groups$)
 
   return (
     <FlatList
       data={Object.entries(groups)}
-      renderItem={({ item: [groupId, group] }) => (
-        <Group id={groupId} {...group} />
-      )}
+      renderItem={({ item: [groupId, group], index }) => {
+        const { bg, border } = pastels[index % pastels.length]
+        return (
+          <GroupCard
+            id={groupId}
+            style={{ backgroundColor: bg, borderColor: border }}
+            {...group}
+          />
+        )
+      }}
+      contentContainerStyle={listStyles.list}
+      showsVerticalScrollIndicator={false}
+      ListEmptyComponent={<EmptyState />}
+      ListFooterComponent={footer ? <>{footer}</> : null}
     />
   )
 }
 
 export default Groups
 
-type HabitId = string
+const listStyles = StyleSheet.create(theme => ({
+  list: {
+    gap: theme.spacing.md,
+    paddingBottom: theme.spacing.xl,
+  },
+}))
 
-type GroupProps = {
+type GroupCardProps = {
   id: string
+  style?: ViewStyle
   name: string
-  habits: Record<HabitId, true>
+  habits: Record<string, true>
 }
 
-const Group = ({ id, name, habits }: GroupProps) => {
+const GroupCard = ({ id, style, name, habits }: GroupCardProps) => {
   const linkProps = useLinkProps({ screen: 'Group', params: { id } })
-  
+  const habitCount = Object.keys(habits).length
+
   return (
     <Pressable
-      style={styleSheet.groupContainer}
+      style={({ pressed }) => [
+        cardStyles.container,
+        style,
+        pressed && cardStyles.pressed,
+      ]}
       {...linkProps}
     >
-      <Text style={styleSheet.groupName}>{name}</Text>
-      <Text style={styleSheet.habitsCount}>{Object.keys(habits).length} habits</Text>
+      <View style={cardStyles.textArea}>
+        <Text style={cardStyles.name}>{name}</Text>
+        <Text style={cardStyles.count}>
+          {habitCount} {habitCount === 1 ? 'habit' : 'habits'}
+        </Text>
+      </View>
+      <Text style={cardStyles.chevron}>{'\u203A'}</Text>
     </Pressable>
   )
 }
 
-const styleSheet = StyleSheet.create({
-  groupContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    borderColor: '#ccc',
-    borderWidth: 1,
-    borderStyle: 'solid',
-    padding: 16,
-    marginVertical: 8,
-    marginHorizontal: 16,
+const cardStyles = StyleSheet.create(theme => ({
+  container: {
+    borderRadius: theme.radii.lg,
+    borderWidth: 1.5,
+    padding: theme.spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
-  groupName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    marginBottom: 8,
+  pressed: {
+    opacity: 0.8,
   },
-  habitsCount: {
-    fontSize: 14,
-    color: '#666666',
+  textArea: {
+    flex: 1,
   },
-})
+  name: {
+    ...theme.typography.heading,
+    color: theme.colors.text,
+    marginBottom: 2,
+  },
+  count: {
+    ...theme.typography.caption,
+    color: theme.colors.textSecondary,
+  },
+  chevron: {
+    fontSize: 24,
+    color: theme.colors.textTertiary,
+    marginLeft: theme.spacing.sm,
+  },
+}))
+
+const EmptyState = () => (
+  <View style={emptyStyles.container}>
+    <Text style={emptyStyles.text}>Create your first group to get started</Text>
+  </View>
+)
+
+const emptyStyles = StyleSheet.create(theme => ({
+  container: {
+    paddingVertical: theme.spacing['4xl'],
+    alignItems: 'center',
+  },
+  text: {
+    ...theme.typography.body,
+    color: theme.colors.textTertiary,
+  },
+}))
