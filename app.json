@@ -2,6 +2,7 @@
   "expo": {
     "name": "habit",
     "slug": "habit",
+    "scheme": "habit",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -29,7 +30,15 @@
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "react-native-edge-to-edge"
+      "react-native-edge-to-edge",
+      [
+        "expo-notifications",
+        {
+          "color": "#e67e22",
+          "defaultChannel": "reminders",
+          "enableBackgroundRemoteNotifications": false
+        }
+      ]
     ]
   }
 }
