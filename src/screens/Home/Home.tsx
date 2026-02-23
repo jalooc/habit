@@ -1,8 +1,8 @@
 import { Text, TextInput, View, Pressable } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { $TextInput } from '@legendapp/state/react-native'
-import { useObservable } from '@legendapp/state/react'
-import { groups$ } from '../../stores'
+import { useObservable, useValue } from '@legendapp/state/react'
+import { groups$, dayBoundaries$ } from '../../stores'
 import { randomUUID } from 'expo-crypto'
 import { StyleSheet } from 'react-native-unistyles'
 import { TrueSheet } from '@lodev09/react-native-true-sheet'
@@ -10,6 +10,7 @@ import { useRef } from 'react'
 import Button from '../../components/Button'
 import Box from '../../components/Box'
 import Groups from './Groups'
+import DayBoundaries from './DayBoundaries'
 
 const Home = () => {
   const newGroupName$ = useObservable('')
@@ -30,9 +31,15 @@ const Home = () => {
         <Text style={homeStyles.greeting}>Your Habits</Text>
         <Text style={homeStyles.subtitle}>Stay consistent, stay strong</Text>
       </View>
+      <DayBoundaries
+        start={useValue(dayBoundaries$.start)}
+        end={useValue(dayBoundaries$.end)}
+        onStartChange={v => dayBoundaries$.start.set(v)}
+        onEndChange={v => dayBoundaries$.end.set(v)}
+      />
       <Groups
         footer={
-          <AddGroupCard onPress={() => sheetRef.current?.present()} />
+          <AddGroupCard onPress={() => sheetRef.current?.present()}/>
         }
       />
       <TrueSheet
@@ -55,7 +62,7 @@ const Home = () => {
               }
             }}
           />
-          <Button title="Create" onPress={addGroup} />
+          <Button title="Create" onPress={addGroup}/>
         </View>
       </TrueSheet>
     </Box>
@@ -66,7 +73,7 @@ export default Home
 
 const homeStyles = StyleSheet.create(theme => ({
   header: {
-    paddingBottom: theme.spacing.xl,
+    paddingBottom: theme.spacing.lg,
   },
   greeting: {
     ...theme.typography.title,
