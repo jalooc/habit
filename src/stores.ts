@@ -18,6 +18,17 @@ export const habits$ = observable<
   }
 }))
 
+export const dayBoundaries$ = observable<{
+  start: { hour: number; minute: number }
+  end: { hour: number; minute: number }
+}>(synced({
+  initial: { start: { hour: 7, minute: 0 }, end: { hour: 23, minute: 0 } },
+  persist: {
+    name: "day-boundaries",
+    plugin: ObservablePersistMMKV
+  }
+}))
+
 export const groups$ = observable<
   Record<GroupId, {
     name: string,
