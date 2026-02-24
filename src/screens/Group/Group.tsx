@@ -1,16 +1,17 @@
 import { StaticScreenProps } from '@react-navigation/native'
 import { FlatList, Text, TextInput, View, ViewStyle, Pressable } from 'react-native'
 import { useObservable, useValue } from '@legendapp/state/react'
-import { groups$, habits$ } from '../stores'
-import Box from '../components/Box'
+import { groups$, habits$ } from '../../stores'
+import Box from '../../components/Box'
 import { StyleSheet } from 'react-native-unistyles'
-import Button from '../components/Button'
+import Button from '../../components/Button'
 import { TrueSheet } from '@lodev09/react-native-true-sheet'
 import { useRef } from 'react'
 import { $TextInput } from '@legendapp/state/react-native'
 import * as React from 'react'
 import { randomUUID } from 'expo-crypto'
-import { pastels } from '../theme'
+import { pastels } from '../../theme'
+import RecurrenceSummary from './RecurrenceSummary'
 
 type Props = StaticScreenProps<{
   id: string;
@@ -24,6 +25,7 @@ const Group = ({ route }: Props) => {
   return (
     <Box>
       <Text style={groupStyles.title}>{name}</Text>
+      <RecurrenceSummary groupId={groupId} />
       <FlatList
         data={habitIds}
         renderItem={({ item: id, index }) => {
