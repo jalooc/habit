@@ -53,6 +53,7 @@ const Home = () => {
           <$TextInput
             style={sheetStyles.input}
             $value={newGroupName$}
+            // @ts-expect-error
             ref={inputRef}
             placeholder="Group name"
             placeholderTextColor="#A8A29E"

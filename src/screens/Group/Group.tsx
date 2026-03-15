@@ -135,6 +135,7 @@ const AddHabitFooter = ({ groupId, hasHabits }: { groupId: string; hasHabits: bo
           <$TextInput
             style={sheetStyles.input}
             $value={newHabitName$}
+            // @ts-expect-error
             ref={inputRef}
             placeholder="Habit name"
             placeholderTextColor="#A8A29E"
