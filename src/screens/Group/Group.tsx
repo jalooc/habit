@@ -27,6 +27,7 @@ const Group = ({ route }: Props) => {
       <Text style={groupStyles.title}>{name}</Text>
       <RecurrenceSummary groupId={groupId} />
       <FlatList
+        keyboardShouldPersistTaps="handled"
         data={habitIds}
         renderItem={({ item: id, index }) => {
           const { bg, border } = pastels[index % pastels.length]
