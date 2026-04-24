@@ -1,5 +1,6 @@
 import { light as theme } from './src/theme'
 import './src/notifications'
+import './src/utilities/habitsNotificationsScheduler'
 import * as React from 'react'
 import { useEffect } from 'react'
 import {

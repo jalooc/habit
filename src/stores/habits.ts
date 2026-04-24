@@ -10,7 +10,7 @@ const habitsSchema = z.record(habitIdSchema, z.object({
   lastCompleted: z.iso.datetime().optional(),
 }))
 
-export default observable<
+const habits$ = observable<
   z.infer<typeof habitsSchema>
 >(synced({
   initial: {},
@@ -22,3 +22,7 @@ export default observable<
     },
   },
 }))
+
+export default habits$
+
+export type Habits = ReturnType<typeof habits$.get>

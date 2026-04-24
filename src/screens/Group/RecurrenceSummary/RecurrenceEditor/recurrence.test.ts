@@ -62,12 +62,25 @@ describe('distributeMonthDays', () => {
 })
 
 describe('buildRRule', () => {
-  it('builds times-per-day with HOURLY freq and byHour', () => {
+  it('builds times-per-day with DAILY freq and byHour', () => {
     const config: RecurrenceConfig = { type: 'times-per-day', value: 3 }
     const rule = buildRRule(config, dayBoundaries)
     const opts = rule.options()
-    expect(opts.freq).toBe('HOURLY')
+    expect(opts.freq).toBe('DAILY')
     expect(opts.byHour).toHaveLength(3)
+    expect(opts.byMinute).toEqual([0])
+  })
+
+  it('deduplicates byHour when slots collide on rounding', () => {
+    const tightBoundaries = {
+      start: { hour: 10, minute: 0 },
+      end: { hour: 12, minute: 0 },
+    }
+    const config: RecurrenceConfig = { type: 'times-per-day', value: 4 }
+    const rule = buildRRule(config, tightBoundaries)
+    const opts = rule.options()
+    expect(opts.byHour).toEqual([...new Set(opts.byHour)])
+    expect(opts.byHour).toEqual([...(opts.byHour ?? [])].sort((a, b) => a - b))
   })
 
   it('builds every-x-hours with HOURLY freq and interval', () => {

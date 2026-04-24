@@ -22,7 +22,7 @@ const persistedGroupsSchema = z.record(groupIdSchema, groupSchema
     recurrence: z.string().optional(),
   }))
 
-export default observable<
+const groups$ = observable<
   z.infer<typeof groupsSchema>
 >(synced({
   initial: {},
@@ -55,3 +55,7 @@ export default observable<
     },
   },
 }))
+
+export default groups$
+
+export type Groups = ReturnType<typeof groups$.get>

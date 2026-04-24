@@ -64,20 +64,23 @@ export const buildRRule = (
   const addDayRestriction = (byDay?: Weekday[]) =>
     config.restrictDays?.length ? config.restrictDays : byDay
 
+  // TODO: this is all potentially wrong, written by AI
   const ruleBuilders: Record<RecurrenceType, () => RRuleTemporal> = {
     'times-per-day': () => {
       const startMinutes = dayBoundaries.start.hour * 60 + dayBoundaries.start.minute
       const endMinutes = dayBoundaries.end.hour * 60 + dayBoundaries.end.minute
       const spanMinutes = endMinutes - startMinutes
-      const intervalHours = Math.max(1, Math.floor(spanMinutes / 60 / config.value))
-      return new RRuleTemporal({
-        ...baseOpts,
-        freq: 'HOURLY',
-        interval: intervalHours,
-        byHour: Array.from(
+      const hours = [...new Set(
+        Array.from(
           { length: config.value },
           (_, i) => Math.round((startMinutes + (i + 1) * spanMinutes / (config.value + 1)) / 60)
-        ),
+        )
+      )].sort((a, b) => a - b)
+      return new RRuleTemporal({
+        ...baseOpts,
+        freq: 'DAILY',
+        byHour: hours,
+        byMinute: [0],
         byDay: addDayRestriction(),
       })
     },
@@ -125,15 +128,11 @@ export const parseRRule = (rruleString: string): RecurrenceConfig => {
   const days = byDay?.length ? byDay : undefined
 
   const parsers: Record<string, () => RecurrenceConfig> = {
-    HOURLY: () =>
-      opts.byHour
+    HOURLY: () => ({ type: 'every-x-hours', value: opts.interval ?? 1, restrictDays: days }),
+    DAILY: () =>
+      opts.byHour?.length
         ? { type: 'times-per-day', value: opts.byHour.length, restrictDays: days }
-        : { type: 'every-x-hours', value: opts.interval ?? 1, restrictDays: days },
-    DAILY: () => ({
-      type: 'every-x-days',
-      value: opts.interval ?? 1,
-      restrictDays: days,
-    }),
+        : { type: 'every-x-days', value: opts.interval ?? 1, restrictDays: days },
     WEEKLY: () => ({
       type: 'times-per-week',
       value: days?.length ?? 1,
