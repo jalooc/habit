@@ -16,7 +16,7 @@ const groupSchema = z.object({
 
 const groupsSchema = z.record(groupIdSchema, groupSchema)
 
-const persistedGroupsSchema = z.record(groupIdSchema, groupSchema
+export const persistedGroupsSchema = z.record(groupIdSchema, groupSchema
   .omit({ recurrence: true })
   .extend({
     recurrence: z.string().optional(),

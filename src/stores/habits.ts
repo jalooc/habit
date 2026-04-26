@@ -5,7 +5,7 @@ import { z } from 'zod'
 
 export const habitIdSchema = z.uuid()
 
-const habitsSchema = z.record(habitIdSchema, z.object({
+export const habitsSchema = z.record(habitIdSchema, z.object({
   name: z.string(),
   lastCompleted: z.iso.datetime().optional(),
 }))

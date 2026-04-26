@@ -3,7 +3,7 @@ import { synced } from '@legendapp/state/sync'
 import { ObservablePersistMMKV } from '@legendapp/state/persist-plugins/mmkv'
 import { z } from 'zod'
 
-const dayBoundariesSchema = z.object({
+export const dayBoundariesSchema = z.object({
   start: z.object({
     hour: z.number(),
     minute: z.number(),

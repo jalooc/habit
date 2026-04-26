@@ -20,6 +20,7 @@ import Group from './src/screens/Group'
 import DevTools from './src/domains/devTools/screens/DevTools'
 import DevLog from './src/domains/devTools/screens/DevLog'
 import DevLogEntry from './src/domains/devTools/screens/DevLogEntry'
+import Backup from './src/domains/devTools/screens/Backup'
 import { useReactNavigationDevTools } from '@dev-plugins/react-navigation'
 import { setupNotifications } from './src/notifications'
 
@@ -63,6 +64,10 @@ const RootStack = createNativeStackNavigator({
     DevLogEntry: {
       screen: DevLogEntry,
       options: { headerTitle: 'Log entry' },
+    },
+    Backup: {
+      screen: Backup,
+      options: { headerTitle: 'Backup' },
     },
   },
 })

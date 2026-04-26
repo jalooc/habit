@@ -17,6 +17,12 @@ const tools = [
     subtitle: 'Timeline of devLog() calls',
     to: { screen: 'DevLog' },
   },
+  {
+    key: 'backup',
+    title: 'Backup',
+    subtitle: 'Export / import stores',
+    to: { screen: 'Backup' },
+  },
 ] as const satisfies readonly Tool[]
 
 const DevTools = () => (
