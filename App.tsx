@@ -16,6 +16,9 @@ import Home from './src/screens/Home'
 import Email from './src/screens/Email'
 import Address from './src/screens/Address'
 import Group from './src/screens/Group'
+import DevTools from './src/domains/devTools/screens/DevTools'
+import DevLog from './src/domains/devTools/screens/DevLog'
+import DevLogEntry from './src/domains/devTools/screens/DevLogEntry'
 import { useReactNavigationDevTools } from '@dev-plugins/react-navigation'
 import { setupNotifications } from './src/notifications'
 
@@ -47,6 +50,18 @@ const RootStack = createNativeStackNavigator({
       screen: Group,
       options: { headerTitle: '' },
       linking: { path: 'group/:id' },
+    },
+    DevTools: {
+      screen: DevTools,
+      options: { headerTitle: 'Dev Tools' },
+    },
+    DevLog: {
+      screen: DevLog,
+      options: { headerTitle: 'Log' },
+    },
+    DevLogEntry: {
+      screen: DevLogEntry,
+      options: { headerTitle: 'Log entry' },
     },
   },
 })

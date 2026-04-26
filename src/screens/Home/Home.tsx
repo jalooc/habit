@@ -11,6 +11,7 @@ import Button from '../../components/Button'
 import Box from '../../components/Box'
 import Groups from './Groups'
 import DayBoundaries from './DayBoundaries'
+import DevToolsLink from '../../domains/devTools/components/DevToolsLink'
 
 const Home = () => {
   const newGroupName$ = useObservable('')
@@ -28,8 +29,11 @@ const Home = () => {
   return (
     <Box style={{ paddingTop: top + 16 }}>
       <View style={homeStyles.header}>
-        <Text style={homeStyles.greeting}>Your Habits</Text>
-        <Text style={homeStyles.subtitle}>Stay consistent, stay strong</Text>
+        <View style={homeStyles.headerText}>
+          <Text style={homeStyles.greeting}>Your Habits</Text>
+          <Text style={homeStyles.subtitle}>Stay consistent, stay strong</Text>
+        </View>
+        <DevToolsLink />
       </View>
       <DayBoundaries
         start={useValue(dayBoundaries$.start)}
@@ -75,6 +79,12 @@ export default Home
 const homeStyles = StyleSheet.create(theme => ({
   header: {
     paddingBottom: theme.spacing.lg,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  headerText: {
+    flex: 1,
   },
   greeting: {
     ...theme.typography.title,
