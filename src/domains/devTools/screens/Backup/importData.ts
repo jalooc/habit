@@ -5,6 +5,7 @@ import { z } from 'zod'
 import habits$, { habitsSchema } from '../../../../stores/habits'
 import groups$, { persistedGroupsSchema } from '../../../../stores/groups'
 import dayBoundaries$, { dayBoundariesSchema } from '../../../../stores/dayBoundaries'
+import { batch } from '@legendapp/state'
 
 const exportSchema = z.object({
   version: z.literal(1),
@@ -26,9 +27,11 @@ export const importData = async () => {
   const text = await new File(result.assets[0].uri).text()
   const parsed = exportSchema.parse(JSON.parse(text))
 
-  habits$.set(parsed.habits)
-  groups$.set(deserializeGroups(parsed.groups))
-  dayBoundaries$.set(parsed.dayBoundaries)
+  batch(() => {
+    habits$.set(parsed.habits)
+    groups$.set(deserializeGroups(parsed.groups))
+    dayBoundaries$.set(parsed.dayBoundaries)
+  })
 
   return { imported: true as const }
 }
