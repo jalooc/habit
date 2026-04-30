@@ -3,13 +3,23 @@ import { SchedulableTriggerInputTypes } from 'expo-notifications'
 import { groups$, habits$, dayBoundaries$ } from '../../stores'
 import buildNotifications from './buildNotifications'
 import { devLog } from '../../domains/devTools/utils/devLog'
+import { scheduleNotificationAsyncForChannel } from '../../notifications'
 
 const resetNotifications = async (notifications: ReturnType<typeof buildNotifications>) => {
   await Notifications.cancelAllScheduledNotificationsAsync()
   await Promise.all(notifications.map(n =>
-    Notifications.scheduleNotificationAsync({
-      content: { title: n.title, body: n.body, data: n.data },
-      trigger: { type: SchedulableTriggerInputTypes.DATE, date: n.date },
+    scheduleNotificationAsyncForChannel({
+      content: {
+        title: n.title,
+        body: n.body,
+        data: n.data,
+        interruptionLevel: 'active',
+      },
+      trigger: { 
+        type: SchedulableTriggerInputTypes.DATE, 
+        date: n.date,
+        channelId: 'reminders'
+      },
     }),
   ))
 }
