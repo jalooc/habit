@@ -41,13 +41,14 @@ export default (
 
 const findSortedHabitsName = (
   groupHabits: NonNullable<Groups[string]>['habits'],
-  habits: Habits,
+  habitsMap: Habits,
 ): string[] => {
-  const candidates = Object.keys(groupHabits)
-    .map(id => habits[id])
-  return [...candidates]
+  const habits = Object.keys(groupHabits)
+    .map(id => habitsMap[id])
+
+  return [...habits]
     .sort((a, b) => getLastCompletedTime(a) - getLastCompletedTime(b))
-    .map(c => c.name)
+    .map(h => h.name)
 }
 
 const getLastCompletedTime = (habit: NonNullable<Habits[string]>) =>
