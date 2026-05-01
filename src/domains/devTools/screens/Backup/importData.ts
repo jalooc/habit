@@ -41,8 +41,8 @@ type PersistedGroups = z.infer<typeof persistedGroupsSchema>
 const deserializeGroups = (groups: PersistedGroups) => Object.fromEntries(
   Object.entries(groups).map(([id, group]) => [id, {
     ...group,
-    recurrence: group.recurrence
-      ? new RRuleTemporal({ rruleString: group.recurrence })
-      : undefined,
+    recurrence: group.recurrence ?
+      new RRuleTemporal({ rruleString: group.recurrence }) :
+      undefined,
   }]),
 )

@@ -7,7 +7,7 @@ import { useLinkProps } from '@react-navigation/native'
 import { pastels } from '../../theme'
 
 type Props = {
-  footer?: ReactNode
+  footer?: ReactNode,
 }
 
 const Groups = ({ footer }: Props) => {
@@ -44,14 +44,14 @@ const listStyles = StyleSheet.create(theme => ({
 }))
 
 type GroupCardProps = {
-  id: string
-  style?: ViewStyle
-  name: string
-  habits: Record<string, true>
+  id: string,
+  style?: ViewStyle,
+  name: string,
+  habits: Record<string, true>,
 }
 
 const GroupCard = ({ id, style, name, habits }: GroupCardProps) => {
-  const linkProps = useLinkProps({ screen: 'Group', params: { id } })
+  const linkProps = useLinkProps({ screen: 'Group', params: { id }})
   const habitCount = Object.keys(habits).length
 
   return (

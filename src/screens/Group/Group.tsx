@@ -8,14 +8,13 @@ import Button from '../../components/Button'
 import { TrueSheet } from '@lodev09/react-native-true-sheet'
 import { useRef } from 'react'
 import { $TextInput } from '@legendapp/state/react-native'
-import * as React from 'react'
 import { randomUUID } from 'expo-crypto'
 import { pastels } from '../../theme'
 import RecurrenceSummary from './RecurrenceSummary'
 
 type Props = StaticScreenProps<{
-  id: string;
-}>;
+  id: string,
+}>
 
 const Group = ({ route }: Props) => {
   const groupId = route.params.id
@@ -58,7 +57,7 @@ const groupStyles = StyleSheet.create(theme => ({
   },
 }))
 
-const HabitCard = ({ id, style }: { id: string; style?: ViewStyle }) => {
+const HabitCard = ({ id, style }: { id: string, style?: ViewStyle }) => {
   const { name } = useValue(habits$[id])
 
   return (
@@ -98,13 +97,13 @@ const emptyStyles = StyleSheet.create(theme => ({
   },
 }))
 
-const AddHabitFooter = ({ groupId, hasHabits }: { groupId: string; hasHabits: boolean }) => {
+const AddHabitFooter = ({ groupId, hasHabits }: { groupId: string, hasHabits: boolean }) => {
   const newHabitName$ = useObservable('')
   const inputRef = useRef<TextInput>(null)
   const sheetRef = useRef<TrueSheet>(null)
 
   const addHabit = () => {
-    sheetRef.current?.dismiss()
+    void sheetRef.current?.dismiss()
     const newHabitName = newHabitName$.get()
     setTimeout(() => {
       const newHabitId = randomUUID()
@@ -128,19 +127,19 @@ const AddHabitFooter = ({ groupId, hasHabits }: { groupId: string; hasHabits: bo
         ref={sheetRef}
         detents={['auto']}
         onDidPresent={() => inputRef.current?.focus()}
-        onDidDismiss={() => newHabitName$.set('')}
+        onDidDismiss={() => void newHabitName$.set('')}
       >
         <View style={sheetStyles.sheet}>
           <Text style={sheetStyles.sheetTitle}>New Habit</Text>
           <$TextInput
             style={sheetStyles.input}
             $value={newHabitName$}
-            // @ts-expect-error
+            // @ts-expect-error ref type in Legend State components doesn't match
             ref={inputRef}
             placeholder="Habit name"
             placeholderTextColor="#A8A29E"
             onKeyPress={e => {
-              if (e?.nativeEvent.key === 'Enter') {
+              if (e.nativeEvent.key === 'Enter') {
                 addHabit()
               }
             }}

@@ -38,4 +38,3 @@ const homeStyles = StyleSheet.create(theme => ({
     letterSpacing: 1,
   },
 }))
-

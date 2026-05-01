@@ -3,13 +3,13 @@ import { StyleSheet, useUnistyles } from 'react-native-unistyles'
 import Ionicons from '@expo/vector-icons/Ionicons'
 import { useRef, useState } from 'react'
 
-type TimeValue = { hour: number; minute: number }
+type TimeValue = { hour: number, minute: number }
 
 type Props = {
-  start: TimeValue
-  end: TimeValue
-  onStartChange: (value: TimeValue) => void
-  onEndChange: (value: TimeValue) => void
+  start: TimeValue,
+  end: TimeValue,
+  onStartChange: (value: TimeValue) => void,
+  onEndChange: (value: TimeValue) => void,
 }
 
 const DayBoundaries = ({ start, end, onStartChange, onEndChange }: Props) => {
@@ -20,14 +20,14 @@ const DayBoundaries = ({ start, end, onStartChange, onEndChange }: Props) => {
       <Text style={styles.dayCardLabel}>Your day</Text>
       <View style={styles.container}>
         <TimeSlot
-          icon={<Ionicons name="sunny-outline" size={22} color={theme.colors.accent}/>}
+          icon={<Ionicons name="sunny-outline" size={22} color={theme.colors.accent} />}
           label="Wake up"
           value={start}
           onChange={onStartChange}
         />
-        <Ionicons name="arrow-forward" size={14} color={theme.colors.textTertiary}/>
+        <Ionicons name="arrow-forward" size={14} color={theme.colors.textTertiary} />
         <TimeSlot
-          icon={<Ionicons name="moon-outline" size={22} color={theme.colors.textSecondary}/>}
+          icon={<Ionicons name="moon-outline" size={22} color={theme.colors.textSecondary} />}
           iconSide="right"
           label="Bedtime"
           value={end}
@@ -41,11 +41,11 @@ const DayBoundaries = ({ start, end, onStartChange, onEndChange }: Props) => {
 export default DayBoundaries
 
 type TimeSlotProps = {
-  icon: React.ReactNode
-  iconSide?: 'left' | 'right'
-  label: string
-  value: TimeValue
-  onChange: (value: TimeValue) => void
+  icon: React.ReactNode,
+  iconSide?: 'left' | 'right',
+  label: string,
+  value: TimeValue,
+  onChange: (value: TimeValue) => void,
 }
 
 const TimeSlot = ({ icon, iconSide = 'left', label, value, onChange }: TimeSlotProps) => {
@@ -60,7 +60,7 @@ const TimeSlot = ({ icon, iconSide = 'left', label, value, onChange }: TimeSlotP
             <TimeDigitInput
               value={value.hour}
               max={23}
-              onChange={hour => onChange({ ...value, hour })}
+              onChange={hour => void onChange({ ...value, hour })}
               onFilled={() => minuteRef.current?.focus()}
             />
             <Text style={timeSlotStyles.colon}>:</Text>
@@ -68,7 +68,7 @@ const TimeSlot = ({ icon, iconSide = 'left', label, value, onChange }: TimeSlotP
               ref={minuteRef}
               value={value.minute}
               max={59}
-              onChange={minute => onChange({ ...value, minute })}
+              onChange={minute => void onChange({ ...value, minute })}
             />
           </View>
           <Text style={timeSlotStyles.label}>{label}</Text>
@@ -80,17 +80,17 @@ const TimeSlot = ({ icon, iconSide = 'left', label, value, onChange }: TimeSlotP
 }
 
 type TimeDigitInputProps = {
-  value: number
-  max: number
-  onChange: (value: number) => void
-  onFilled?: () => void
-  ref?: React.Ref<TextInput>
+  value: number,
+  max: number,
+  onChange: (value: number) => void,
+  onFilled?: () => void,
+  ref?: React.Ref<TextInput>,
 }
 
 const TimeDigitInput = ({ value, max, onChange, onFilled, ref }: TimeDigitInputProps) => {
   const [text, setText] = useState(() => String(value).padStart(2, '0'))
 
-  const handleFocus = () => setText('')
+  const handleFocus = () => void setText('')
 
   const handleBlur = () => {
     const parsed = parseInt(text, 10)

@@ -2,10 +2,10 @@ import { Pressable, Text } from 'react-native'
 import { StyleSheet } from 'react-native-unistyles'
 
 type Props = {
-  title: string
-  onPress: () => void
-  variant?: 'primary' | 'secondary'
-  disabled?: boolean
+  title: string,
+  onPress: () => void,
+  variant?: 'primary' | 'secondary',
+  disabled?: boolean,
 }
 
 const Button = ({ title, onPress, variant = 'primary', disabled }: Props) => (
@@ -22,7 +22,8 @@ const Button = ({ title, onPress, variant = 'primary', disabled }: Props) => (
       styles.text,
       variant === 'secondary' && styles.textSecondary,
       disabled && styles.textDisabled,
-    ]}>
+    ]}
+    >
       {title}
     </Text>
   </Pressable>

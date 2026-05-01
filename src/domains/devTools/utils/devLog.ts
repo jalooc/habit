@@ -2,10 +2,10 @@ import { createMMKV, useMMKVString } from 'react-native-mmkv'
 import { randomUUID } from 'expo-crypto'
 
 export type DevLogEntry = {
-  id: string
-  timestamp: number
-  label: string
-  payload?: unknown
+  id: string,
+  timestamp: number,
+  label: string,
+  payload?: unknown,
 }
 
 const ENTRIES_KEY = 'entries'
@@ -28,6 +28,7 @@ const toSerializable = (payload: unknown): unknown => {
   try {
     return JSON.parse(JSON.stringify(payload))
   } catch {
+    // eslint-disable-next-line @typescript-eslint/no-base-to-string
     return String(payload)
   }
 }
@@ -38,10 +39,10 @@ export const devLog = (label: string, payload?: unknown): void => {
       id: randomUUID(),
       timestamp: Date.now(),
       label,
-      payload: payload,
+      payload,
     }
     console.log('[dev log]', entry)
-    
+
     const entries = readEntries()
     const next = [...entries, toSerializable(entry)]
     storage.set(ENTRIES_KEY, JSON.stringify(next))

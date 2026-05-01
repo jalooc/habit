@@ -4,10 +4,10 @@ import { useLinkProps } from '@react-navigation/native'
 import Box from '../../../../components/Box'
 
 type Tool = {
-  key: string
-  title: string
-  subtitle: string
-  to: { screen: keyof ReactNavigation.RootParamList }
+  key: string,
+  title: string,
+  subtitle: string,
+  to: { screen: keyof ReactNavigation.RootParamList },
 }
 
 const tools = [
@@ -49,7 +49,7 @@ const ToolRow = ({ tool }: { tool: Tool }) => {
         <Text style={styles.title}>{tool.title}</Text>
         <Text style={styles.subtitle}>{tool.subtitle}</Text>
       </View>
-      <Text style={styles.chevron}>{'›'}</Text>
+      <Text style={styles.chevron}>›</Text>
     </Pressable>
   )
 }

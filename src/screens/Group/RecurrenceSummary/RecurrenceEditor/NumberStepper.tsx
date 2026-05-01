@@ -2,11 +2,11 @@ import { View, Text, Pressable } from 'react-native'
 import { StyleSheet } from 'react-native-unistyles'
 
 type Props = {
-  value: number
-  min: number
-  max: number
-  label: string
-  onChange: (value: number) => void
+  value: number,
+  min: number,
+  max: number,
+  label: string,
+  onChange: (value: number) => void,
 }
 
 const NumberStepper = ({ value, min, max, label, onChange }: Props) => (
@@ -15,7 +15,7 @@ const NumberStepper = ({ value, min, max, label, onChange }: Props) => (
     <View style={styles.stepper}>
       <Pressable
         style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
-        onPress={() => onChange(Math.max(min, value - 1))}
+        onPress={() => void onChange(Math.max(min, value - 1))}
         disabled={value <= min}
       >
         <Text style={[styles.buttonText, value <= min && styles.buttonTextDisabled]}>-</Text>
@@ -23,7 +23,7 @@ const NumberStepper = ({ value, min, max, label, onChange }: Props) => (
       <Text style={styles.value}>{value}</Text>
       <Pressable
         style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
-        onPress={() => onChange(Math.min(max, value + 1))}
+        onPress={() => void onChange(Math.min(max, value + 1))}
         disabled={value >= max}
       >
         <Text style={[styles.buttonText, value >= max && styles.buttonTextDisabled]}>+</Text>

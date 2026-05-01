@@ -19,9 +19,9 @@ const Home = () => {
   const sheetRef = useRef<TrueSheet>(null)
 
   const addGroup = () => {
-    sheetRef.current?.dismiss()
+    void sheetRef.current?.dismiss()
     const newGroupName = newGroupName$.get()
-    setTimeout(() => groups$[randomUUID()].set({ name: newGroupName, habits: {} }), 500)
+    setTimeout(() => void groups$[randomUUID()].set({ name: newGroupName, habits: {}}), 500)
   }
 
   const { top } = useSafeAreaInsets()
@@ -38,36 +38,36 @@ const Home = () => {
       <DayBoundaries
         start={useValue(dayBoundaries$.start)}
         end={useValue(dayBoundaries$.end)}
-        onStartChange={v => dayBoundaries$.start.set(v)}
-        onEndChange={v => dayBoundaries$.end.set(v)}
+        onStartChange={v => void dayBoundaries$.start.set(v)}
+        onEndChange={v => void dayBoundaries$.end.set(v)}
       />
       <Groups
         footer={
-          <AddGroupCard onPress={() => sheetRef.current?.present()}/>
+          <AddGroupCard onPress={() => sheetRef.current?.present()} />
         }
       />
       <TrueSheet
         ref={sheetRef}
         detents={['auto']}
         onDidPresent={() => inputRef.current?.focus()}
-        onDidDismiss={() => newGroupName$.set('')}
+        onDidDismiss={() => void newGroupName$.set('')}
       >
         <View style={sheetStyles.sheet}>
           <Text style={sheetStyles.sheetTitle}>New Group</Text>
           <$TextInput
             style={sheetStyles.input}
             $value={newGroupName$}
-            // @ts-expect-error
+            // @ts-expect-error ref type in Legend State components doesn't match
             ref={inputRef}
             placeholder="Group name"
             placeholderTextColor="#A8A29E"
             onKeyPress={e => {
-              if (e?.nativeEvent.key === 'Enter') {
+              if (e.nativeEvent.key === 'Enter') {
                 addGroup()
               }
             }}
           />
-          <Button title="Create" onPress={addGroup}/>
+          <Button title="Create" onPress={addGroup} />
         </View>
       </TrueSheet>
     </Box>

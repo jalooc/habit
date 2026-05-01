@@ -49,11 +49,11 @@ export const light = {
 } as const
 
 type AppThemes = {
-  light: typeof light
+  light: typeof light,
 }
 
 declare module 'react-native-unistyles' {
-  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type, @typescript-eslint/consistent-type-definitions
   interface UnistylesThemes extends AppThemes {}
 }
 

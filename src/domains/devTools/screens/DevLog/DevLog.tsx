@@ -40,7 +40,7 @@ export default DevLog
 const LogRow = ({ entry }: { entry: DevLogEntry }) => {
   const formatted = entry.payload === undefined ? '' : formatPayload(entry.payload)
   const expandable = entry.payload !== undefined && needsExpansion(formatted)
-  const linkProps = useLinkProps({ screen: 'DevLogEntry', params: { entry } })
+  const linkProps = useLinkProps({ screen: 'DevLogEntry', params: { entry }})
 
   const content = (
     <>

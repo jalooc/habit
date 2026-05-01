@@ -8,7 +8,7 @@ import { groups$ } from '../../../stores'
 import RecurrenceEditor from './RecurrenceEditor'
 
 type Props = {
-  groupId: string
+  groupId: string,
 }
 
 const RecurrenceSummary = ({ groupId }: Props) => {
@@ -20,16 +20,16 @@ const RecurrenceSummary = ({ groupId }: Props) => {
     return toText(String(recurrence))
   })
 
-  const summaryCard = recurrenceText
-    ? (
+  const summaryCard = recurrenceText ?
+    (
       <Pressable
         style={({ pressed }) => [styles.filled, pressed && styles.filledPressed]}
         onPress={() => sheetRef.current?.present()}
       >
         <Text style={styles.filledLabel}>{recurrenceText}</Text>
       </Pressable>
-    )
-    : (
+    ) :
+    (
       <Pressable
         style={({ pressed }) => [styles.empty, pressed && styles.emptyPressed]}
         onPress={() => sheetRef.current?.present()}
@@ -44,7 +44,7 @@ const RecurrenceSummary = ({ groupId }: Props) => {
       <TrueSheet
         ref={sheetRef}
         detents={[0.65]}
-        onDidDismiss={() => setEditorKey(k => k + 1)}
+        onDidDismiss={() => void setEditorKey(k => k + 1)}
         scrollable
       >
         <RecurrenceEditor

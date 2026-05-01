@@ -1,7 +1,6 @@
 import { light as theme } from './src/theme'
 import './src/notifications'
 import './src/utilities/habitsNotificationsScheduler'
-import * as React from 'react'
 import { useEffect } from 'react'
 import {
   createStaticNavigation,
@@ -12,10 +11,8 @@ import {
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { Linking } from 'react-native'
 import * as ExpoLinking from 'expo-linking'
-import * as Notifications from 'expo-notifications'
+import * as Notifications from './src/notifications'
 import Home from './src/screens/Home'
-import Email from './src/screens/Email'
-import Address from './src/screens/Address'
 import Group from './src/screens/Group'
 import DevTools from './src/domains/devTools/screens/DevTools'
 import DevLog from './src/domains/devTools/screens/DevLog'
@@ -46,8 +43,6 @@ const RootStack = createNativeStackNavigator({
       screen: Home,
       options: { headerShown: false },
     },
-    Email,
-    Address,
     Group: {
       screen: Group,
       options: { headerTitle: '' },
@@ -72,10 +67,12 @@ const RootStack = createNativeStackNavigator({
   },
 })
 
-type RootStackParamList = StaticParamList<typeof RootStack>;
+type RootStackParamList = StaticParamList<typeof RootStack>
 
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace ReactNavigation {
+    // eslint-disable-next-line @typescript-eslint/consistent-type-definitions, @typescript-eslint/no-empty-object-type
     interface RootParamList extends RootStackParamList {
     }
   }
@@ -89,7 +86,7 @@ const App = () => {
   useReactNavigationDevTools(navigationRef)
 
   useEffect(() => {
-    setupNotifications()
+    void setupNotifications()
   }, [])
 
   return (
@@ -112,8 +109,8 @@ const App = () => {
 
           return response?.notification.request.content.data.url?.toString() ?? undefined
         },
-        subscribe: (listener) => {
-          const onReceiveURL = ({ url }: { url: string }) => listener(url)
+        subscribe: listener => {
+          const onReceiveURL = ({ url }: { url: string }) => void listener(url)
 
           // Listen to incoming links from deep linking
           const eventListenerSubscription = Linking.addEventListener('url', onReceiveURL)

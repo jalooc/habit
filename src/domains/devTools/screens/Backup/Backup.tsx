@@ -7,10 +7,10 @@ import { exportData } from './exportData'
 import { importData } from './importData'
 
 type Status =
-  | { kind: 'idle' }
-  | { kind: 'busy', message: string }
-  | { kind: 'success', message: string }
-  | { kind: 'error', message: string }
+  | { kind: 'idle' } |
+  { kind: 'busy', message: string } |
+  { kind: 'success', message: string } |
+  { kind: 'error', message: string }
 
 const Backup = () => {
   const [status, setStatus] = useState<Status>({ kind: 'idle' })
@@ -19,10 +19,11 @@ const Backup = () => {
     setStatus({ kind: 'busy', message: 'Exporting…' })
     try {
       const result = await exportData()
-      setStatus(result.saved
-        ? { kind: 'success', message: 'Export saved.' }
-        : { kind: 'idle' })
+      setStatus(result.saved ?
+        { kind: 'success', message: 'Export saved.' } :
+        { kind: 'idle' })
     } catch (error) {
+      // eslint-disable-next-line no-restricted-syntax
       const message = error instanceof Error ? error.message : String(error)
       devLog('Backup export failed', { error: message })
       setStatus({ kind: 'error', message: `Export failed: ${message}` })
@@ -33,10 +34,11 @@ const Backup = () => {
     setStatus({ kind: 'busy', message: 'Importing…' })
     try {
       const result = await importData()
-      setStatus(result.imported
-        ? { kind: 'success', message: 'Import complete.' }
-        : { kind: 'idle' })
+      setStatus(result.imported ?
+        { kind: 'success', message: 'Import complete.' } :
+        { kind: 'idle' })
     } catch (error) {
+      // eslint-disable-next-line no-restricted-syntax
       const message = error instanceof Error ? error.message : String(error)
       devLog('Backup import failed', { error: message })
       setStatus({ kind: 'error', message: `Import failed: ${message}` })
@@ -88,10 +90,10 @@ const Backup = () => {
 export default Backup
 
 type Action = {
-  key: string
-  title: string
-  subtitle: string
-  onPress: () => void
+  key: string,
+  title: string,
+  subtitle: string,
+  onPress: () => void,
 }
 
 const ActionRow = ({ action, disabled }: { action: Action, disabled: boolean }) => (
@@ -104,7 +106,7 @@ const ActionRow = ({ action, disabled }: { action: Action, disabled: boolean }) 
       <Text style={styles.title}>{action.title}</Text>
       <Text style={styles.subtitle}>{action.subtitle}</Text>
     </View>
-    <Text style={styles.chevron}>{'›'}</Text>
+    <Text style={styles.chevron}>›</Text>
   </Pressable>
 )
 

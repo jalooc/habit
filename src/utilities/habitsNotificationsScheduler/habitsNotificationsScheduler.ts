@@ -1,24 +1,22 @@
-import * as Notifications from 'expo-notifications'
-import { SchedulableTriggerInputTypes } from 'expo-notifications'
+import * as Notifications from '../../notifications'
 import { groups$, habits$, dayBoundaries$ } from '../../stores'
 import buildNotifications from './buildNotifications'
 import { devLog } from '../../domains/devTools/utils/devLog'
-import { scheduleNotificationAsyncForChannel } from '../../notifications'
 
 const resetNotifications = async (notifications: ReturnType<typeof buildNotifications>) => {
   await Notifications.cancelAllScheduledNotificationsAsync()
   await Promise.all(notifications.map(n =>
-    scheduleNotificationAsyncForChannel({
+    Notifications.scheduleNotificationAsyncForChannel({
       content: {
         title: n.title,
         body: n.body,
         data: n.data,
         interruptionLevel: 'active',
       },
-      trigger: { 
-        type: SchedulableTriggerInputTypes.DATE, 
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DATE,
         date: n.date,
-        channelId: 'reminders'
+        channelId: 'reminders',
       },
     }),
   ))
@@ -33,9 +31,9 @@ const reschedule = async () => {
   }
 }
 
-groups$.onChange(() => reschedule())
-habits$.onChange(() => reschedule())
-dayBoundaries$.onChange(() => reschedule())
+groups$.onChange(() => void reschedule())
+habits$.onChange(() => void reschedule())
+dayBoundaries$.onChange(() => void reschedule())
 
 Notifications.addNotificationReceivedListener(async () => {
   const pending = await Notifications.getAllScheduledNotificationsAsync()

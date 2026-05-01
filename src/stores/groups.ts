@@ -3,7 +3,6 @@ import { synced } from '@legendapp/state/sync'
 import { ObservablePersistMMKV } from '@legendapp/state/persist-plugins/mmkv'
 import { RRuleTemporal } from 'rrule-temporal'
 import { z } from 'zod'
-import { habitIdSchema } from './habits'
 import { PartialDeep } from 'type-fest'
 
 const groupIdSchema = z.uuid()
@@ -14,6 +13,7 @@ const groupSchema = z.object({
   recurrence: z.instanceof(RRuleTemporal).optional(),
 })
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const groupsSchema = z.record(groupIdSchema, groupSchema)
 
 export const persistedGroupsSchema = z.record(groupIdSchema, groupSchema
@@ -34,9 +34,9 @@ const groups$ = observable<
         return Object.fromEntries(
           Object.entries(persistedGroupsSchema.parse(value)).map(([id, group]) => [id, {
             ...group,
-            recurrence: group.recurrence
-              ? new RRuleTemporal({ rruleString: group.recurrence })
-              : undefined,
+            recurrence: group.recurrence ?
+              new RRuleTemporal({ rruleString: group.recurrence }) :
+              undefined,
           }]),
         )
       },
@@ -45,7 +45,7 @@ const groups$ = observable<
           return Object.fromEntries(
             Object.entries(value).map(([id, group]) => [id, {
               ...group,
-              ...(group?.recurrence && { recurrence: group.recurrence?.toString?.() }),
+              ...(group?.recurrence && { recurrence: group.recurrence.toString?.() }),
             }]),
           )
         } catch (error) {

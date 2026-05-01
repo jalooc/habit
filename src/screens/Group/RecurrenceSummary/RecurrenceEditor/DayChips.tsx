@@ -4,8 +4,8 @@ import { WEEKDAYS, WEEKDAY_LABELS } from './recurrence'
 import type { Weekday } from './recurrence'
 
 type Props = {
-  selected: Weekday[]
-  onChange: (days: Weekday[]) => void
+  selected: Weekday[],
+  onChange: (days: Weekday[]) => void,
 }
 
 const DayChips = ({ selected, onChange }: Props) => (
@@ -17,10 +17,10 @@ const DayChips = ({ selected, onChange }: Props) => (
           key={day}
           style={[styles.chip, isSelected && styles.chipSelected]}
           onPress={() =>
-            onChange(
-              isSelected
-                ? selected.filter(d => d !== day)
-                : [...selected, day]
+            void onChange(
+              isSelected ?
+                selected.filter(d => d !== day) :
+                [...selected, day]
             )
           }
         >

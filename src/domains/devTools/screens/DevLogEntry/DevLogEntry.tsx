@@ -7,7 +7,7 @@ import { DevLogEntry as DevLogEntryT } from '../../utils/devLog'
 import { formatPayload } from './formatPayload'
 
 type Props = StaticScreenProps<{
-  entry: DevLogEntryT
+  entry: DevLogEntryT,
 }>
 
 const DevLogEntry = ({ route }: Props) => {

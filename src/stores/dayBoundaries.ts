@@ -15,7 +15,7 @@ export const dayBoundariesSchema = z.object({
 })
 
 export default observable<z.infer<typeof dayBoundariesSchema>>(synced({
-  initial: { start: { hour: 7, minute: 0 }, end: { hour: 23, minute: 0 } },
+  initial: { start: { hour: 7, minute: 0 }, end: { hour: 23, minute: 0 }},
   persist: {
     name: 'day-boundaries',
     plugin: ObservablePersistMMKV,

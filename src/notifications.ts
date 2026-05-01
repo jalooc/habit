@@ -1,4 +1,6 @@
+/* eslint-disable no-restricted-imports */
 import * as Notifications from 'expo-notifications'
+import { PermissionStatus } from 'expo-notifications'
 import { Platform } from 'react-native'
 import { NotificationChannelInput } from 'expo-notifications/src/NotificationChannelManager.types'
 import { objectEntries } from 'tsafe'
@@ -10,12 +12,13 @@ const CHANNELS_DEFINITIONS = {
     name: 'Habit Reminders',
     importance: Notifications.AndroidImportance.HIGH,
     vibrationPattern: [0, 250, 250, 250],
-  }
+  },
 } as const satisfies Record<ChannelId, NotificationChannelInput>
 
 type CHANNELS_ID = keyof typeof CHANNELS_DEFINITIONS
 
 Notifications.setNotificationHandler({
+  // eslint-disable-next-line @typescript-eslint/require-await
   handleNotification: async () => ({
     shouldPlaySound: true,
     shouldSetBadge: true,
@@ -37,15 +40,24 @@ export const setupNotifications = async () => {
 const requestPermissions = async () => {
   const { status: existingStatus } = await Notifications.getPermissionsAsync()
 
-  if (existingStatus === 'granted') return true
+  if (existingStatus === PermissionStatus.GRANTED) return true
 
   const { status } = await Notifications.requestPermissionsAsync()
 
-  return status === 'granted'
+  return status === PermissionStatus.GRANTED
 }
 
 export const scheduleNotificationAsyncForChannel = (param: NotificationRequestInput & {
   trigger: {
-    channelId: CHANNELS_ID
-  }
+    channelId: CHANNELS_ID,
+  },
 }) => Notifications.scheduleNotificationAsync(param)
+
+export {
+  getLastNotificationResponse,
+  addNotificationResponseReceivedListener,
+  cancelAllScheduledNotificationsAsync,
+  addNotificationReceivedListener,
+  getAllScheduledNotificationsAsync,
+  SchedulableTriggerInputTypes,
+} from 'expo-notifications'

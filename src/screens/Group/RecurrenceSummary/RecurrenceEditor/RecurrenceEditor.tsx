@@ -14,8 +14,8 @@ import {
 import type { RecurrenceType, Weekday } from './recurrence'
 
 type Props = {
-  groupId: string
-  onDismiss: () => void
+  groupId: string,
+  onDismiss: () => void,
 }
 
 const VALUE_LABELS: Record<RecurrenceType, string> = {
@@ -84,12 +84,12 @@ const RecurrenceEditor = ({ groupId, onDismiss }: Props) => {
               key={type}
               type={type}
               isSelected={selectedType === type}
-              onPress={() => selectedType$.set(type)}
+              onPress={() => void selectedType$.set(type)}
             >
               <NumberStepper
                 value={value}
                 label={valueLabel}
-                onChange={v => value$.set(v)}
+                onChange={v => void value$.set(v)}
                 min={1}
                 max={selectedType === 'times-per-day' ? 12 : 30}
               />
@@ -98,7 +98,7 @@ const RecurrenceEditor = ({ groupId, onDismiss }: Props) => {
                   <Text style={styles.daySectionLabel}>On specific days</Text>
                   <DayChips
                     selected={specificDays}
-                    onChange={days => specificDays$.set(days)}
+                    onChange={days => void specificDays$.set(days)}
                   />
                 </View>
               )}
@@ -111,13 +111,13 @@ const RecurrenceEditor = ({ groupId, onDismiss }: Props) => {
             <Text style={styles.restrictLabel}>Restrict to specific days</Text>
             <Switch
               value={restrictDaysEnabled}
-              onValueChange={v => restrictDaysEnabled$.set(v)}
+              onValueChange={v => void restrictDaysEnabled$.set(v)}
             />
           </View>
           {restrictDaysEnabled && (
             <DayChips
               selected={restrictDays}
-              onChange={days => restrictDays$.set(days)}
+              onChange={days => void restrictDays$.set(days)}
             />
           )}
         </View>

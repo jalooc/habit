@@ -5,10 +5,10 @@ import { devLog } from '../../domains/devTools/utils/devLog'
 const MAX_NOTIFICATIONS = 64 // iOS allows max 64 scheduled notifications per app
 
 type ScheduledNotification = {
-  title: string
-  body: string
-  date: Date
-  data: { url: string }
+  title: string,
+  body: string,
+  date: Date,
+  data: { url: string },
 }
 
 export default (
@@ -16,12 +16,12 @@ export default (
   habits: Habits,
 ): ScheduledNotification[] => {
   const all = Object.entries(groups).flatMap(([groupId, group]) => {
-    if (!group?.recurrence) return []
-    
+    if (!group.recurrence) return []
+
     const names = findSortedHabitsName(group.habits, habits)
-    
+
     const occurrences = group.recurrence.all((_, i) => i < names.length)
-    
+
     return occurrences.map((occurence, i) => ({
       title: group.name,
       body: names[i % names.length],
@@ -29,13 +29,13 @@ export default (
       data: { url: `group/${groupId}` },
     }))
   })
-  
+
   const result = [...all]
     .sort((a, b) => a.date.getTime() - b.date.getTime())
     .slice(0, MAX_NOTIFICATIONS)
-  
+
   devLog('rescheduling notifications', { notifications: result })
-  
+
   return result
 }
 

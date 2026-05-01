@@ -4,10 +4,10 @@ import type { RecurrenceType } from './recurrence'
 import { RECURRENCE_TYPE_LABELS, RECURRENCE_TYPE_DESCRIPTIONS } from './recurrence'
 
 type Props = {
-  type: RecurrenceType
-  isSelected: boolean
-  onPress: () => void
-  children?: React.ReactNode
+  type: RecurrenceType,
+  isSelected: boolean,
+  onPress: () => void,
+  children?: React.ReactNode,
 }
 
 const RecurrenceTypeCard = ({ type, isSelected, onPress, children }: Props) => (
