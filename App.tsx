@@ -20,6 +20,8 @@ import DevLogEntry from 'src/domains/devTools/screens/DevLogEntry'
 import Backup from 'src/domains/devTools/screens/Backup'
 import { useReactNavigationDevTools } from '@dev-plugins/react-navigation'
 import { setupNotifications } from 'src/domains/notifications/utils/notifications'
+import { devLog } from 'src/domains/devTools/utils/devLog'
+import { isNonNullish } from 'remeda'
 
 const navigationTheme = {
   ...DefaultTheme,
@@ -46,7 +48,10 @@ const RootStack = createNativeStackNavigator({
     Group: {
       screen: Group,
       options: { headerTitle: '' },
-      linking: { path: 'group/:id' },
+      linking: {
+        path: 'group/:id',
+        initialRouteName: 'Home',
+      },
     },
     DevTools: {
       screen: DevTools,
@@ -98,33 +103,45 @@ const App = () => {
         prefixes: [ExpoLinking.createURL('/')],
         getInitialURL: async () => {
           // Check if app was opened from a deep link
-          const url = await Linking.getInitialURL()
+          const initialUrl = await Linking.getInitialURL()
 
-          if (url != null) {
-            return url
+          if (isNonNullish(initialUrl)) {
+            devLog('notification: getInitialURL', { initialUrl })
+            return initialUrl
           }
 
           // Handle URL from expo push notifications
           const response = Notifications.getLastNotificationResponse()
 
-          return response?.notification.request.content.data.url?.toString() ?? undefined
+          const notificationUrl = response?.notification.request.content.data.url
+          const fullUrl = typeof notificationUrl === 'string' ? ExpoLinking.createURL(notificationUrl) : undefined
+
+          devLog('notification: getInitialURL', { notificationUrl, fullUrl, response })
+
+          return fullUrl
         },
         subscribe: listener => {
-          const onReceiveURL = ({ url }: { url: string }) => void listener(url)
-
           // Listen to incoming links from deep linking
-          const eventListenerSubscription = Linking.addEventListener('url', onReceiveURL)
+          const eventListenerSubscription = Linking.addEventListener('url', ({ url }) => {
+            devLog('notification: RN linking event listener', { url })
+
+            void listener(url)
+          })
 
           // Listen to expo push notifications
           const subscription = Notifications.addNotificationResponseReceivedListener(response => {
-            const url = response.notification.request.content.data.url
+            const notificationUrl = response.notification.request.content.data.url
+            const fullUrl = typeof notificationUrl === 'string' ? ExpoLinking.createURL(notificationUrl) : undefined
+
+            devLog('notification: Expo push notification listener', { notificationUrl, fullUrl, response })
 
             // Let React Navigation handle the URL
-            if (typeof url === 'string') listener(url)
+            if (isNonNullish(fullUrl)) {
+              listener(fullUrl)
+            }
           })
 
           return () => {
-            // Clean up the event listeners
             eventListenerSubscription.remove()
             subscription.remove()
           }
