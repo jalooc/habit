@@ -2,7 +2,6 @@ import { Text, TextInput, View, Pressable } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { $TextInput } from '@legendapp/state/react-native'
 import { useObservable, useValue } from '@legendapp/state/react'
-import { groups$, dayBoundaries$ } from '../../stores'
 import { randomUUID } from 'expo-crypto'
 import { StyleSheet } from 'react-native-unistyles'
 import { TrueSheet } from '@lodev09/react-native-true-sheet'
@@ -11,7 +10,9 @@ import Button from '../../components/Button'
 import Box from '../../components/Box'
 import Groups from './Groups'
 import DayBoundaries from './DayBoundaries'
-import DevToolsLink from '../../domains/devTools/components/DevToolsLink'
+import DevToolsLink from '../../../devTools/components/DevToolsLink'
+import groups$ from 'src/domains/groups/stores'
+import dayBoundaries$ from 'src/domains/misc/stores/dayBoundaries'
 
 const Home = () => {
   const newGroupName$ = useObservable('')

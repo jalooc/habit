@@ -1,7 +1,7 @@
 import { ScrollView, Text, Pressable, View } from 'react-native'
 import { StyleSheet } from 'react-native-unistyles'
 import { useLinkProps } from '@react-navigation/native'
-import Box from '../../../../components/Box'
+import Box from '../../../misc/components/Box'
 
 type Tool = {
   key: string,

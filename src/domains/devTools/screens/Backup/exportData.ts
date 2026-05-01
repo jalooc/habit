@@ -1,7 +1,7 @@
 import { Directory } from 'expo-file-system'
-import habits$ from '../../../../stores/habits'
-import groups$, { Groups } from '../../../../stores/groups'
-import dayBoundaries$ from '../../../../stores/dayBoundaries'
+import habits$ from '../../../habits/stores'
+import groups$, { GroupsStore } from '../../../groups/stores'
+import dayBoundaries$ from 'src/domains/misc/stores/dayBoundaries'
 
 export const exportData = async () => {
   const payload = {
@@ -31,7 +31,7 @@ const pickDirectory = async () => {
   }
 }
 
-const serializeGroups = (groups: Groups) => Object.fromEntries(
+const serializeGroups = (groups: GroupsStore) => Object.fromEntries(
   Object.entries(groups).map(([id, group]) => [id, {
     ...group,
     recurrence: group.recurrence?.toString(),

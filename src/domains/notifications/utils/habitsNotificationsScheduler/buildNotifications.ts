@@ -1,6 +1,6 @@
-import type { Groups } from '../../stores/groups'
-import type { Habits } from '../../stores/habits'
-import { devLog } from '../../domains/devTools/utils/devLog'
+import { GroupsStore } from 'src/domains/groups/stores'
+import { HabitsStores } from 'src/domains/habits/stores'
+import { devLog } from 'src/domains/devTools/utils/devLog'
 
 const MAX_NOTIFICATIONS = 64 // iOS allows max 64 scheduled notifications per app
 
@@ -12,8 +12,8 @@ type ScheduledNotification = {
 }
 
 export default (
-  groups: Groups,
-  habits: Habits,
+  groups: GroupsStore,
+  habits: HabitsStores,
 ): ScheduledNotification[] => {
   const all = Object.entries(groups).flatMap(([groupId, group]) => {
     if (!group.recurrence) return []
@@ -40,8 +40,8 @@ export default (
 }
 
 const findSortedHabitsName = (
-  groupHabits: NonNullable<Groups[string]>['habits'],
-  habitsMap: Habits,
+  groupHabits: NonNullable<GroupsStore[string]>['habits'],
+  habitsMap: HabitsStores,
 ): string[] => {
   const habits = Object.keys(groupHabits)
     .map(id => habitsMap[id])
@@ -51,5 +51,5 @@ const findSortedHabitsName = (
     .map(h => h.name)
 }
 
-const getLastCompletedTime = (habit: NonNullable<Habits[string]>) =>
+const getLastCompletedTime = (habit: NonNullable<HabitsStores[string]>) =>
   habit.lastCompleted ? Date.parse(habit.lastCompleted) : 0

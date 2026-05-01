@@ -25,4 +25,4 @@ const habits$ = observable<
 
 export default habits$
 
-export type Habits = ReturnType<typeof habits$.get>
+export type HabitsStores = ReturnType<typeof habits$.get>

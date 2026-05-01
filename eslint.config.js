@@ -141,6 +141,18 @@ export default [
             },
           ],
           patterns: [{
+            regex: 'src/(?!(domains/.*/(components|utils|assets|screens|stores)[/.*]?))',
+            message: 'Organize modules in predefined groups under domains.',
+          }, {
+            /*
+                Modules are often divided into sub-modules for readability and maintainability, where those
+                sub-modules are internal to the "root" modules. This rule prevents importing those sub-modules
+                (which happens often by laziness or an overlook) in order to keep the modules SOLID.
+              */
+            group: ['src/domains/*/*/*/**'],
+            message: 'Direct importing of sub-modules is not allowed. Turn the sub-module into a root module' +
+              ' or reexport it from the "owning" module if you really need to use it directly.',
+          }, {
             /*
               This rule promotes abstracting module's internal details away from the consumers. For instance,
               a consumer should not care if a module is a simple, single-file module "src/module.ts" or

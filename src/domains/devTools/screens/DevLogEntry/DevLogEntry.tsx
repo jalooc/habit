@@ -2,7 +2,7 @@ import { ScrollView, Text, View } from 'react-native'
 import { StaticScreenProps } from '@react-navigation/native'
 import { StyleSheet } from 'react-native-unistyles'
 import dayjs from 'dayjs'
-import Box from '../../../../components/Box'
+import Box from '../../../misc/components/Box'
 import { DevLogEntry as DevLogEntryT } from '../../utils/devLog'
 import { formatPayload } from './formatPayload'
 

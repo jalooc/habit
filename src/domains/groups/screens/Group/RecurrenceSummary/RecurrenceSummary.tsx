@@ -4,8 +4,8 @@ import { StyleSheet } from 'react-native-unistyles'
 import { TrueSheet } from '@lodev09/react-native-true-sheet'
 import { useSelector } from '@legendapp/state/react'
 import { toText } from 'rrule-temporal/totext'
-import { groups$ } from '../../../stores'
 import RecurrenceEditor from './RecurrenceEditor'
+import groups$ from 'src/domains/groups/stores'
 
 type Props = {
   groupId: string,

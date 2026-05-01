@@ -1,6 +1,6 @@
-import { light as theme } from './src/theme'
-import './src/notifications'
-import './src/utilities/habitsNotificationsScheduler'
+import { light as theme } from 'src/domains/misc/utils/theme'
+import 'src/domains/notifications/utils/notifications'
+import 'src/domains/notifications/utils/habitsNotificationsScheduler'
 import { useEffect } from 'react'
 import {
   createStaticNavigation,
@@ -11,15 +11,15 @@ import {
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import { Linking } from 'react-native'
 import * as ExpoLinking from 'expo-linking'
-import * as Notifications from './src/notifications'
-import Home from './src/screens/Home'
-import Group from './src/screens/Group'
-import DevTools from './src/domains/devTools/screens/DevTools'
-import DevLog from './src/domains/devTools/screens/DevLog'
-import DevLogEntry from './src/domains/devTools/screens/DevLogEntry'
-import Backup from './src/domains/devTools/screens/Backup'
+import * as Notifications from 'src/domains/notifications/utils/notifications'
+import Home from 'src/domains/misc/screens/Home'
+import Group from 'src/domains/groups/screens/Group'
+import DevTools from 'src/domains/devTools/screens/DevTools'
+import DevLog from 'src/domains/devTools/screens/DevLog'
+import DevLogEntry from 'src/domains/devTools/screens/DevLogEntry'
+import Backup from 'src/domains/devTools/screens/Backup'
 import { useReactNavigationDevTools } from '@dev-plugins/react-navigation'
-import { setupNotifications } from './src/notifications'
+import { setupNotifications } from 'src/domains/notifications/utils/notifications'
 
 const navigationTheme = {
   ...DefaultTheme,

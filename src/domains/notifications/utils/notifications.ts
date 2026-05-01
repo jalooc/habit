@@ -47,7 +47,7 @@ const requestPermissions = async () => {
   return status === PermissionStatus.GRANTED
 }
 
-export const scheduleNotificationAsyncForChannel = (param: NotificationRequestInput & {
+export const scheduleNotificationAsync = (param: NotificationRequestInput & {
   trigger: {
     channelId: CHANNELS_ID,
   },
@@ -59,5 +59,6 @@ export {
   cancelAllScheduledNotificationsAsync,
   addNotificationReceivedListener,
   getAllScheduledNotificationsAsync,
+  setNotificationHandler,
   SchedulableTriggerInputTypes,
 } from 'expo-notifications'

@@ -1,12 +1,14 @@
-import * as Notifications from '../../notifications'
-import { groups$, habits$, dayBoundaries$ } from '../../stores'
+import * as Notifications from 'src/domains/notifications/utils/notifications'
 import buildNotifications from './buildNotifications'
-import { devLog } from '../../domains/devTools/utils/devLog'
+import { devLog } from '../../../devTools/utils/devLog'
+import groups$ from 'src/domains/groups/stores'
+import habits$ from 'src/domains/habits/stores'
+import dayBoundaries$ from 'src/domains/misc/stores/dayBoundaries'
 
 const resetNotifications = async (notifications: ReturnType<typeof buildNotifications>) => {
   await Notifications.cancelAllScheduledNotificationsAsync()
   await Promise.all(notifications.map(n =>
-    Notifications.scheduleNotificationAsyncForChannel({
+    Notifications.scheduleNotificationAsync({
       content: {
         title: n.title,
         body: n.body,

@@ -1,7 +1,7 @@
 import { ScrollView, Text, Pressable, View, Alert } from 'react-native'
 import { useState } from 'react'
 import { StyleSheet } from 'react-native-unistyles'
-import Box from '../../../../components/Box'
+import Box from '../../../misc/components/Box'
 import { devLog } from '../../utils/devLog'
 import { exportData } from './exportData'
 import { importData } from './importData'

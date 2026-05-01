@@ -58,4 +58,4 @@ const groups$ = observable<
 
 export default groups$
 
-export type Groups = ReturnType<typeof groups$.get>
+export type GroupsStore = ReturnType<typeof groups$.get>

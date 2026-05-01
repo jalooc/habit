@@ -1,8 +1,7 @@
 import { View, Text, ScrollView, Switch } from 'react-native'
 import { StyleSheet } from 'react-native-unistyles'
 import { useObservable, useSelector, useValue } from '@legendapp/state/react'
-import { groups$, dayBoundaries$ } from '../../../../stores'
-import Button from '../../../../components/Button'
+import Button from '../../../../../misc/components/Button'
 import RecurrenceTypeCard from './RecurrenceTypeCard'
 import NumberStepper from './NumberStepper'
 import DayChips from './DayChips'
@@ -12,6 +11,8 @@ import {
   parseRRule,
 } from './recurrence'
 import type { RecurrenceType, Weekday } from './recurrence'
+import groups$ from 'src/domains/groups/stores'
+import dayBoundaries$ from 'src/domains/misc/stores/dayBoundaries'
 
 type Props = {
   groupId: string,

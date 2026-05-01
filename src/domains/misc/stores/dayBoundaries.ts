@@ -14,7 +14,7 @@ export const dayBoundariesSchema = z.object({
   }),
 })
 
-export default observable<z.infer<typeof dayBoundariesSchema>>(synced({
+const dayBoundaries$ = observable<z.infer<typeof dayBoundariesSchema>>(synced({
   initial: { start: { hour: 7, minute: 0 }, end: { hour: 23, minute: 0 }},
   persist: {
     name: 'day-boundaries',
@@ -24,3 +24,5 @@ export default observable<z.infer<typeof dayBoundariesSchema>>(synced({
     },
   },
 }))
+
+export default dayBoundaries$
