@@ -5,6 +5,7 @@ import Box from '../../../misc/components/Box'
 import { devLog } from '../../utils/devLog'
 import { exportData } from './exportData'
 import { importData } from './importData'
+import { serializeError } from 'serialize-error'
 
 type Status =
   | { kind: 'idle' } |
@@ -22,11 +23,10 @@ const Backup = () => {
       setStatus(result.saved ?
         { kind: 'success', message: 'Export saved.' } :
         { kind: 'idle' })
-    } catch (error) {
-      // eslint-disable-next-line no-restricted-syntax
-      const message = error instanceof Error ? error.message : String(error)
-      devLog('Backup export failed', { error: message })
-      setStatus({ kind: 'error', message: `Export failed: ${message}` })
+    } catch (rawError) {
+      const error = serializeError(rawError)
+      devLog('Backup export failed', { error })
+      setStatus({ kind: 'error', message: `Export failed: ${error.message}` })
     }
   }
 
@@ -37,11 +37,10 @@ const Backup = () => {
       setStatus(result.imported ?
         { kind: 'success', message: 'Import complete.' } :
         { kind: 'idle' })
-    } catch (error) {
-      // eslint-disable-next-line no-restricted-syntax
-      const message = error instanceof Error ? error.message : String(error)
-      devLog('Backup import failed', { error: message })
-      setStatus({ kind: 'error', message: `Import failed: ${message}` })
+    } catch (rawError) {
+      const error = serializeError(rawError)
+      devLog('Backup import failed', { error })
+      setStatus({ kind: 'error', message: `Import failed: ${error.message}` })
     }
   }
 
