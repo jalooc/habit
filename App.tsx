@@ -1,6 +1,6 @@
 import { light as theme } from 'src/domains/misc/utils/theme'
 import 'src/domains/notifications/utils/notifications'
-import 'src/domains/notifications/utils/habitsNotificationsScheduler'
+import 'src/domains/habits/utils/habitsNotificationsScheduler'
 import { useEffect } from 'react'
 import {
   createStaticNavigation,
@@ -22,6 +22,7 @@ import { useReactNavigationDevTools } from '@dev-plugins/react-navigation'
 import { setupNotifications } from 'src/domains/notifications/utils/notifications'
 import { devLog } from 'src/domains/devTools/utils/devLog'
 import { isNonNullish } from 'remeda'
+import { groupScreenLinkPlaceholder } from 'src/domains/habits/utils/linking'
 
 const navigationTheme = {
   ...DefaultTheme,
@@ -49,7 +50,7 @@ const RootStack = createNativeStackNavigator({
       screen: Group,
       options: { headerTitle: '' },
       linking: {
-        path: 'group/:id',
+        path: groupScreenLinkPlaceholder,
         initialRouteName: 'Home',
       },
     },

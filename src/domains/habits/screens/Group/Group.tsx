@@ -12,9 +12,10 @@ import { $TextInput } from '@legendapp/state/react-native'
 import { randomUUID } from 'expo-crypto'
 import { pastels } from '../../../misc/utils/theme'
 import RecurrenceSummary from './RecurrenceSummary'
+import { GROUP_ID_PARAM } from 'src/domains/habits/utils/linking'
 
 type Props = StaticScreenProps<{
-  id: string,
+  [GROUP_ID_PARAM]: string,
 }>
 
 const Group = ({ route }: Props) => {
