@@ -1,6 +1,6 @@
 import { Directory } from 'expo-file-system'
-import habits$ from '../../../habits/stores'
-import groups$, { GroupsStore } from '../../../groups/stores'
+import habits$ from 'src/domains/habits/stores/stores'
+import groups$, { GroupsStore } from 'src/domains/habits/stores/groups'
 import dayBoundaries$ from 'src/domains/misc/stores/dayBoundaries'
 
 export const exportData = async () => {

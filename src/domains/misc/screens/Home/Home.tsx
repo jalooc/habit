@@ -11,7 +11,7 @@ import Box from '../../components/Box'
 import Groups from './Groups'
 import DayBoundaries from './DayBoundaries'
 import DevToolsLink from '../../../devTools/components/DevToolsLink'
-import groups$ from 'src/domains/groups/stores'
+import groups$ from 'src/domains/habits/stores/groups'
 import dayBoundaries$ from 'src/domains/misc/stores/dayBoundaries'
 
 const Home = () => {

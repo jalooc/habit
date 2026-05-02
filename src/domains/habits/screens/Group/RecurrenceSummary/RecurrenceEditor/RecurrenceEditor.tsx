@@ -11,7 +11,7 @@ import {
   parseRRule,
 } from './recurrence'
 import type { RecurrenceType, Weekday } from './recurrence'
-import groups$ from 'src/domains/groups/stores'
+import groups$ from 'src/domains/habits/stores/groups'
 import dayBoundaries$ from 'src/domains/misc/stores/dayBoundaries'
 
 type Props = {

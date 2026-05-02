@@ -1,5 +1,5 @@
-import { GroupsStore } from 'src/domains/groups/stores'
-import { HabitsStores } from 'src/domains/habits/stores'
+import { GroupsStore } from 'src/domains/habits/stores/groups'
+import { HabitsStores } from 'src/domains/habits/stores/stores'
 import { devLog } from 'src/domains/devTools/utils/devLog'
 
 const MAX_NOTIFICATIONS = 64 // iOS allows max 64 scheduled notifications per app

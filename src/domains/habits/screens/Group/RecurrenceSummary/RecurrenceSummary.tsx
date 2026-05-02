@@ -5,7 +5,7 @@ import { TrueSheet } from '@lodev09/react-native-true-sheet'
 import { useSelector } from '@legendapp/state/react'
 import { toText } from 'rrule-temporal/totext'
 import RecurrenceEditor from './RecurrenceEditor'
-import groups$ from 'src/domains/groups/stores'
+import groups$ from 'src/domains/habits/stores/groups'
 
 type Props = {
   groupId: string,

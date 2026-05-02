@@ -4,7 +4,7 @@ import { FlatList, Text, Pressable, View, ViewStyle } from 'react-native'
 import { StyleSheet } from 'react-native-unistyles'
 import { useLinkProps } from '@react-navigation/native'
 import { pastels } from '../../utils/theme'
-import groups$ from 'src/domains/groups/stores'
+import groups$ from 'src/domains/habits/stores/groups'
 
 type Props = {
   footer?: ReactNode,
