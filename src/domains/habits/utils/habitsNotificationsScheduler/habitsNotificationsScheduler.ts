@@ -2,7 +2,7 @@ import * as Notifications from 'src/domains/notifications/utils/notifications'
 import buildNotifications from './buildNotifications'
 import { devLog } from 'src/domains/devTools/utils/devLog'
 import groups$ from 'src/domains/habits/stores/groups'
-import habits$ from 'src/domains/habits/stores/stores'
+import habits$ from 'src/domains/habits/stores/habits'
 import dayBoundaries$ from 'src/domains/misc/stores/dayBoundaries'
 import { serializeError } from 'serialize-error'
 

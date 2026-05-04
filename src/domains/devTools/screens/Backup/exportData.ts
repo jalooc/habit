@@ -1,5 +1,5 @@
 import { Directory } from 'expo-file-system'
-import habits$ from 'src/domains/habits/stores/stores'
+import habits$ from 'src/domains/habits/stores/habits'
 import groups$, { GroupsStore } from 'src/domains/habits/stores/groups'
 import dayBoundaries$ from 'src/domains/misc/stores/dayBoundaries'
 

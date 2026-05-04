@@ -1,5 +1,5 @@
 import { GroupsStore } from 'src/domains/habits/stores/groups'
-import { HabitsStores } from 'src/domains/habits/stores/stores'
+import { HabitsStores } from 'src/domains/habits/stores/habits'
 import { devLog } from 'src/domains/devTools/utils/devLog'
 import { createGroupScreenLink } from 'src/domains/habits/utils/linking'
 
