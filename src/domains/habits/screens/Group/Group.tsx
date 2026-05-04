@@ -16,6 +16,7 @@ import { GROUP_ID_PARAM } from 'src/domains/habits/utils/linking'
 
 type Props = StaticScreenProps<{
   [GROUP_ID_PARAM]: string,
+  withTickOff?: boolean,
 }>
 
 const Group = ({ route }: Props) => {

@@ -1,7 +1,7 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import Home from 'src/domains/misc/screens/Home'
 import Group from 'src/domains/habits/screens/Group'
-import { groupScreenLinkPlaceholder } from 'src/domains/habits/utils/linking'
+import { groupScreenLinkingConfig } from 'src/domains/habits/utils/linking'
 import DevTools from 'src/domains/devTools/screens/DevTools'
 import DevLog from 'src/domains/devTools/screens/DevLog'
 import DevLogEntry from 'src/domains/devTools/screens/DevLogEntry'
@@ -22,8 +22,8 @@ const RootStack = createNativeStackNavigator({
       screen: Group,
       options: { headerTitle: '' },
       linking: {
-        path: groupScreenLinkPlaceholder,
         initialRouteName: 'Home',
+        ...groupScreenLinkingConfig,
       },
     },
     DevTools: {
