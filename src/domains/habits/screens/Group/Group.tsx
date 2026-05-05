@@ -3,7 +3,7 @@ import { Text, TextInput, View, Pressable } from 'react-native'
 import Animated, { LinearTransition } from 'react-native-reanimated'
 import { useObservable, useSelector, useValue } from '@legendapp/state/react'
 import groups$ from 'src/domains/habits/stores/groups'
-import habits$, { HabitsStores } from 'src/domains/habits/stores/habits'
+import habits$ from 'src/domains/habits/stores/habits'
 import Box from '../../../misc/components/Box'
 import { StyleSheet } from 'react-native-unistyles'
 import Button from '../../../misc/components/Button'
@@ -29,7 +29,7 @@ const Group = ({ route }: Props) => {
   const habitIds = useSelector(() => {
     const habitsMap = habits$.get()
     return Object.keys(habits).sort((a, b) =>
-      getLastCompletedTime(habitsMap[a]) - getLastCompletedTime(habitsMap[b])
+      (habitsMap[a].lastActioned?.timestamp ?? 0) - (habitsMap[b].lastActioned?.timestamp ?? 0)
     )
   })
 
@@ -77,9 +77,6 @@ const groupStyles = StyleSheet.create(theme => ({
     paddingBottom: theme.spacing.xl,
   },
 }))
-
-const getLastCompletedTime = (habit: HabitsStores[string]) =>
-  habit.lastCompleted ? Date.parse(habit.lastCompleted) : 0
 
 const EmptyState = () => (
   <View style={emptyStyles.container}>

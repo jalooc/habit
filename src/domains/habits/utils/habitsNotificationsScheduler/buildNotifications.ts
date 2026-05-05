@@ -48,9 +48,6 @@ const findSortedHabitsName = (
     .map(id => habitsMap[id])
 
   return [...habits]
-    .sort((a, b) => getLastCompletedTime(a) - getLastCompletedTime(b))
+    .sort((a, b) => (a.lastActioned?.timestamp ?? 0) - (b.lastActioned?.timestamp ?? 0))
     .map(h => h.name)
 }
-
-const getLastCompletedTime = (habit: NonNullable<HabitsStores[string]>) =>
-  habit.lastCompleted ? Date.parse(habit.lastCompleted) : 0
