@@ -1,8 +1,9 @@
-import { StaticScreenProps } from '@react-navigation/native'
-import { FlatList, Text, TextInput, View, ViewStyle, Pressable } from 'react-native'
-import { useObservable, useValue } from '@legendapp/state/react'
+import { StaticScreenProps, useNavigation } from '@react-navigation/native'
+import { Text, TextInput, View, Pressable } from 'react-native'
+import Animated, { LinearTransition } from 'react-native-reanimated'
+import { useObservable, useSelector, useValue } from '@legendapp/state/react'
 import groups$ from 'src/domains/habits/stores/groups'
-import habits$ from 'src/domains/habits/stores/habits'
+import habits$, { HabitsStores } from 'src/domains/habits/stores/habits'
 import Box from '../../../misc/components/Box'
 import { StyleSheet } from 'react-native-unistyles'
 import Button from '../../../misc/components/Button'
@@ -10,9 +11,10 @@ import { TrueSheet } from '@lodev09/react-native-true-sheet'
 import { useRef } from 'react'
 import { $TextInput } from '@legendapp/state/react-native'
 import { randomUUID } from 'expo-crypto'
-import { pastels } from '../../../misc/utils/theme'
+import { pastelOf } from '../../../misc/utils/theme'
 import RecurrenceSummary from './RecurrenceSummary'
 import { GROUP_ID_PARAM } from 'src/domains/habits/utils/linking'
+import HabitCard from './HabitCard'
 
 type Props = StaticScreenProps<{
   [GROUP_ID_PARAM]: string,
@@ -21,19 +23,34 @@ type Props = StaticScreenProps<{
 
 const Group = ({ route }: Props) => {
   const groupId = route.params.id
+  const withTickOff = route.params.withTickOff
+  const navigation = useNavigation()
   const { name, habits } = useValue(groups$[groupId])
-  const habitIds = Object.keys(habits)
+  const habitIds = useSelector(() => {
+    const habitsMap = habits$.get()
+    return Object.keys(habits).sort((a, b) =>
+      getLastCompletedTime(habitsMap[a]) - getLastCompletedTime(habitsMap[b])
+    )
+  })
 
   return (
     <Box>
       <Text style={groupStyles.title}>{name}</Text>
       <RecurrenceSummary groupId={groupId} />
-      <FlatList
+      <Animated.FlatList
         keyboardShouldPersistTaps="handled"
         data={habitIds}
+        keyExtractor={id => id}
         renderItem={({ item: id, index }) => {
-          const { bg, border } = pastels[index % pastels.length]
-          return <HabitCard id={id} style={{ backgroundColor: bg, borderColor: border }} />
+          const { bg, border } = pastelOf(id)
+          return (
+            <HabitCard
+              id={id}
+              style={{ backgroundColor: bg, borderColor: border }}
+              showTickOffControls={withTickOff && index === 0}
+              onAction={() => void navigation.setParams({ withTickOff: false })}
+            />
+          )
         }}
         contentContainerStyle={groupStyles.list}
         showsVerticalScrollIndicator={false}
@@ -41,6 +58,7 @@ const Group = ({ route }: Props) => {
         ListFooterComponent={
           <AddHabitFooter groupId={groupId} hasHabits={habitIds.length > 0} />
         }
+        itemLayoutAnimation={listTransition}
       />
     </Box>
   )
@@ -60,28 +78,8 @@ const groupStyles = StyleSheet.create(theme => ({
   },
 }))
 
-const HabitCard = ({ id, style }: { id: string, style?: ViewStyle }) => {
-  const { name } = useValue(habits$[id])
-
-  return (
-    <View style={[habitStyles.container, style]}>
-      <Text style={habitStyles.name}>{name}</Text>
-    </View>
-  )
-}
-
-const habitStyles = StyleSheet.create(theme => ({
-  container: {
-    borderRadius: theme.radii.lg,
-    borderWidth: 1.5,
-    padding: theme.spacing.lg,
-  },
-  name: {
-    ...theme.typography.body,
-    fontWeight: '500',
-    color: theme.colors.text,
-  },
-}))
+const getLastCompletedTime = (habit: HabitsStores[string]) =>
+  habit.lastCompleted ? Date.parse(habit.lastCompleted) : 0
 
 const EmptyState = () => (
   <View style={emptyStyles.container}>
@@ -202,3 +200,9 @@ const sheetStyles = StyleSheet.create(theme => ({
     color: theme.colors.text,
   },
 }))
+
+const listTransition = LinearTransition
+  .springify()
+  .damping(12)
+  .stiffness(90)
+  .mass(0.8)

@@ -3,7 +3,7 @@ import { useValue } from '@legendapp/state/react'
 import { FlatList, Text, Pressable, View, ViewStyle } from 'react-native'
 import { StyleSheet } from 'react-native-unistyles'
 import { useLinkProps } from '@react-navigation/native'
-import { pastels } from '../../utils/theme'
+import { pastelOf } from '../../utils/theme'
 import groups$ from 'src/domains/habits/stores/groups'
 
 type Props = {
@@ -16,8 +16,8 @@ const Groups = ({ footer }: Props) => {
   return (
     <FlatList
       data={Object.entries(groups)}
-      renderItem={({ item: [groupId, group], index }) => {
-        const { bg, border } = pastels[index % pastels.length]
+      renderItem={({ item: [groupId, group] }) => {
+        const { bg, border } = pastelOf(groupId)
         return (
           <GroupCard
             id={groupId}
