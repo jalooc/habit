@@ -2,6 +2,7 @@ import { GroupsStore } from 'src/domains/habits/stores/groups'
 import { HabitsStores } from 'src/domains/habits/stores/habits'
 import { devLog } from 'src/domains/devTools/utils/devLog'
 import { createGroupScreenLink } from 'src/domains/habits/utils/linking'
+import { Temporal } from '@js-temporal/polyfill'
 
 const MAX_NOTIFICATIONS = 64 // iOS allows max 64 scheduled notifications per app
 
@@ -21,7 +22,7 @@ export default (
 
     const names = findSortedHabitsNames(group.habits, habits)
 
-    const occurrences = group.recurrence.all((_, i) => i < names.length)
+    const occurrences = getOccurrencesAfter(group.recurrence, new Date(), names.length)
 
     return occurrences.map((occurence, i) => ({
       title: group.name,
@@ -50,4 +51,18 @@ const findSortedHabitsNames = (
   return [...habits]
     .sort((a, b) => (a.lastActioned?.timestamp ?? 0) - (b.lastActioned?.timestamp ?? 0))
     .map(h => h.name)
+}
+
+const getOccurrencesAfter = (
+  recurrence: NonNullable<GroupsStore[string]['recurrence']>,
+  after: Date,
+  count: number
+) => {
+  const occurrences: Temporal.ZonedDateTime[] = []
+  for (let i = 0; i < count; i++) {
+    const occurrence = recurrence.next(occurrences.at(-1) ?? after, false)
+    if (occurrence) occurrences.push(occurrence)
+    else break
+  }
+  return occurrences
 }
