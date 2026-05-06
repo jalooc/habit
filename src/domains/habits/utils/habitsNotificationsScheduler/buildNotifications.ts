@@ -19,7 +19,7 @@ export default (
   const all = Object.entries(groups).flatMap(([groupId, group]) => {
     if (!group.recurrence) return []
 
-    const names = findSortedHabitsName(group.habits, habits)
+    const names = findSortedHabitsNames(group.habits, habits)
 
     const occurrences = group.recurrence.all((_, i) => i < names.length)
 
@@ -40,7 +40,7 @@ export default (
   return result
 }
 
-const findSortedHabitsName = (
+const findSortedHabitsNames = (
   groupHabits: NonNullable<GroupsStore[string]>['habits'],
   habitsMap: HabitsStores,
 ): string[] => {
