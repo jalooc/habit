@@ -3,7 +3,9 @@ import { StyleSheet } from 'react-native-unistyles'
 import { useValue } from '@legendapp/state/react'
 import habits$ from 'src/domains/habits/stores/habits'
 import ActionsRow from './ActionsRow'
+import SwipeActions from './SwipeActions'
 import { batch } from '@legendapp/state'
+import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable'
 
 type Props = {
   id: string,
@@ -36,15 +38,31 @@ const HabitCard = ({ id, style, showTickOffControls, onAction }: Props) => {
   }
 
   return (
-    <View style={[habitStyles.container, style]}>
-      <Text style={habitStyles.name}>{name}</Text>
-      {showTickOffControls && (
-        <ActionsRow
+    <ReanimatedSwipeable
+      enabled={!showTickOffControls}
+      enableTrackpadTwoFingerGesture
+      friction={2}
+      rightThreshold={40}
+      overshootRight={false}
+      renderRightActions={(progress, _, swipeableMethods) => (
+        <SwipeActions
+          progress={progress}
+          swipeableMethods={swipeableMethods}
           onTickOff={tickOff}
           onSkipRound={skipRound}
         />
       )}
-    </View>
+    >
+      <View style={[habitStyles.container, style]}>
+        <Text style={habitStyles.name}>{name}</Text>
+        {showTickOffControls && (
+          <ActionsRow
+            onTickOff={tickOff}
+            onSkipRound={skipRound}
+          />
+        )}
+      </View>
+    </ReanimatedSwipeable>
   )
 }
 

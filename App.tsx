@@ -8,6 +8,7 @@ import {
 } from '@react-navigation/native'
 import { Linking } from 'react-native'
 import * as ExpoLinking from 'expo-linking'
+import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import * as Notifications from 'src/domains/notifications/utils/notifications'
 import { useReactNavigationDevTools } from '@dev-plugins/react-navigation'
 import { setupNotifications } from 'src/domains/notifications/utils/notifications'
@@ -37,61 +38,63 @@ const App = () => {
   }, [])
 
   return (
-    <Navigation
-      ref={navigationRef}
-      theme={navigationTheme}
-      linking={{
-        config: {
-          initialRouteName: 'Home',
-        },
-        prefixes: [ExpoLinking.createURL('/')],
-        getInitialURL: async () => {
+    <GestureHandlerRootView>
+      <Navigation
+        ref={navigationRef}
+        theme={navigationTheme}
+        linking={{
+          config: {
+            initialRouteName: 'Home',
+          },
+          prefixes: [ExpoLinking.createURL('/')],
+          getInitialURL: async () => {
           // Check if app was opened from a deep link
-          const initialUrl = await Linking.getInitialURL()
+            const initialUrl = await Linking.getInitialURL()
 
-          if (isNonNullish(initialUrl)) {
-            devLog('notification: getInitialURL', { initialUrl })
-            return initialUrl
-          }
+            if (isNonNullish(initialUrl)) {
+              devLog('notification: getInitialURL', { initialUrl })
+              return initialUrl
+            }
 
-          // Handle URL from expo push notifications
-          const response = Notifications.getLastNotificationResponse()
+            // Handle URL from expo push notifications
+            const response = Notifications.getLastNotificationResponse()
 
-          const notificationUrl = response?.notification.request.content.data.url
-          const fullUrl = typeof notificationUrl === 'string' ? ExpoLinking.createURL(notificationUrl) : undefined
-
-          devLog('notification: getInitialURL', { notificationUrl, fullUrl, response })
-
-          return fullUrl
-        },
-        subscribe: listener => {
-          // Listen to incoming links from deep linking
-          const eventListenerSubscription = Linking.addEventListener('url', ({ url }) => {
-            devLog('notification: RN linking event listener', { url })
-
-            void listener(url)
-          })
-
-          // Listen to expo push notifications
-          const subscription = Notifications.addNotificationResponseReceivedListener(response => {
-            const notificationUrl = response.notification.request.content.data.url
+            const notificationUrl = response?.notification.request.content.data.url
             const fullUrl = typeof notificationUrl === 'string' ? ExpoLinking.createURL(notificationUrl) : undefined
 
-            devLog('notification: Expo push notification listener', { notificationUrl, fullUrl, response })
+            devLog('notification: getInitialURL', { notificationUrl, fullUrl, response })
 
-            // Let React Navigation handle the URL
-            if (isNonNullish(fullUrl)) {
-              listener(fullUrl)
+            return fullUrl
+          },
+          subscribe: listener => {
+          // Listen to incoming links from deep linking
+            const eventListenerSubscription = Linking.addEventListener('url', ({ url }) => {
+              devLog('notification: RN linking event listener', { url })
+
+              void listener(url)
+            })
+
+            // Listen to expo push notifications
+            const subscription = Notifications.addNotificationResponseReceivedListener(response => {
+              const notificationUrl = response.notification.request.content.data.url
+              const fullUrl = typeof notificationUrl === 'string' ? ExpoLinking.createURL(notificationUrl) : undefined
+
+              devLog('notification: Expo push notification listener', { notificationUrl, fullUrl, response })
+
+              // Let React Navigation handle the URL
+              if (isNonNullish(fullUrl)) {
+                listener(fullUrl)
+              }
+            })
+
+            return () => {
+              eventListenerSubscription.remove()
+              subscription.remove()
             }
-          })
-
-          return () => {
-            eventListenerSubscription.remove()
-            subscription.remove()
-          }
-        },
-      }}
-    />
+          },
+        }}
+      />
+    </GestureHandlerRootView>
   )
 }
 
