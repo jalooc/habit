@@ -21,10 +21,7 @@ const RootStack = createNativeStackNavigator({
     Group: {
       screen: Group,
       options: { headerTitle: '' },
-      linking: {
-        initialRouteName: 'Home',
-        ...groupScreenLinkingConfig,
-      },
+      linking: groupScreenLinkingConfig,
     },
     DevTools: {
       screen: DevTools,

@@ -41,7 +41,9 @@ const App = () => {
       ref={navigationRef}
       theme={navigationTheme}
       linking={{
-        config: {},
+        config: {
+          initialRouteName: 'Home',
+        },
         prefixes: [ExpoLinking.createURL('/')],
         getInitialURL: async () => {
           // Check if app was opened from a deep link
