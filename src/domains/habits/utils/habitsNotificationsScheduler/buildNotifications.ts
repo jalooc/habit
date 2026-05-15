@@ -1,6 +1,5 @@
 import { GroupsStore } from 'src/domains/habits/stores/groups'
 import { HabitsStores } from 'src/domains/habits/stores/habits'
-import { devLog } from 'src/domains/devTools/utils/devLog'
 import { createGroupScreenLink } from 'src/domains/habits/utils/linking'
 import { Temporal } from '@js-temporal/polyfill'
 
@@ -32,13 +31,9 @@ export default (
     }))
   })
 
-  const result = [...all]
+  return [...all]
     .sort((a, b) => a.date.getTime() - b.date.getTime())
     .slice(0, MAX_NOTIFICATIONS)
-
-  devLog('rescheduling notifications', { notifications: result })
-
-  return result
 }
 
 const findSortedHabitsNames = (
