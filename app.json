@@ -24,7 +24,8 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.habit"
+      "package": "com.anonymous.habit",
+      "permissions": ["android.permission.USE_EXACT_ALARM"]
     },
     "web": {
       "favicon": "./assets/favicon.png"
