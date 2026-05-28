@@ -32,9 +32,9 @@ const AddHabitFooter = ({ groupId, hasHabits }: Props) => {
     clearImages,
   } = usePendingImages()
 
-  const addHabit = () => {
-    pendingCommit.current = { name: newHabitName$.get(), images: commitImages() }
-    void sheetRef.current?.dismiss()
+  const addHabit = async () => {
+    pendingCommit.current = { name: newHabitName$.get(), images: await commitImages() }
+    await sheetRef.current?.dismiss()
   }
 
   const handleDismiss = () => {
@@ -86,7 +86,7 @@ const AddHabitFooter = ({ groupId, hasHabits }: Props) => {
               placeholder="Habit name"
               placeholderTextColor="#A8A29E"
               onKeyPress={e => {
-                if (e.nativeEvent.key === 'Enter' && canSubmit) addHabit()
+                if (e.nativeEvent.key === 'Enter' && canSubmit) void addHabit()
               }}
             />
           </TextInputWrapper>

@@ -14,6 +14,7 @@ import tseslint from 'typescript-eslint'
 export default [
   globalIgnores(['src/domains/convex/convex/_generated']),
   ...defineConfig(
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument,@typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access
     includeIgnoreFile(path.resolve(path.dirname(fileURLToPath(import.meta.url)), '.gitignore')),
     eslint.configs.recommended,
     ...tseslint.configs.strictTypeChecked,
@@ -35,6 +36,7 @@ export default [
               'setupTests.js',
             ],
           },
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           tsconfigRootDir: import.meta.dirname,
         },
       },

@@ -1,6 +1,6 @@
 import { TextInput, View, Text } from 'react-native'
 import { StyleSheet, useUnistyles } from 'react-native-unistyles'
-import Ionicons from '@expo/vector-icons/Ionicons'
+import Ionicons from '@react-native-vector-icons/ionicons/static'
 import { useRef, useState } from 'react'
 
 type TimeValue = { hour: number, minute: number }

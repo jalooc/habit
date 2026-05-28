@@ -60,7 +60,7 @@ const importZip = async (uri: string) => {
         devLog('Overwriting existing images directory.')
         imagesDir.delete()
       }
-      srcImagesDir.move(imagesDir)
+      await srcImagesDir.move(imagesDir)
     }
 
     applyImport(parsed)

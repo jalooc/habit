@@ -24,7 +24,7 @@ export const exportData = async () => {
 
   try {
     if (imagesDir.exists) { // images are optional; if none added yet, zip will only contain data.json
-      imagesDir.copy(new Directory(tempDir, 'images'))
+      await imagesDir.copy(new Directory(tempDir, 'images'))
       devLog('Exporting with images:', imagesDir.list().map(i => i.name))
     } else {
       devLog('Exporting without images directory, as it does not exist.')

@@ -63,7 +63,7 @@ const App = () => {
             // Handle URL from expo push notifications
             const response = Notifications.getLastNotificationResponse()
 
-            const notificationUrl = response?.notification.request.content.data.url
+            const notificationUrl = response?.notification.request.content.data?.url
             const fullUrl = typeof notificationUrl === 'string' ? ExpoLinking.createURL(notificationUrl) : undefined
 
             devLog('notification: getInitialURL', { notificationUrl, fullUrl, response })
@@ -80,7 +80,7 @@ const App = () => {
 
             // Listen to expo push notifications
             const subscription = Notifications.addNotificationResponseReceivedListener(response => {
-              const notificationUrl = response.notification.request.content.data.url
+              const notificationUrl = response.notification.request.content.data?.url
               const fullUrl = typeof notificationUrl === 'string' ? ExpoLinking.createURL(notificationUrl) : undefined
 
               devLog('notification: Expo push notification listener', { notificationUrl, fullUrl, response })

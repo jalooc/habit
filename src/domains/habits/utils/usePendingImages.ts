@@ -3,6 +3,7 @@ import { randomUUID } from 'expo-crypto'
 import { Directory, File, Paths } from 'expo-file-system'
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator'
 import { imagesDir } from 'src/domains/habits/utils/habitImages'
+import { isTruthy } from 'remeda'
 
 const MAX_IMAGE_SIZE = 1200
 
@@ -26,18 +27,18 @@ export default () => {
     pendingImagesUris$.push(pendingUri)
   }
 
-  const commitImages = (): string[] => {
+  const commitImages = () => {
     const uris = pendingImagesUris$.get()
     if (uris.length === 0) return []
 
     imagesDir.create({ idempotent: true })
 
-    return uris.flatMap(uri => {
+    return Promise.all(uris.map(async uri => {
       const file = new File(uri)
-      if (!file.exists) return []
-      file.move(new File(imagesDir, file.name))
-      return [file.name]
-    })
+      if (!file.exists) return undefined
+      await file.move(new File(imagesDir, file.name))
+      return file.name
+    })).then(filenames => filenames.filter(isTruthy))
   }
 
   const clearImages = () => {
@@ -71,6 +72,6 @@ const savePendingImageFromUri = async (sourceUri: string): Promise<string> => {
   const compressedUri = await compress(sourceUri)
   const filename = `${randomUUID()}.jpg`
   const compressedFile = new File(compressedUri)
-  compressedFile.move(new File(pendingImagesDir, filename))
+  await compressedFile.move(new File(pendingImagesDir, filename))
   return compressedFile.uri
 }

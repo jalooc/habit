@@ -21,12 +21,13 @@ This is an Expo dev-client project: `npm start` alone is not enough — `npm run
 ## Architecture
 
 ### Tech Stack
-- **Expo SDK 54** + React Native 0.81, New Architecture enabled
+- **Expo SDK 56** + React Native 0.85 (New Architecture is always on)
 - **React Navigation 7** static API (`createStaticNavigation`)
 - **Legend State 3** (`@legendapp/state`) for reactive state, persisted via MMKV
 - **Unistyles 3** for styling (babel plugin configured with `root: 'src'` — must stay in sync if `src/` is renamed)
 - **TrueSheet** for bottom sheets, **rrule-temporal** for recurrence, **zod** for schema validation, **dayjs** for dates
 - **remeda** preferred over lodash; **tsafe** for type-level helpers
+- **`@react-native-vector-icons/ionicons`** for icons — import from the `/static` sub-path: `import Ionicons from '@react-native-vector-icons/ionicons/static'`
 
 ### Domain-oriented structure
 
@@ -62,7 +63,7 @@ Navigator is in `src/domains/misc/utils/navigation.ts` (not `App.tsx`), declared
 Deep links are wired in `App.tsx`'s `linking` prop, combining `expo-linking` (regular deep links) **and** `expo-notifications` response listeners (so tapping a notification routes via React Navigation). Screen-specific link parsing lives with the screen — e.g. `habits/utils/linking.ts` exports `groupScreenLinkingConfig` and a `createGroupScreenLink()` builder that is reused when scheduling notifications. When adding a deep-linkable screen, follow this pattern: colocate `linkingConfig` + link builder with the screen.
 
 ## Other architectural choices
-- Prefer using native components (either React Native ones or ones provided by https://docs.expo.dev/versions/latest/sdk/ui/universal/, especiall considering https://docs.expo.dev/versions/latest/sdk/ui/drop-in-replacements/ as replacements for popular 3rd party libraries).
+- Prefer using native components (either React Native ones or ones provided by https://docs.expo.dev/versions/latest/sdk/ui/universal/, especially considering https://docs.expo.dev/versions/latest/sdk/ui/drop-in-replacements/ as replacements for popular 3rd party libraries).
 
 ## Style rules worth knowing here
 
