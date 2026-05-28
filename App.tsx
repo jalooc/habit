@@ -15,6 +15,8 @@ import { setupNotifications } from 'src/domains/notifications/utils/notification
 import { devLog } from 'src/domains/devTools/utils/devLog'
 import { isNonNullish } from 'remeda'
 import { Navigation } from 'src/domains/misc/utils/navigation'
+import { cleanupPendingImages } from 'src/domains/habits/utils/usePendingImages'
+import { cleanupOrphanedImages } from 'src/domains/habits/utils/habitImages'
 
 const navigationTheme = {
   ...DefaultTheme,
@@ -35,6 +37,8 @@ const App = () => {
 
   useEffect(() => {
     void setupNotifications()
+    cleanupOrphanedImages()
+    cleanupPendingImages()
   }, [])
 
   return (

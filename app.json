@@ -25,13 +25,22 @@
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.anonymous.habit",
-      "permissions": ["android.permission.USE_EXACT_ALARM"]
+      "permissions": [
+        "android.permission.USE_EXACT_ALARM", 
+        "android.permission.READ_MEDIA_IMAGES"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
       "react-native-edge-to-edge",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Habit to attach images to habits."
+        }
+      ],
       [
         "expo-notifications",
         {

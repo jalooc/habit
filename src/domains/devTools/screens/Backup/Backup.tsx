@@ -59,13 +59,13 @@ const Backup = () => {
     {
       key: 'export',
       title: 'Export data',
-      subtitle: 'Save habits, groups, day boundaries to a JSON file',
+      subtitle: 'Save habits, groups, day boundaries to a backup file',
       onPress: handleExport,
     },
     {
       key: 'import',
       title: 'Import data',
-      subtitle: 'Pick a JSON backup; replaces existing data',
+      subtitle: 'Pick a backup file; replaces existing data',
       onPress: handleImport,
     },
   ]

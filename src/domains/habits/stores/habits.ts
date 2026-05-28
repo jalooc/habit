@@ -15,6 +15,7 @@ const habitsSchemaVm1 = z.record(habitIdSchema, z.object({
 
 export const habitsSchema = z.record(habitIdSchema, z.object({
   name: z.string(),
+  images: z.array(z.string()).optional(),
   lastActioned: z.object({
     timestamp: z.number(),
     type: z.enum(['completed', 'skipped']),
