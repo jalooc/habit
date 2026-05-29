@@ -51,7 +51,8 @@
         }
       ],
       "@react-native-vector-icons/ionicons",
-      "expo-font"
+      "expo-font",
+      "react-native-enriched-markdown"
     ]
   }
 }
