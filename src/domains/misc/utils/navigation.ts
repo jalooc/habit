@@ -1,6 +1,10 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
 import Home from 'src/domains/misc/screens/Home'
+import NewGroup from 'src/domains/habits/screens/NewGroup'
 import Group from 'src/domains/habits/screens/Group'
+import EditGroup from 'src/domains/habits/screens/EditGroup'
+import HabitForm from 'src/domains/habits/screens/HabitForm'
+import EditSchedule from 'src/domains/habits/screens/EditSchedule'
 import { groupScreenLinkingConfig } from 'src/domains/habits/utils/linking'
 import DevTools from 'src/domains/devTools/screens/DevTools'
 import DevLog from 'src/domains/devTools/screens/DevLog'
@@ -12,6 +16,7 @@ const RootStack = createNativeStackNavigator({
   screenOptions: {
     headerShadowVisible: false,
     headerBackTitleVisible: false,
+    sheetCornerRadius: 20,
   },
   screens: {
     Home: {
@@ -22,6 +27,34 @@ const RootStack = createNativeStackNavigator({
       screen: Group,
       options: { headerTitle: '' },
       linking: groupScreenLinkingConfig,
+    },
+    NewGroup: {
+      screen: NewGroup,
+      options: {
+        presentation: 'formSheet',
+        sheetAllowedDetents: 'fitToContents',
+      },
+    },
+    EditGroup: {
+      screen: EditGroup,
+      options: {
+        presentation: 'formSheet',
+        sheetAllowedDetents: 'fitToContents',
+      },
+    },
+    HabitForm: {
+      screen: HabitForm,
+      options: {
+        presentation: 'formSheet',
+        sheetAllowedDetents: 'fitToContents',
+      },
+    },
+    EditSchedule: {
+      screen: EditSchedule,
+      options: {
+        presentation: 'formSheet',
+        sheetAllowedDetents: [0.65] as number[],
+      },
     },
     DevTools: {
       screen: DevTools,

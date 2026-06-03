@@ -1,32 +1,33 @@
-import { useRef } from 'react'
-import type { RefObject } from 'react'
+import { useEffect, useRef } from 'react'
 import { Alert, Text, TextInput, View } from 'react-native'
+import { StaticScreenProps, useNavigation } from '@react-navigation/native'
 import { StyleSheet, useUnistyles } from 'react-native-unistyles'
 import { useObservable, useSelector } from '@legendapp/state/react'
 import { $TextInput } from '@legendapp/state/react-native'
-import { TrueSheet } from '@lodev09/react-native-true-sheet'
 import { TextInputWrapper } from 'expo-paste-input'
 import { File } from 'expo-file-system'
 import { randomUUID } from 'expo-crypto'
 import { EnrichedMarkdownTextInput } from 'react-native-enriched-markdown'
 import type { EnrichedMarkdownTextInputInstance, MarkdownTextInputStyle } from 'react-native-enriched-markdown'
 import type { PasteEventPayload } from 'expo-paste-input'
+import { batch } from '@legendapp/state'
+import { isNonNullish } from 'remeda'
 import habits$ from 'src/domains/habits/stores/habits'
 import groups$ from 'src/domains/habits/stores/groups'
 import Button from 'src/domains/misc/components/Button'
 import usePendingImages from 'src/domains/habits/utils/usePendingImages'
 import { imageFileUri, imagesDir } from 'src/domains/habits/utils/habitImages'
-import PendingImageRow from './AddHabitFooter/PendingImageRow'
-import { batch } from '@legendapp/state'
-import { isNonNullish, isNullish } from 'remeda'
+import PendingImageRow from './PendingImageRow'
+import useUnmountPromise from 'src/domains/misc/utils/useUnmountPromise'
 
-type Props = {
-  sheetRef: RefObject<TrueSheet | null>,
+type Props = StaticScreenProps<{
   groupId: string,
   habitId?: string,
-}
+}>
 
-const HabitFormSheet = ({ sheetRef, groupId, habitId }: Props) => {
+const HabitForm = ({ route }: Props) => {
+  const { groupId, habitId } = route.params
+  const navigation = useNavigation()
   const isEditMode = isNonNullish(habitId)
   const { theme } = useUnistyles()
   const name$ = useObservable(() => habitId ? habits$[habitId].name.get() : '')
@@ -34,6 +35,7 @@ const HabitFormSheet = ({ sheetRef, groupId, habitId }: Props) => {
   const nameInputRef = useRef<TextInput>(null)
   const descInputRef = useRef<EnrichedMarkdownTextInputInstance | null>(null)
   const originalFilenames = useRef<string[]>(habitId ? habits$[habitId].images.get() ?? [] : [])
+  const unmountPromise = useUnmountPromise()
 
   const existingImages$ = useObservable<{ filename: string, uri: string }[]>(
     () => (habitId ? habits$[habitId].images.get() ?? [] : []).map(f => ({ filename: f, uri: imageFileUri(f) }))
@@ -55,22 +57,7 @@ const HabitFormSheet = ({ sheetRef, groupId, habitId }: Props) => {
 
   const { pendingImages, addPendingImage, commitPendingImages, clearPendingImages } = usePendingImages()
 
-  const onOpen = () => {
-    if (isNonNullish(habitId)) return
-
-    nameInputRef.current?.focus()
-  }
-
-  const onClose = () => {
-    if (isNullish(habitId)) return
-
-    const habit = habits$[habitId].peek()
-    name$.set(habit.name)
-    descInputRef.current?.setValue(habit.description ?? '')
-    existingImages$.set((habit.images ?? []).map(f => ({ filename: f, uri: imageFileUri(f) })))
-    originalFilenames.current = habit.images ?? []
-    clearPendingImages()
-  }
+  useEffect(() => () => { clearPendingImages() }, [])
 
   const submit = async () => {
     const [description, newFilenames] = await Promise.all([
@@ -82,14 +69,13 @@ const HabitFormSheet = ({ sheetRef, groupId, habitId }: Props) => {
     const name = name$.peek().trim()
     const filesToDelete = originalFilenames.current.filter(f => !remainingFilenames.includes(f))
 
-    await sheetRef.current?.dismiss()
+    navigation.goBack()
 
     if (isEditMode) {
-      filesToDelete
-        .forEach(filename => {
-          const file = new File(imagesDir, filename)
-          if (file.exists) file.delete()
-        })
+      filesToDelete.forEach(filename => {
+        const file = new File(imagesDir, filename)
+        if (file.exists) file.delete()
+      })
 
       batch(() => {
         habits$[habitId].name.set(name)
@@ -130,7 +116,9 @@ const HabitFormSheet = ({ sheetRef, groupId, habitId }: Props) => {
             text: 'Remove',
             style: 'destructive',
             onPress: async () => {
-              await sheetRef.current?.dismiss()
+              navigation.goBack()
+              await unmountPromise
+
               groups$[groupId].habits[habitId].delete()
             },
           },
@@ -146,7 +134,9 @@ const HabitFormSheet = ({ sheetRef, groupId, habitId }: Props) => {
             text: 'Delete',
             style: 'destructive',
             onPress: async () => {
-              await sheetRef.current?.dismiss()
+              navigation.goBack()
+              await unmountPromise
+
               const images = habits$[habitId].images.peek() ?? []
               images.forEach(filename => {
                 const file = new File(imagesDir, filename)
@@ -164,58 +154,52 @@ const HabitFormSheet = ({ sheetRef, groupId, habitId }: Props) => {
   }
 
   return (
-    <TrueSheet
-      ref={sheetRef}
-      detents={['auto']}
-      onDidPresent={onOpen}
-      onDidDismiss={onClose}
-    >
-      <View style={styles.sheet}>
-        <Text style={styles.sheetTitle}>{isEditMode ? 'Edit Habit' : 'New Habit'}</Text>
-        <TextInputWrapper onPaste={handlePaste}>
-          <$TextInput
-            style={styles.input}
-            $value={name$}
-            // @ts-expect-error ref type in Legend State components doesn't match
-            ref={nameInputRef}
-            placeholder="Habit name"
-            placeholderTextColor={theme.colors.textTertiary}
-            onKeyPress={e => {
-              if (e.nativeEvent.key === 'Enter' && canSubmit) void submit()
-            }}
-          />
-        </TextInputWrapper>
-        <EnrichedMarkdownTextInput
-          ref={descInputRef}
-          defaultValue={habitId ? habits$[habitId].description.peek() : ''}
-          multiline
-          style={styles.descriptionInput}
-          placeholder="Description (optional)"
+    <View style={styles.sheet}>
+      <Text style={styles.title}>{isEditMode ? 'Edit Habit' : 'New Habit'}</Text>
+      <TextInputWrapper onPaste={handlePaste}>
+        <$TextInput
+          style={styles.input}
+          $value={name$}
+          // @ts-expect-error ref type in Legend State components doesn't match
+          ref={nameInputRef}
+          autoFocus={!isEditMode}
+          placeholder="Habit name"
           placeholderTextColor={theme.colors.textTertiary}
-          markdownStyle={{ link: { color: theme.colors.accent }} satisfies MarkdownTextInputStyle}
+          onKeyPress={e => {
+            if (e.nativeEvent.key === 'Enter' && canSubmit) void submit()
+          }}
         />
-        <PendingImageRow
-          pendingImages={[...existingAsUnified, ...pendingImages]}
-          onAddImage={addPendingImage}
-        />
+      </TextInputWrapper>
+      <EnrichedMarkdownTextInput
+        ref={descInputRef}
+        defaultValue={habitId ? habits$[habitId].description.peek() : ''}
+        multiline
+        style={styles.descriptionInput}
+        placeholder="Description (optional)"
+        placeholderTextColor={theme.colors.textTertiary}
+        markdownStyle={{ link: { color: theme.colors.accent }} satisfies MarkdownTextInputStyle}
+      />
+      <PendingImageRow
+        pendingImages={[...existingAsUnified, ...pendingImages]}
+        onAddImage={addPendingImage}
+      />
+      <Button
+        title={isEditMode ? 'Save' : 'Create'}
+        onPress={submit}
+        disabled={!canSubmit}
+      />
+      {isEditMode && (
         <Button
-          title={isEditMode ? 'Save' : 'Create'}
-          onPress={submit}
-          disabled={!canSubmit}
+          title={isInOtherGroup ? 'Remove from Group' : 'Delete Habit'}
+          onPress={handleRemove}
+          variant="secondary"
         />
-        {isEditMode && (
-          <Button
-            title={isInOtherGroup ? 'Remove from Group' : 'Delete Habit'}
-            onPress={handleRemove}
-            variant="secondary"
-          />
-        )}
-      </View>
-    </TrueSheet>
+      )}
+    </View>
   )
 }
 
-export default HabitFormSheet
+export default HabitForm
 
 const styles = StyleSheet.create(theme => ({
   sheet: {
@@ -223,7 +207,7 @@ const styles = StyleSheet.create(theme => ({
     paddingBottom: theme.spacing['4xl'],
     gap: theme.spacing.xl,
   },
-  sheetTitle: {
+  title: {
     ...theme.typography.heading,
     color: theme.colors.text,
   },

@@ -25,8 +25,9 @@ This is an Expo dev-client project: `npm start` alone is not enough — `npm run
 - **React Navigation 7** static API (`createStaticNavigation`)
 - **Legend State 3** (`@legendapp/state`) for reactive state, persisted via MMKV
 - **Unistyles 3** for styling (babel plugin configured with `root: 'src'` — must stay in sync if `src/` is renamed)
-- **TrueSheet** for bottom sheets, **rrule-temporal** for recurrence, **zod** for schema validation, **dayjs** for dates
-- **remeda** preferred over lodash; **tsafe** for type-level helpers
+- **React Navigation `formSheet`** for bottom sheets (native iOS sheet) — use `presentation: 'formSheet'` + `sheetAllowedDetents` in screen options; **rrule-temporal** for recurrence, **zod** for schema validation, **dayjs** for dates
+- **`expo-image`** for image display (drop-in for RN `Image`); **`react-native-enriched-markdown`** for markdown rendering
+- **remeda** preferred over lodash; **tsafe** + **type-fest** for type-level helpers
 - **`@react-native-vector-icons/ionicons`** for icons — import from the `/static` sub-path: `import Ionicons from '@react-native-vector-icons/ionicons/static'`
 
 ### Domain-oriented structure
@@ -55,6 +56,13 @@ Legend State conventions (see global rules):
 ### Reactive notifications scheduler
 
 `src/domains/habits/utils/habitsNotificationsScheduler/` subscribes to `groups$`, `habits$`, and `dayBoundaries$` via `.onChange()` and on every change rebuilds the full notification set (`buildNotifications`) then `cancelAllScheduledNotificationsAsync` + reschedules. **Side effect:** importing `App.tsx` activates this — see the bare `import 'src/domains/habits/utils/habitsNotificationsScheduler'` at the top of `App.tsx`. Don't add ad-hoc `Notifications.scheduleNotificationAsync` calls elsewhere; the scheduler owns the queue and a stray call will be wiped on the next change.
+
+### Image handling
+
+Habits can have attached images. The flow is split across two utilities in `src/domains/habits/utils/`:
+
+- `habitImages.ts` — permanent storage in `<documents>/habit-images/`. Exports `imageFileUri(filename)` for display and `cleanupOrphanedImages()` (called at startup) to prune files no longer referenced by any habit.
+- `usePendingImages.ts` — staged uploads. Images are compressed and written to `<cache>/pending-images/` during editing. On save, call `commitPendingImages()` to move them to the permanent dir and get back the filenames to store in the habit record. On cancel, call `clearPendingImages()`.
 
 ### Navigation + deep linking
 

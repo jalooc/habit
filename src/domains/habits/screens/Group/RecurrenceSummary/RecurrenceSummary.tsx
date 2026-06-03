@@ -1,10 +1,8 @@
 import { Text, Pressable } from 'react-native'
-import { useRef, useState } from 'react'
 import { StyleSheet } from 'react-native-unistyles'
-import { TrueSheet } from '@lodev09/react-native-true-sheet'
 import { useSelector } from '@legendapp/state/react'
+import { useNavigation } from '@react-navigation/native'
 import { toText } from 'rrule-temporal/totext'
-import RecurrenceEditor from './RecurrenceEditor'
 import groups$ from 'src/domains/habits/stores/groups'
 
 type Props = {
@@ -12,48 +10,33 @@ type Props = {
 }
 
 const RecurrenceSummary = ({ groupId }: Props) => {
-  const sheetRef = useRef<TrueSheet>(null)
-  const [editorKey, setEditorKey] = useState(0)
+  const navigation = useNavigation()
   const recurrenceText = useSelector(() => {
     const recurrence = groups$[groupId].recurrence.get()
     if (!recurrence) return undefined
     return toText(String(recurrence))
   })
 
-  const summaryCard = recurrenceText ?
-    (
+  const goToEditor = () => void navigation.navigate('EditSchedule', { groupId })
+
+  if (recurrenceText) {
+    return (
       <Pressable
         style={({ pressed }) => [styles.filled, pressed && styles.filledPressed]}
-        onPress={() => sheetRef.current?.present()}
+        onPress={goToEditor}
       >
         <Text style={styles.filledLabel}>{recurrenceText}</Text>
       </Pressable>
-    ) :
-    (
-      <Pressable
-        style={({ pressed }) => [styles.empty, pressed && styles.emptyPressed]}
-        onPress={() => sheetRef.current?.present()}
-      >
-        <Text style={styles.emptyLabel}>Add Schedule</Text>
-      </Pressable>
     )
+  }
 
   return (
-    <>
-      {summaryCard}
-      <TrueSheet
-        ref={sheetRef}
-        detents={[0.65]}
-        onDidDismiss={() => void setEditorKey(k => k + 1)}
-        scrollable
-      >
-        <RecurrenceEditor
-          key={editorKey}
-          groupId={groupId}
-          onDismiss={() => sheetRef.current?.dismiss()}
-        />
-      </TrueSheet>
-    </>
+    <Pressable
+      style={({ pressed }) => [styles.empty, pressed && styles.emptyPressed]}
+      onPress={goToEditor}
+    >
+      <Text style={styles.emptyLabel}>Add Schedule</Text>
+    </Pressable>
   )
 }
 

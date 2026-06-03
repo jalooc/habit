@@ -1,8 +1,6 @@
-import { useRef } from 'react'
 import { Pressable, Text } from 'react-native'
 import { StyleSheet } from 'react-native-unistyles'
-import { TrueSheet } from '@lodev09/react-native-true-sheet'
-import HabitFormSheet from '../HabitFormSheet'
+import { useNavigation } from '@react-navigation/native'
 
 type Props = {
   groupId: string,
@@ -10,21 +8,18 @@ type Props = {
 }
 
 const AddHabitFooter = ({ groupId, hasHabits }: Props) => {
-  const sheetRef = useRef<TrueSheet>(null)
+  const navigation = useNavigation()
 
   return (
-    <>
-      <Pressable
-        style={({ pressed }) => [addCardStyles.container, pressed && addCardStyles.pressed]}
-        onPress={() => sheetRef.current?.present()}
-      >
-        <Text style={addCardStyles.plus}>+</Text>
-        <Text style={addCardStyles.label}>
-          {hasHabits ? 'Add Habit' : 'Add First Habit'}
-        </Text>
-      </Pressable>
-      <HabitFormSheet groupId={groupId} sheetRef={sheetRef} />
-    </>
+    <Pressable
+      style={({ pressed }) => [addCardStyles.container, pressed && addCardStyles.pressed]}
+      onPress={() => void navigation.navigate('HabitForm', { groupId })}
+    >
+      <Text style={addCardStyles.plus}>+</Text>
+      <Text style={addCardStyles.label}>
+        {hasHabits ? 'Add Habit' : 'Add First Habit'}
+      </Text>
+    </Pressable>
   )
 }
 

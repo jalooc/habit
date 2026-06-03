@@ -1,8 +1,7 @@
-import { useRef } from 'react'
 import { Pressable, Text, View, ViewStyle } from 'react-native'
 import { StyleSheet } from 'react-native-unistyles'
 import { useObservable, useValue } from '@legendapp/state/react'
-import { TrueSheet } from '@lodev09/react-native-true-sheet'
+import { useNavigation } from '@react-navigation/native'
 import habits$ from 'src/domains/habits/stores/habits'
 import ActionsRow from './ActionsRow'
 import SwipeActions from './SwipeActions'
@@ -11,7 +10,6 @@ import ImageViewer from './ImageViewer'
 import { batch } from '@legendapp/state'
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable'
 import Description from './Description'
-import HabitFormSheet from '../HabitFormSheet'
 
 type Props = {
   id: string,
@@ -25,7 +23,7 @@ const HabitCard = ({ id, groupId, style, showTickOffControls, onAction }: Props)
   const habit$ = habits$[id]
   const { name, images, description } = useValue(habit$)
   const viewer$ = useObservable({ visible: false, index: 0 })
-  const editSheetRef = useRef<TrueSheet>(null)
+  const navigation = useNavigation()
   const viewerVisible = useValue(viewer$.visible)
   const viewerIndex = useValue(viewer$.index)
 
@@ -66,7 +64,7 @@ const HabitCard = ({ id, groupId, style, showTickOffControls, onAction }: Props)
         )}
       >
         <View style={[habitStyles.container, style]}>
-          <Pressable onPress={() => editSheetRef.current?.present()}>
+          <Pressable onPress={() => void navigation.navigate('HabitForm', { groupId, habitId: id })}>
             <Text style={habitStyles.name}>{name}</Text>
           </Pressable>
           {description && <Description description={description} />}
@@ -92,7 +90,6 @@ const HabitCard = ({ id, groupId, style, showTickOffControls, onAction }: Props)
           )}
         </View>
       </ReanimatedSwipeable>
-      <HabitFormSheet groupId={groupId} habitId={id} sheetRef={editSheetRef} />
     </>
   )
 }

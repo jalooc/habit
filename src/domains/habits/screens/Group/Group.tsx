@@ -1,9 +1,7 @@
-import { useRef } from 'react'
 import { StaticScreenProps, useNavigation } from '@react-navigation/native'
 import { Pressable, Text, View } from 'react-native'
 import Animated, { LinearTransition } from 'react-native-reanimated'
 import { useSelector, useValue } from '@legendapp/state/react'
-import { TrueSheet } from '@lodev09/react-native-true-sheet'
 import groups$ from 'src/domains/habits/stores/groups'
 import habits$ from 'src/domains/habits/stores/habits'
 import Box from '../../../misc/components/Box'
@@ -13,7 +11,6 @@ import RecurrenceSummary from './RecurrenceSummary'
 import { GROUP_ID_PARAM } from 'src/domains/habits/utils/linking'
 import HabitCard from './HabitCard'
 import AddHabitFooter from './AddHabitFooter'
-import EditGroupSheet from './EditGroupSheet'
 
 type Props = StaticScreenProps<{
   [GROUP_ID_PARAM]: string,
@@ -24,7 +21,6 @@ const Group = ({ route }: Props) => {
   const groupId = route.params.id
   const withTickOff = route.params.withTickOff
   const navigation = useNavigation()
-  const editSheetRef = useRef<TrueSheet>(null)
   const { name } = useValue(groups$[groupId])
   const habitIds = useSelector(() => {
     const habitsMap = habits$.get()
@@ -35,7 +31,7 @@ const Group = ({ route }: Props) => {
 
   return (
     <Box>
-      <Pressable onPress={() => editSheetRef.current?.present()}>
+      <Pressable onPress={() => void navigation.navigate('EditGroup', { groupId })}>
         <Text style={groupStyles.title}>{name}</Text>
       </Pressable>
       <RecurrenceSummary groupId={groupId} />
@@ -63,7 +59,6 @@ const Group = ({ route }: Props) => {
         }
         itemLayoutAnimation={listTransition}
       />
-      <EditGroupSheet groupId={groupId} sheetRef={editSheetRef} />
     </Box>
   )
 }

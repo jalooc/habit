@@ -1,30 +1,16 @@
-import { Text, TextInput, View, Pressable } from 'react-native'
+import { Text, View, Pressable } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { $TextInput } from '@legendapp/state/react-native'
-import { useObservable, useValue } from '@legendapp/state/react'
-import { randomUUID } from 'expo-crypto'
+import { useValue } from '@legendapp/state/react'
 import { StyleSheet } from 'react-native-unistyles'
-import { TrueSheet } from '@lodev09/react-native-true-sheet'
-import { useRef } from 'react'
-import Button from '../../components/Button'
+import { useNavigation } from '@react-navigation/native'
 import Box from '../../components/Box'
 import Groups from './Groups'
 import DayBoundaries from './DayBoundaries'
 import DevToolsLink from '../../../devTools/components/DevToolsLink'
-import groups$ from 'src/domains/habits/stores/groups'
 import dayBoundaries$ from 'src/domains/misc/stores/dayBoundaries'
 
 const Home = () => {
-  const newGroupName$ = useObservable('')
-  const inputRef = useRef<TextInput>(null)
-  const sheetRef = useRef<TrueSheet>(null)
-
-  const addGroup = () => {
-    void sheetRef.current?.dismiss()
-    const newGroupName = newGroupName$.get()
-    setTimeout(() => void groups$[randomUUID()].set({ name: newGroupName, habits: {}}), 500)
-  }
-
+  const navigation = useNavigation()
   const { top } = useSafeAreaInsets()
 
   return (
@@ -44,33 +30,9 @@ const Home = () => {
       />
       <Groups
         footer={
-          <AddGroupCard onPress={() => sheetRef.current?.present()} />
+          <AddGroupCard onPress={() => void navigation.navigate('NewGroup')} />
         }
       />
-      <TrueSheet
-        ref={sheetRef}
-        detents={['auto']}
-        onDidPresent={() => inputRef.current?.focus()}
-        onDidDismiss={() => void newGroupName$.set('')}
-      >
-        <View style={sheetStyles.sheet}>
-          <Text style={sheetStyles.sheetTitle}>New Group</Text>
-          <$TextInput
-            style={sheetStyles.input}
-            $value={newGroupName$}
-            // @ts-expect-error ref type in Legend State components doesn't match
-            ref={inputRef}
-            placeholder="Group name"
-            placeholderTextColor="#A8A29E"
-            onKeyPress={e => {
-              if (e.nativeEvent.key === 'Enter') {
-                addGroup()
-              }
-            }}
-          />
-          <Button title="Create" onPress={addGroup} />
-        </View>
-      </TrueSheet>
     </Box>
   )
 }
@@ -133,26 +95,5 @@ const addCardStyles = StyleSheet.create(theme => ({
     ...theme.typography.body,
     fontWeight: '500',
     color: theme.colors.accent,
-  },
-}))
-
-const sheetStyles = StyleSheet.create(theme => ({
-  sheet: {
-    padding: theme.spacing['3xl'],
-    paddingBottom: theme.spacing['4xl'],
-    gap: theme.spacing.xl,
-  },
-  sheetTitle: {
-    ...theme.typography.heading,
-    color: theme.colors.text,
-  },
-  input: {
-    backgroundColor: theme.colors.background,
-    borderRadius: theme.radii.md,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    padding: theme.spacing.md,
-    ...theme.typography.body,
-    color: theme.colors.text,
   },
 }))

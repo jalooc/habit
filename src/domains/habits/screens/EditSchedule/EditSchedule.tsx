@@ -1,7 +1,9 @@
 import { View, Text, ScrollView, Switch } from 'react-native'
 import { StyleSheet } from 'react-native-unistyles'
 import { useObservable, useSelector, useValue } from '@legendapp/state/react'
-import Button from '../../../../../misc/components/Button'
+import Button from 'src/domains/misc/components/Button'
+import groups$ from 'src/domains/habits/stores/groups'
+import dayBoundaries$ from 'src/domains/misc/stores/dayBoundaries'
 import RecurrenceTypeCard from './RecurrenceTypeCard'
 import NumberStepper from './NumberStepper'
 import DayChips from './DayChips'
@@ -11,13 +13,11 @@ import {
   parseRRule,
 } from './recurrence'
 import type { RecurrenceType, Weekday } from './recurrence'
-import groups$ from 'src/domains/habits/stores/groups'
-import dayBoundaries$ from 'src/domains/misc/stores/dayBoundaries'
+import { StaticScreenProps, useNavigation } from '@react-navigation/native'
 
-type Props = {
+type Props = StaticScreenProps<{
   groupId: string,
-  onDismiss: () => void,
-}
+}>
 
 const VALUE_LABELS: Record<RecurrenceType, string> = {
   'times-per-day': 'Times per day',
@@ -33,7 +33,10 @@ const getInitialConfig = (groupId: string) => {
   return parseRRule(String(recurrence))
 }
 
-const RecurrenceEditor = ({ groupId, onDismiss }: Props) => {
+const EditSchedule = ({ route }: Props) => {
+  const { groupId } = route.params
+  const navigation = useNavigation()
+
   const initialConfig = getInitialConfig(groupId)
   const selectedType$ = useObservable<RecurrenceType | null>(initialConfig?.type ?? null)
   const value$ = useObservable(initialConfig?.value ?? 2)
@@ -56,12 +59,12 @@ const RecurrenceEditor = ({ groupId, onDismiss }: Props) => {
       dayBounds
     )
     groups$[groupId].recurrence.set(rule)
-    onDismiss()
+    navigation.goBack()
   }
 
   const handleClear = () => {
     groups$[groupId].recurrence.delete()
-    onDismiss()
+    navigation.goBack()
   }
 
   const selectedType = useValue(selectedType$)
@@ -142,7 +145,7 @@ const RecurrenceEditor = ({ groupId, onDismiss }: Props) => {
   )
 }
 
-export default RecurrenceEditor
+export default EditSchedule
 
 const styles = StyleSheet.create(theme => ({
   container: {

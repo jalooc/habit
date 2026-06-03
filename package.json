@@ -15,7 +15,6 @@
     "@dev-plugins/react-navigation": "^0.4.0",
     "@expo/metro-config": "~56.0.0",
     "@legendapp/state": "^3.0.0-beta.43",
-    "@lodev09/react-native-true-sheet": "^3.7.3",
     "@react-native-vector-icons/ionicons": "^13.1.2",
     "@react-navigation/native": "^7.1.26",
     "@react-navigation/native-stack": "^7.9.0",
