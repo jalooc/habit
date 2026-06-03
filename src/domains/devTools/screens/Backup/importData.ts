@@ -74,6 +74,10 @@ const importZip = async (uri: string) => {
 
 const applyImport = (parsed: z.infer<typeof dataSchema>) => {
   batch(() => {
+    habits$.delete()
+    groups$.delete()
+    dayBoundaries$.delete()
+
     habits$.set(parsed.habits)
     groups$.set(deserializeGroups(parsed.groups))
     dayBoundaries$.set(parsed.dayBoundaries)
