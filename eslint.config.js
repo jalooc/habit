@@ -34,6 +34,7 @@ export default [
             allowDefaultProject: [
               'babel.config.js',
               'setupTests.js',
+              'metro.config.js',
             ],
           },
           // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment

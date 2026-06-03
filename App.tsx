@@ -17,6 +17,7 @@ import { isNonNullish } from 'remeda'
 import { Navigation } from 'src/domains/misc/utils/navigation'
 import { cleanupPendingImages } from 'src/domains/habits/utils/usePendingImages'
 import { cleanupOrphanedImages } from 'src/domains/habits/utils/habitImages'
+import useRozeniteStorageDevtools from 'src/domains/devTools/utils/useRozeniteStorageDevtools'
 
 const navigationTheme = {
   ...DefaultTheme,
@@ -31,6 +32,8 @@ const navigationTheme = {
 }
 
 const App = () => {
+  useRozeniteStorageDevtools()
+
   const navigationRef = useNavigationContainerRef()
 
   useReactNavigationDevTools(navigationRef)

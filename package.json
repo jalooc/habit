@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.ts",
   "scripts": {
-    "start": "expo start",
+    "start": "WITH_ROZENITE=true expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@dev-plugins/react-navigation": "^0.4.0",
+    "@expo/metro-config": "~56.0.0",
     "@legendapp/state": "^3.0.0-beta.43",
     "@lodev09/react-native-true-sheet": "^3.7.3",
     "@react-native-vector-icons/ionicons": "^13.1.2",
@@ -59,6 +60,13 @@
   "devDependencies": {
     "@eslint/compat": "^2.0.5",
     "@eslint/js": "^10.0.1",
+    "@rozenite/controls-plugin": "^1.11.0",
+    "@rozenite/expo-atlas-plugin": "^1.11.0",
+    "@rozenite/file-system-plugin": "^1.11.0",
+    "@rozenite/metro": "^1.11.0",
+    "@rozenite/network-activity-plugin": "^1.11.0",
+    "@rozenite/performance-monitor-plugin": "^1.11.0",
+    "@rozenite/storage-plugin": "^1.11.0",
     "@stylistic/eslint-plugin": "^5.10.0",
     "@types/react": "~19.2.14",
     "eslint": "^10.2.1",
