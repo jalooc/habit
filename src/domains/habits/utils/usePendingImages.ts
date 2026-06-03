@@ -27,18 +27,20 @@ export default () => {
     pendingImagesUris$.push(pendingUri)
   }
 
-  const commitImages = () => {
+  const commitImages = async () => {
     const uris = pendingImagesUris$.get()
-    if (uris.length === 0) return []
+    if (uris.length === 0) return Promise.resolve([])
 
     imagesDir.create({ idempotent: true })
 
-    return Promise.all(uris.map(async uri => {
+    const filenames = await Promise.all(uris.map(async uri => {
       const file = new File(uri)
       if (!file.exists) return undefined
       await file.move(new File(imagesDir, file.name))
       return file.name
-    })).then(filenames => filenames.filter(isTruthy))
+    }))
+
+    return filenames.filter(isTruthy)
   }
 
   const clearImages = () => {
@@ -48,9 +50,9 @@ export default () => {
 
   return {
     pendingImages,
-    addImage,
-    commitImages,
-    clearImages,
+    addPendingImage: addImage,
+    commitPendingImages: commitImages,
+    clearPendingImages: clearImages,
   }
 }
 

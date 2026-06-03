@@ -1,7 +1,9 @@
+import { useRef } from 'react'
 import { StaticScreenProps, useNavigation } from '@react-navigation/native'
-import { Text, View } from 'react-native'
+import { Pressable, Text, View } from 'react-native'
 import Animated, { LinearTransition } from 'react-native-reanimated'
 import { useSelector, useValue } from '@legendapp/state/react'
+import { TrueSheet } from '@lodev09/react-native-true-sheet'
 import groups$ from 'src/domains/habits/stores/groups'
 import habits$ from 'src/domains/habits/stores/habits'
 import Box from '../../../misc/components/Box'
@@ -11,6 +13,7 @@ import RecurrenceSummary from './RecurrenceSummary'
 import { GROUP_ID_PARAM } from 'src/domains/habits/utils/linking'
 import HabitCard from './HabitCard'
 import AddHabitFooter from './AddHabitFooter'
+import EditGroupSheet from './EditGroupSheet'
 
 type Props = StaticScreenProps<{
   [GROUP_ID_PARAM]: string,
@@ -21,17 +24,20 @@ const Group = ({ route }: Props) => {
   const groupId = route.params.id
   const withTickOff = route.params.withTickOff
   const navigation = useNavigation()
-  const { name, habits } = useValue(groups$[groupId])
+  const editSheetRef = useRef<TrueSheet>(null)
+  const { name } = useValue(groups$[groupId])
   const habitIds = useSelector(() => {
     const habitsMap = habits$.get()
-    return Object.keys(habits).sort((a, b) =>
+    return Object.keys(groups$[groupId].habits.get()).sort((a, b) =>
       (habitsMap[a].lastActioned?.timestamp ?? 0) - (habitsMap[b].lastActioned?.timestamp ?? 0)
     )
   })
 
   return (
     <Box>
-      <Text style={groupStyles.title}>{name}</Text>
+      <Pressable onPress={() => editSheetRef.current?.present()}>
+        <Text style={groupStyles.title}>{name}</Text>
+      </Pressable>
       <RecurrenceSummary groupId={groupId} />
       <Animated.FlatList
         keyboardShouldPersistTaps="handled"
@@ -42,6 +48,7 @@ const Group = ({ route }: Props) => {
           return (
             <HabitCard
               id={id}
+              groupId={groupId}
               style={{ backgroundColor: bg, borderColor: border }}
               showTickOffControls={withTickOff && index === 0}
               onAction={() => void navigation.setParams({ withTickOff: false })}
@@ -56,6 +63,7 @@ const Group = ({ route }: Props) => {
         }
         itemLayoutAnimation={listTransition}
       />
+      <EditGroupSheet groupId={groupId} sheetRef={editSheetRef} />
     </Box>
   )
 }
