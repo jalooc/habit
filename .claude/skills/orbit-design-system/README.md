@@ -1,0 +1,241 @@
+# Orbit + Ink — Design System
+
+A small, opinionated design system for a **rotating-habits app**. The product surfaces *one habit at a time* from a *group* of related practices that cycle on a cadence (daily, weekdays, every-other-day, etc). Tick it off → the next one comes up tomorrow.
+
+This system is **single-product, mobile-first** (Android Pixel-class, 412 × 892), calm and literary in voice, warm in tone. The defining visual is the **orbit ring** — a circle of dots where the up-next habit is always anchored at 12 o'clock and the ring rotates one notch when a habit is marked done.
+
+## Product context
+
+The original problem: managing several "rotational" practices in parallel — five different ab exercises, three languages, four people to call — is awkward on paper and on regular to-do or habit apps. Orbit makes the rotation itself the model: a **Group** holds an ordered queue of **Habits**, a cursor points at up-next, and any tick advances the cursor (or, if the user picks a different habit, moves that one to the back of the queue).
+
+See `shared-data.js` for the data model and the four rotation helpers (`upNext`, `tickOff`, `skipTurn`, `tickOutOfOrder`). Port these verbatim — they encode the entire mechanic.
+
+## Sources
+
+| Source | Path | Notes |
+|---|---|---|
+| Original handoff | `ORIGINAL_HANDOFF.md` | First-pass spec. **Superseded** — kept for the orbit-ring math + motion only. See the banner at the top of that file. |
+| Initial exploration | `variation-d.jsx` | First-pass React components. Superseded by `screens.jsx` / `rings.jsx` + the per-feature files. Loaded by `Original prototype.html` only. |
+| Working lab | `index.html` | Pan/zoom canvas with the live prototype + every screen, edge state, feature, and a Tweaks panel. |
+| Token source | `tokens.jsx`, `design-tokens.json`, `colors_and_type.css` | Three views of the same tokens: runtime, machine-readable, CSS. |
+| Feature reference | `whisper.jsx`, `images.jsx`, `description.jsx`, `edit-time.jsx` | Per-feature components — see "Feature files" below. |
+| Wireframes | `*  - wireframes.html`, `Section alternatives*.html` | Exploration sketches that led to the current designs. Reference only. |
+
+---
+
+## Content fundamentals
+
+**Voice.** Warm, literary, slightly slow. Sentences are short and observational. The app talks like a thoughtful friend, not a coach. Never cheerleader-y; never gamified. No streaks-as-screaming; no "Crush it today!"; no emoji except the rare ✓ inside a coral dot.
+
+**Casing.** Sentence case for UI strings; uppercase + letter-spacing for kicker labels ("UP NEXT", "THE QUEUE", "NOW"). Group names are user-written and rendered in italic Fraunces.
+
+**Pronoun.** Indirect — "the ring waits", "the next ping comes when it's time". The user is not addressed as "you" except where it's earned ("Your due rotations are all squared away.").
+
+**Time language.** Avoid "day" as a measurement of cadence (a rotation can ping in minutes). Use "a moment", "right now", "when it's time". The cadence labels themselves *do* use day language because they refer to the user's chosen schedule ("Once a day", "Weekdays", "Every 2 days") — that's their meaning.
+
+**Examples.**
+
+| Bad | Good |
+|---|---|
+| "Crush your routine today!" | "Today · 4 rotations" |
+| "Streak: 11 days 🔥" | "Streak · 11 days" |
+| "You missed yesterday" | (silent — habit carries over) |
+| "Skip" | "Skip this turn" / "The habit cycles to the back of the ring, untouched." |
+| "No rotations due today" | "A quiet moment — nothing in rotation." |
+| "Daily reminder" | "Reminder when due" |
+| "Quiet hours" | "Active hours" |
+
+A "Literary" and a "Functional" tone dictionary live in `tokens.jsx` (the Tweaks panel can toggle between them). The Literary set is the default; Functional exists for accessibility users / shorter copy and is *not* a separate brand voice — it's the same calm tone, just tighter.
+
+See `microcopy.md` for the full dictionary.
+
+---
+
+## Visual foundations
+
+### Palette
+
+**One chromatic accent.** Coral (#c96442) on light, sand-coral (#e3a37a) on dark. Used for:
+- the active dot on the orbit ring
+- "UP NEXT" / "NOW" kickers
+- the coral chip ("5 habits in rotation", "Active hours · 8:00 – 22:00")
+- the prominent **Rotation paused** banner
+- the wordmark "◯ ORBIT"
+
+The primary CTA is **always ink-on-bone** ("MARK DONE" pill). Coral is never used for a primary action — it stays close to the rotation itself.
+
+Two themes, no more:
+- **Light · Bone** — `#f5f1ec` bg, `#ffffff` cards, `#1a1814` ink. The warm default.
+- **Dark · Evening** — `#1c1d20` bg, `#252629` cards, `#ece8e2` ink. Sand-coral accent.
+
+Earlier exploration included Moss and Slate variants. Those are gone — Bone and Evening are the design system.
+
+### Type
+
+**Fraunces + Inter.** Two families.
+
+| Role | Family | Why |
+|---|---|---|
+| Display, group names, ring center text, body | Fraunces (variable, ital + opsz) | Warm; reads "literary"; ital+opsz handle the headline-to-body range. |
+| Kickers, buttons, meta, labels | Inter (400/500/600) | Sharp; reads "system"; lets Fraunces do all the personality. |
+
+Avoid Helvetica, Arial, Roboto, system-ui-default for body copy. The Fraunces opsz axis is genuinely used (large H1 vs small body) — keep it.
+
+See `colors_and_type.css` for the canonical semantic styles (`.oi-h1`, `.oi-kicker`, `.oi-ring-center`, etc.) and `design-tokens.json` for the type token map.
+
+### Spacing & shape
+
+Six radii, used systematically:
+
+| Radius | Use |
+|---|---|
+| 28 | Hero cards (the rotation ring lives in one of these) |
+| 22 | List cards (Rotations index) |
+| 18 | Secondary cards, inputs blocks, queue list |
+| 16 | Inner clusters, settings rows |
+| 14 | Single inputs (name field) |
+| 100 (full pill) | All buttons, chips, badges |
+
+Screen padding: **22 px** horizontal (cozy density). Three density modes exist in tokens (compact 18 / cozy 22 / roomy 26) — cozy is canonical.
+
+### Backgrounds, gradients, imagery
+
+**No gradients in the app body.** A single exception: the **lock-screen notification preview** uses a coral→ink linear gradient to evoke a phone wallpaper. Everywhere else: flat warm bone, flat dark slate.
+
+**No imagery.** No photos, no hand-drawn illustrations, no full-bleed graphics. The orbit ring (SVG, generated) and a few Unicode marks are the only "imagery". If a screen feels empty, that's intentional — the literary voice fills the space, not graphics.
+
+### Elevation
+
+**One shadow.** `--shadow` — used on all cards. Paused list cards drop the shadow entirely and lower opacity to 0.7. Hero on paused detail screens stays elevated but desaturated.
+
+```css
+--shadow: 0 1px 2px rgba(26,24,20,0.04), 0 8px 32px rgba(26,24,20,0.08);
+```
+
+The paused **banner** uses its own coral-tinted glow (`--shadow-paused`).
+
+### Animation
+
+**One headline motion: the ring rotates one notch when a habit is marked done.**
+
+```
+duration: 550ms
+easing:   cubic-bezier(.55, .06, .3, 1)
+follow-up: cursor advances at 600ms; tab pager nudges to next due group ~250ms after that.
+```
+
+The active dot has a slow halo pulse (`r: 14 → 20 → 14`, opacity `.16 → .06 → .16`, 2.4s, infinite).
+
+All other UI motion is short ease (200ms): button opacity, tab swap, chip width changes (the pager dot elongates to 18×6), toggles.
+
+**No bouncy springs. No micro-celebrations.** A tick lands quietly.
+
+### Hover, press, focus
+
+- **Hover** (desktop): opacity 0.85 on buttons. No background swaps.
+- **Press** (mobile + desktop): opacity 0.6, no scale.
+- **Focus-visible**: 1.5px coral outline + 2px offset.
+- **Disabled**: opacity 0.5, `cursor: default`.
+
+### Layout rules
+
+- Mobile-first, 412 px design width. Everything scales for larger viewports by sitting in the center (the lab clamps the prototype to 412 × 892 with a device frame).
+- Tab bar at the bottom (4 tabs: Today / Rotations / Insights / Settings).
+- Status strip at the top inside the device chrome: `◯ ORBIT` left, weekday + date right.
+- 22 px horizontal padding everywhere.
+- Bottom safe area: 32 px below the last content block.
+
+---
+
+## Iconography
+
+**No icon library.** The system uses Unicode glyphs and SVG primitives drawn inline.
+
+| Glyph | Use |
+|---|---|
+| `◯` U+25EF | Wordmark mark ("◯ ORBIT"). Also the inactive-rotation tab icon. |
+| `◐` U+25D0 | "Today" tab. |
+| `◔` U+25D4 | "Insights" tab. |
+| `◌` U+25CC | "Settings" tab. |
+| `✓` U+2713 | Inside the active-dot circle in the queue list; "done" indicator. |
+| `·` U+00B7 | Separator in kickers + meta ("Once a day · 5 habits"). |
+| `—` U+2014 | Em-dash. Used in copy ("A quiet moment — nothing in rotation."). |
+
+If you need a richer set, **Lucide** (`stroke-width: 1.5`) is the closest match in feel — but resist; the app's restraint is what gives it identity.
+
+**No emoji**, except the coral-circle `✓` inside the active dot.
+
+---
+
+## File index
+
+```
+.
+├── README.md                ← you are here
+├── ORIGINAL_HANDOFF.md      ← first-pass spec (superseded; see banner)
+├── microcopy.md             ← voice + Literary / Functional tone dictionaries
+├── components.md            ← component reference (props, states, interaction spec)
+├── design-tokens.json       ← machine-readable tokens
+├── colors_and_type.css      ← canonical CSS variables + semantic styles
+├── SKILL.md                 ← Claude Code skill manifest
+
+├── tokens.jsx               ← runtime token provider (used by the lab)
+├── rings.jsx                ← OrbitRing + OrbitMini
+├── screens.jsx              ← Today / Rotations / Group / Create + shared chrome
+├── screens-extra.jsx        ← Empty / Onboarding / Settings / Stats / Notification preview
+├── prototype.jsx            ← Nav-stack app shell (the live prototype)
+├── shared-data.js           ← Data model + rotation helpers (port verbatim)
+
+│   ── Feature files ──
+├── images.jsx               ← Per-habit images: thumb strip, hero strip, queue mosaic, add-sheet, viewer
+├── description.jsx          ← Per-habit markdown note: form sheet + reader sheet + hero note card
+├── whisper.jsx              ← "A note for next time": composer, hero card, row indicator, form field
+├── edit-time.jsx            ← Editing the time of a tick: toast, hero label, picker stages, log sheet
+├── edit-time-hosts.jsx      ← Lab-only hosts wiring edit-time components into device frames
+├── today-list.jsx           ← Today hero variant: stacked Carried-over / Up-next swipeable cards
+├── swipeable.jsx            ← Shared swipe primitive (left/right gestures)
+├── hi-screens.jsx           ← Lab-only hi-fi compositions for the images feature
+
+│   ── Lab + assets ──
+├── index.html               ← Lab canvas (live prototype + all states + features + Tweaks)
+├── Original prototype.html  ← Original handoff's prototype, preserved
+├── Habit images - wireframes.html
+├── Habit images - hi-fi.html
+├── Habit description - wireframes.html
+├── Note for next time - wireframes.html
+├── Note for next time - hi-fi.html
+├── Section alternatives.html
+├── Section alternatives v2.html
+├── assets/img/              ← Reference images used by the images feature
+├── app-icons/               ← App-icon explorations
+
+├── preview/                 ← Design System tab cards (color, type, spacing, components, brand)
+└── ui_kits/orbit/           ← Focused UI kit demo (importable into Claude Code)
+```
+
+### Feature files — what to read when
+
+| Feature | Files | Read these first |
+|---|---|---|
+| Per-habit reference images | `images.jsx` | `Habit images - hi-fi.html` for the composed view; the file's header comment lists every surface. |
+| Per-habit markdown description | `description.jsx` | `Habit description - wireframes.html` shows the sheet layouts. |
+| "A note for next time" (whisper) | `whisper.jsx` | `Note for next time - hi-fi.html`. Whispers travel with the habit, not the cursor. |
+| Editing the time of a tick | `edit-time.jsx` + `edit-time-hosts.jsx` | Lab's "Edit the time of a tick" section. Three progressive picker stages + a day-scoped log sheet. |
+| Today swipe-card variant | `today-list.jsx` + `swipeable.jsx` | Optional variant — not the default hero. Behind a Tweaks toggle. |
+
+## Working with this system in Claude Code
+
+The fastest path:
+
+1. Read this README and `microcopy.md`.
+2. Import `colors_and_type.css` once at the root of your app. Set `data-theme="dark"` on `<html>` to flip.
+3. Port `shared-data.js` verbatim — the four rotation helpers are the entire mechanic.
+4. For visual recreation, use `tokens.jsx` + the screen files as reference. They're inline-JSX (no build step) and self-contained; pull patterns into whatever framework you're using (React Native, Compose, Flutter, plain React).
+5. For the orbit ring specifically: the math is in `rings.jsx`'s `OrbitRing`. Position dots at `(i / n) * 360 - 90` degrees, rotate the whole group by `-cursor * (360/n)`, counter-rotate each dot's content so it stays upright. On tick, animate `-step` over 550 ms with `cubic-bezier(.55,.06,.3,1)`.
+
+## Caveats
+
+- **Fonts are loaded from Google Fonts via `@import`**. No local TTFs ship with this system. If you need offline support, download Fraunces (variable, italic + opsz) and Inter (400/500/600) and self-host.
+- **No production icon set**. Unicode + inline SVG primitives only. If your build needs an icon library, see the note above on Lucide.
+- **No imagery assets.** This system is text-only by design. If your product needs photography or illustration, that's a separate decision — flag it.
+- **Mobile-only.** No tablet or desktop layouts here. The lab is 412 × 892 and stays there.

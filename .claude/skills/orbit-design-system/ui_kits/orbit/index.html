@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Orbit UI Kit · demo</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; }
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: #efece8;
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px;
+    min-height: 100vh;
+  }
+  body[data-theme="dark"] { background: #131316; }
+  #root { display: flex; gap: 28px; align-items: flex-start; flex-wrap: wrap; justify-content: center; }
+  .legend {
+    width: 320px;
+    color: #29261b; font-size: 13px; line-height: 1.5;
+    padding: 22px 24px;
+    background: rgba(255,255,255,0.7);
+    border-radius: 18px;
+    border: 1px solid rgba(26,24,20,0.08);
+  }
+  body[data-theme="dark"] .legend {
+    background: rgba(255,255,255,0.05);
+    color: rgba(236,232,226,0.8);
+    border-color: rgba(255,255,255,0.08);
+  }
+  .legend h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 400; font-size: 24px; line-height: 1.15;
+    letter-spacing: -0.3px; margin: 0 0 8px;
+  }
+  .legend p { margin: 8px 0; }
+  .legend .kicker {
+    font-weight: 500; font-size: 10px; line-height: 1;
+    letter-spacing: 1.8px; text-transform: uppercase;
+    color: #c96442; margin-bottom: 8px;
+  }
+  body[data-theme="dark"] .legend .kicker { color: #e3a37a; }
+  .legend code {
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    font-size: 11px; background: rgba(0,0,0,0.06); padding: 2px 5px; border-radius: 4px;
+  }
+  body[data-theme="dark"] .legend code { background: rgba(255,255,255,0.08); }
+</style>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<!-- All source files live at the project root. -->
+<script src="../../shared-data.js"></script>
+<script type="text/babel" src="../../tokens.jsx"></script>
+<script type="text/babel" src="../../rings.jsx"></script>
+<script type="text/babel" src="../../screens.jsx"></script>
+<script type="text/babel" src="../../screens-extra.jsx"></script>
+<script type="text/babel" src="../../prototype.jsx"></script>
+<script type="text/babel" src="../../android-frame.jsx"></script>
+<script type="text/babel" src="../../tweaks-panel.jsx"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react">
+function KitDemo() {
+  const [tw, setTw] = useTweaks(TWEAK_DEFAULTS);
+
+  // Reflect dark-mode on body so the legend swaps theme too.
+  React.useEffect(() => {
+    document.body.dataset.theme = tw.dark ? 'dark' : 'light';
+  }, [tw.dark]);
+
+  return (
+    <TokenProvider tweaks={tw}>
+      <div className="legend">
+        <div className="kicker">Orbit UI Kit · demo</div>
+        <h1>One app. Two themes. Calm by default.</h1>
+        <p>This is the Orbit + Ink kit rendered inside an Android device chrome. Tap through Today → Rotations → a group; tap any queue item to mark done; long-press / undo are in the Tweaks panel.</p>
+        <p>Source: <code>screens.jsx</code>, <code>rings.jsx</code>, <code>screens-extra.jsx</code>. Tokens: <code>tokens.jsx</code> · <code>colors_and_type.css</code> · <code>design-tokens.json</code>.</p>
+        <p>The full lab (every state + alternate ring metaphors explored) is at <code>../../index.html</code>.</p>
+      </div>
+
+      <AndroidDevice width={412} height={892} dark={tw.dark}>
+        <div style={{ width: '100%', height: '100%', background: '#fff' }}>
+          <OrbitInkApp ringId="orbit" />
+        </div>
+      </AndroidDevice>
+
+      <TweaksPanel title="Tweaks">
+        <TweakSection label="Theme" />
+        <TweakToggle label="Dark mode"
+                     value={tw.dark}
+                     onChange={(v) => setTw('dark', v)} />
+        <TweakSection label="Density & ring" />
+        <TweakRadio  label="Density"
+                     value={tw.density}
+                     options={['compact', 'cozy', 'roomy']}
+                     onChange={(v) => setTw('density', v)} />
+        <TweakRadio  label="Ring size"
+                     value={tw.ringSize}
+                     options={['small', 'default', 'large']}
+                     onChange={(v) => setTw('ringSize', v)} />
+        <TweakSection label="Copy" />
+        <TweakRadio  label="Tone"
+                     value={tw.tone}
+                     options={['literary', 'functional']}
+                     onChange={(v) => setTw('tone', v)} />
+      </TweaksPanel>
+    </TokenProvider>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<KitDemo />);
+</script>
+</body>
+</html>

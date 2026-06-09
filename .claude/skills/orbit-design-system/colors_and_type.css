@@ -1,0 +1,283 @@
+/* ─────────────────────────────────────────────────────────────────
+   Orbit + Ink — colors_and_type.css
+
+   Canonical CSS variables for both themes + semantic typography +
+   spacing + motion. Drop this in once at the document root.
+
+   Theme switches by setting `data-theme="dark"` on <html> or <body>.
+   The dark block overrides the light vars.
+   ───────────────────────────────────────────────────────────────── */
+
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Inter:wght@400;500;600&display=swap");
+
+:root, [data-theme="light"] {
+  /* ── color · semantic ── */
+  --bg:          #f5f1ec;
+  --card:        #ffffff;
+  --ink:         #1a1814;
+  --ink-soft:    #7a766e;
+  --ink-faint:   #b5b0a6;
+  --accent:      #c96442;       /* coral — only chromatic */
+  --accent-dim:  #e7dccf;
+  --accent-soft: #f4dccf;
+  --rule:        rgba(26,24,20,0.10);
+
+  --shadow:        0 1px 2px rgba(26,24,20,0.04), 0 8px 32px rgba(26,24,20,0.08);
+  --shadow-paused: 0 6px 22px rgba(201,100,66,0.28);
+
+  /* status bar colour expectation — dark icons on a light background */
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --bg:          #1c1d20;
+  --card:        #252629;
+  --ink:         #ece8e2;
+  --ink-soft:    #9a958c;
+  --ink-faint:   #5d594f;
+  --accent:      #e3a37a;       /* sand-coral — softened for dark surfaces */
+  --accent-dim:  #3a342d;
+  --accent-soft: #2b2723;
+  --rule:        rgba(236,232,226,0.10);
+
+  --shadow:        0 1px 2px rgba(0,0,0,0.25), 0 12px 36px rgba(0,0,0,0.4);
+  --shadow-paused: 0 6px 22px rgba(227,163,122,0.20);
+
+  color-scheme: dark;
+}
+
+/* ── type · font stacks ─────────────────────────────────────────── */
+:root {
+  --serif: "Fraunces", Georgia, serif;
+  --sans:  "Inter", system-ui, -apple-system, sans-serif;
+
+  /* ── radii ── */
+  --radius-hero:   28px;
+  --radius-card:   22px;
+  --radius-inner:  18px;
+  --radius-subtle: 16px;
+  --radius-input:  14px;
+  --radius-pill:   100px;
+
+  /* ── density (cozy default) ── */
+  --pad-screen:    22px;
+  --pad-card:      16px;
+  --gap:           12px;
+  --pad-ring:      24px 14px 20px;
+
+  /* ── motion ── */
+  --t-ring: 550ms cubic-bezier(.55,.06,.3,1);
+  --t-fast: 200ms ease;
+  --t-med:  250ms ease;
+}
+
+[data-density="compact"] { --pad-screen: 18px; --pad-card: 12px; --gap: 8px;  --pad-ring: 18px 12px 14px; }
+[data-density="roomy"]   { --pad-screen: 26px; --pad-card: 20px; --gap: 16px; --pad-ring: 32px 18px 26px; }
+
+/* ── base ──────────────────────────────────────────────────────── */
+html, body {
+  margin: 0; padding: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── semantic typography ──────────────────────────────────────────
+   Use these classes (or copy the rules) rather than re-declaring
+   font/size/letter-spacing inline. Display copy is Fraunces; everything
+   chrome / interactive is Inter.
+   ───────────────────────────────────────────────────────────────── */
+
+.oi-h1 {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 32px;
+  line-height: 1.1;
+  letter-spacing: -0.4px;
+  text-wrap: pretty;
+  color: var(--ink);
+}
+
+.oi-group-display {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 22px;
+  line-height: 1.1;
+  letter-spacing: -0.3px;
+  color: var(--ink);
+}
+
+.oi-body {                /* habit names, body copy */
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 1.4;
+  letter-spacing: -0.2px;
+  color: var(--ink-soft);
+}
+
+.oi-ring-center {         /* up-next text inside the orbit ring */
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 21px;
+  line-height: 1.2;
+  letter-spacing: -0.2px;
+  color: var(--ink);
+  text-wrap: pretty;
+}
+
+.oi-kicker {              /* labels above titles, section headers */
+  font-family: var(--sans);
+  font-weight: 500;
+  font-size: 11px;
+  line-height: 1;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.oi-kicker-accent { color: var(--accent); }
+
+.oi-section-label {       /* "The queue", "Other rotations" */
+  font-family: var(--sans);
+  font-weight: 500;
+  font-size: 11px;
+  line-height: 1;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.oi-btn-primary {         /* ink-on-bone pill */
+  font-family: var(--sans);
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 1;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+
+.oi-btn-small {
+  font-family: var(--sans);
+  font-weight: 500;
+  font-size: 11px;
+  line-height: 1;
+  letter-spacing: 1.2px;
+}
+
+.oi-meta {
+  font-family: var(--sans);
+  font-weight: 400;
+  font-size: 13px;
+  line-height: 1.3;
+  color: var(--ink-soft);
+}
+
+.oi-italic-quote {        /* "Built for habits that don't fit a checklist." */
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 1.5;
+  font-style: italic;
+  color: var(--ink-faint);
+}
+
+/* ── component primitives ─────────────────────────────────────────
+   These are the smallest building blocks. Most of the design system
+   composes these.
+   ───────────────────────────────────────────────────────────────── */
+
+.oi-card {
+  background: var(--card);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow);
+}
+
+.oi-card-hero {
+  background: var(--card);
+  border-radius: var(--radius-hero);
+  box-shadow: var(--shadow);
+  padding: var(--pad-ring);
+}
+
+.oi-pill {                /* button + chip + badge base */
+  display: inline-flex;
+  align-items: center;
+  border-radius: var(--radius-pill);
+  border: none;
+  cursor: pointer;
+  transition: opacity var(--t-fast);
+  white-space: nowrap;
+}
+
+.oi-pill-primary {
+  background: var(--ink);
+  color: var(--card);
+  padding: 13px 32px;
+}
+
+.oi-pill-secondary {
+  background: var(--card);
+  color: var(--ink-soft);
+  border: 1px solid var(--accent-dim);
+  padding: 6px 14px;
+}
+
+.oi-pill-ghost {
+  background: transparent;
+  color: var(--ink-soft);
+  border: 1px solid var(--accent-dim);
+  padding: 12px 16px;
+}
+
+.oi-chip-soft {           /* "5 habits in rotation", "Active hours · 8:00 – 22:00" */
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-family: var(--sans);
+  font-weight: 500;
+  font-size: 11px;
+  line-height: 1;
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+}
+
+.oi-input {
+  width: 100%;
+  border: none;
+  background: var(--card);
+  padding: 14px 16px;
+  border-radius: var(--radius-input);
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: 18px;
+  color: var(--ink);
+  outline: none;
+}
+
+/* ── focus / interaction ──────────────────────────────────────────
+   Subtle. Coral 1px outline.
+   ───────────────────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 1.5px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.oi-pill:disabled, .oi-pill[aria-disabled="true"] {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* ── ring animation primitive ──
+   Apply to the rotating <g> in the orbit ring SVG.
+   `data-rotating="true"` triggers the settle animation.
+   */
+.oi-ring-rotor { transform-origin: center; transition: transform 400ms ease; }
+.oi-ring-rotor[data-rotating="true"] { transition: transform var(--t-ring); }

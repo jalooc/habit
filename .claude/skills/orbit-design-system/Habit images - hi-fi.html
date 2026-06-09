@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Habit images — hi-fi</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; }
+  body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background: #ece8e1; }
+  * { box-sizing: border-box; }
+
+  @keyframes oiFade { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes oiSlideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+  .stage {
+    min-height: 100%;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 34px 20px 60px;
+  }
+  .stage .head { text-align: center; max-width: 560px; margin-bottom: 20px; }
+  .stage .head .k {
+    font: 500 11px/1 'Inter', sans-serif; letter-spacing: 1.8px; text-transform: uppercase;
+    color: #9a948a; margin-bottom: 8px;
+  }
+  .stage .head h1 {
+    font: 400 27px/1.15 'Fraunces', Georgia, serif; color: #1a1814; margin: 0; letter-spacing: -0.4px;
+  }
+  .stage .head p {
+    font: 400 13.5px/1.5 'Inter', sans-serif; color: #6f6a61; margin: 10px 0 0;
+  }
+
+  .seg {
+    display: inline-flex; gap: 4px; padding: 4px; border-radius: 100px;
+    background: #fff; box-shadow: 0 1px 2px rgba(26,24,20,0.05), 0 6px 22px rgba(26,24,20,0.07);
+    margin-bottom: 8px;
+  }
+  .seg button {
+    border: none; cursor: pointer; background: transparent; color: #7a766e;
+    padding: 9px 18px; border-radius: 100px; font: 500 12px/1 'Inter', sans-serif;
+    letter-spacing: 0.4px; transition: background .2s, color .2s;
+  }
+  .seg button.on { background: #1a1814; color: #fff; }
+
+  .caption {
+    font: 400 11.5px/1.4 'Inter', sans-serif; color: #9a948a; margin: 14px 0 0;
+    text-align: center; letter-spacing: 0.2px;
+  }
+  .caption b { color: #6f6a61; font-weight: 500; }
+</style>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script src="shared-data.js"></script>
+<script type="text/babel" src="tokens.jsx"></script>
+<script type="text/babel" src="rings.jsx"></script>
+<script type="text/babel" src="swipeable.jsx"></script>
+<script type="text/babel" src="screens.jsx"></script>
+<script type="text/babel" src="android-frame.jsx"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="images.jsx"></script>
+<script type="text/babel" src="hi-screens.jsx"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react">
+const { useState, useMemo } = React;
+
+let _uid = 0;
+const uid = () => `img${Date.now()}-${_uid++}`;
+const mk = (n) => ({ id: uid(), src: `assets/img/ref-${n}.png` });
+
+// Core, with images attached per habit (the feature under design).
+const INITIAL_CORE = {
+  id: 'core',
+  name: 'Core',
+  cadence: { kind: 'daily', label: 'Once a day' },
+  cursor: 2, // Hollow hold is up next
+  paused: false,
+  lastDone: 'Yesterday · Dead bug',
+  habits: [
+    { id: 'h1', name: 'Front plank, 60s',     images: [mk(2), mk(3)] },
+    { id: 'h2', name: 'Dead bug, 12 reps',     images: [mk(6)] },
+    { id: 'h3', name: 'Hollow hold, 45s',      images: [mk(1), mk(4), mk(5), mk(9)] },
+    { id: 'h4', name: 'Bird dog, 10/side',     images: [] },
+    { id: 'h5', name: 'Glute bridge, 15 reps', images: [mk(7), mk(8)] },
+  ],
+};
+
+const PRESENTATION_NOTE = {
+  formSheet: 'formSheet · medium detent · drag grabber up for all photos',
+  modal: 'modal · slide-up · Cancel / Add header',
+  fullScreenModal: 'fullScreenModal · full takeover',
+};
+
+function App() {
+  const [tw, setTw] = useTweaks({
+    dark: false,
+    presentation: 'formSheet',
+    thumbShape: 'rounded',
+    heroStrip: true,
+    showTweaks: true,
+  });
+
+  const [group, setGroup] = useState(INITIAL_CORE);
+  const [screen, setScreen] = useState('group');     // 'group' | 'create'
+  const [overlay, setOverlay] = useState(null);       // {kind:'add'|'view', habitId, index}
+
+  const shape = tw.thumbShape;
+
+  // ── image handlers ──
+  const addImages = (habitId, srcs) => setGroup((g) => ({
+    ...g,
+    habits: g.habits.map((h) => h.id === habitId
+      ? { ...h, images: [...h.images, ...srcs.map((src) => ({ id: uid(), src }))] } : h),
+  }));
+  const removeImage = (habitId, imgId) => setGroup((g) => ({
+    ...g,
+    habits: g.habits.map((h) => h.id === habitId
+      ? { ...h, images: h.images.filter((im) => im.id !== imgId) } : h),
+  }));
+  const openViewer = (habitId, index) => setOverlay({ kind: 'view', habitId, index });
+  const openAdd = (habitId) => setOverlay({ kind: 'add', habitId });
+
+  // ── name / habit handlers (create) ──
+  const setName = (v) => setGroup((g) => ({ ...g, name: v }));
+  const setHabitName = (id, v) => setGroup((g) => ({ ...g, habits: g.habits.map((h) => h.id === id ? { ...h, name: v } : h) }));
+  const addHabit = () => setGroup((g) => ({ ...g, habits: [...g.habits, { id: uid(), name: '', images: [] }] }));
+  const removeHabit = (id) => setGroup((g) => ({ ...g, habits: g.habits.filter((h) => h.id !== id) }));
+
+  const overlayHabit = overlay ? group.habits.find((h) => h.id === overlay.habitId) : null;
+
+  return (
+    <TokenProvider tweaks={{ dark: tw.dark, density: 'cozy', tone: 'literary', ringSize: 'default' }}>
+      <div className="stage">
+
+        <div className="head">
+          <div className="k">Habit images · hi-fi</div>
+          <h1>Adding & showing images on a habit</h1>
+          <p>Option A in the form &amp; hero (a quiet thumb strip), Option D in the queue (a mosaic that
+             only appears when a habit has images). Tap a thumbnail to open the viewer; tap <b>＋</b> to add.</p>
+        </div>
+
+        <div className="seg">
+          <button className={screen === 'group' ? 'on' : ''} onClick={() => setScreen('group')}>Group screen</button>
+          <button className={screen === 'create' ? 'on' : ''} onClick={() => setScreen('create')}>Add / edit form</button>
+        </div>
+
+        <AndroidDevice width={412} height={892} dark={tw.dark}>
+          <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden',
+                        background: tw.dark ? '#1c1d20' : '#f5f1ec' }}>
+            <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+              <div style={{ flex: 1, overflow: 'auto' }}>
+                {screen === 'group' ? (
+                  <HiGroupScreen
+                    group={group} shape={shape} heroStrip={tw.heroStrip}
+                    setGroup={setGroup}
+                    onOpenViewer={openViewer}
+                    back={() => {}} go={(s) => setScreen(s)} />
+                ) : (
+                  <HiCreateScreen
+                    group={group} shape={shape}
+                    onName={setName} onHabitName={setHabitName}
+                    onAddHabit={addHabit} onRemoveHabit={removeHabit}
+                    onRequestAdd={openAdd} onRemoveImage={removeImage} onOpenViewer={openViewer}
+                    back={() => setScreen('group')} />
+                )}
+              </div>
+              <TabBar active="groups" onTab={() => {}} />
+            </div>
+
+            {/* overlays — rendered inside the device, cover full screen */}
+            {overlay?.kind === 'add' && overlayHabit && (
+              <AddSheet
+                habit={overlayHabit}
+                presentation={tw.presentation}
+                shape={shape}
+                onAdd={(srcs) => addImages(overlay.habitId, srcs)}
+                onClose={() => setOverlay(null)} />
+            )}
+            {overlay?.kind === 'view' && overlayHabit && overlayHabit.images.length > 0 && (
+              <Lightbox
+                images={overlayHabit.images}
+                index={Math.min(overlay.index, overlayHabit.images.length - 1)}
+                habitName={overlayHabit.name}
+                onIndex={(i) => setOverlay((o) => ({ ...o, index: i }))}
+                onClose={() => setOverlay(null)} />
+            )}
+          </div>
+        </AndroidDevice>
+
+        <div className="caption">
+          Add images → <b>{PRESENTATION_NOTE[tw.presentation]}</b>　·　Viewer → transparentModal
+        </div>
+      </div>
+
+      <TweaksPanel title="Tweaks">
+        <TweakSection label="Theme" />
+        <TweakToggle label="Dark mode" value={tw.dark} onChange={(v) => setTw('dark', v)} />
+
+        <TweakSection label="Images" />
+        <TweakSelect label="Add images via"
+          value={tw.presentation}
+          options={['formSheet', 'modal', 'fullScreenModal']}
+          onChange={(v) => setTw('presentation', v)} />
+        <TweakRadio label="Thumb shape"
+          value={tw.thumbShape}
+          options={['rounded', 'circle']}
+          onChange={(v) => setTw('thumbShape', v)} />
+        <TweakToggle label="Hero strip under ring"
+          value={tw.heroStrip}
+          onChange={(v) => setTw('heroStrip', v)} />
+      </TweaksPanel>
+    </TokenProvider>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,471 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Habit — App icons</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #f5f1ec;
+    --card: #ffffff;
+    --ink: #1a1814;
+    --ink-soft: #7a766e;
+    --ink-faint: #b5b0a6;
+    --accent: #c96442;
+    --accent-dim: #e7dccf;
+    --accent-soft: #f4dccf;
+    --rule: rgba(26,24,20,0.10);
+    --serif: "Fraunces", Georgia, serif;
+    --sans: "Inter", system-ui, sans-serif;
+  }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--ink); font-family: var(--sans); }
+  body { padding: 56px 48px 96px; }
+  .wrap { max-width: 1200px; margin: 0 auto; }
+
+  .header { display: flex; align-items: baseline; justify-content: space-between; gap: 24px; margin-bottom: 8px; }
+  .kicker { font-family: var(--sans); font-weight: 500; font-size: 11px; letter-spacing: 1.8px; text-transform: uppercase; color: var(--accent); }
+  h1 { font-family: var(--serif); font-weight: 400; font-size: 44px; letter-spacing: -0.6px; margin: 8px 0 0; line-height: 1.05; }
+  .sub { font-family: var(--serif); font-size: 16px; color: var(--ink-soft); margin-top: 12px; max-width: 720px; line-height: 1.5; }
+
+  .rule { height: 1px; background: var(--rule); margin: 40px 0 32px; }
+
+  .section-label { font-family: var(--sans); font-weight: 500; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 20px; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 28px;
+  }
+
+  .card {
+    background: var(--card);
+    border-radius: 22px;
+    box-shadow: 0 1px 2px rgba(26,24,20,0.04), 0 8px 32px rgba(26,24,20,0.08);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .preview {
+    aspect-ratio: 1 / 1;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 18px;
+    overflow: hidden;
+    position: relative;
+  }
+  /* Show transparent-bg icons on a checker */
+  .preview.checker {
+    background-image:
+      linear-gradient(45deg, #ebe6df 25%, transparent 25%),
+      linear-gradient(-45deg, #ebe6df 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #ebe6df 75%),
+      linear-gradient(-45deg, transparent 75%, #ebe6df 75%);
+    background-size: 16px 16px;
+    background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+    background-color: #f8f5f0;
+  }
+  .preview.dark { background: #1c1d20; }
+  .preview.bone { background: #f5f1ec; }
+
+  .meta { display: flex; flex-direction: column; gap: 4px; }
+  .name { font-family: var(--sans); font-weight: 600; font-size: 13px; color: var(--ink); letter-spacing: -0.1px; }
+  .spec { font-family: var(--sans); font-size: 11px; color: var(--ink-soft); }
+  .file { font-family: ui-monospace, SF Mono, Menlo, monospace; font-size: 11px; color: var(--ink-faint); }
+
+  .hero-row {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: 28px;
+    margin-bottom: 12px;
+  }
+  .hero-card {
+    background: var(--card);
+    border-radius: 28px;
+    box-shadow: 0 1px 2px rgba(26,24,20,0.04), 0 8px 32px rgba(26,24,20,0.08);
+    padding: 36px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  .hero-icon-wrap {
+    display: flex; align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  .hero-svg { width: 320px; height: 320px; border-radius: 64px; box-shadow: 0 24px 48px rgba(26,24,20,0.18); }
+
+  .notes {
+    background: var(--card);
+    border-radius: 22px;
+    box-shadow: 0 1px 2px rgba(26,24,20,0.04), 0 8px 32px rgba(26,24,20,0.08);
+    padding: 28px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .notes h2 { font-family: var(--serif); font-weight: 400; font-size: 22px; margin: 0; letter-spacing: -0.3px; }
+  .anatomy { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px 24px; }
+  .anatomy .row { display: flex; gap: 12px; align-items: baseline; }
+  .swatch { width: 14px; height: 14px; border-radius: 4px; display: inline-block; flex: 0 0 auto; }
+  .anatomy .label { font-family: var(--sans); font-size: 13px; color: var(--ink); }
+  .anatomy .val { font-family: ui-monospace, SF Mono, Menlo, monospace; font-size: 12px; color: var(--ink-soft); margin-left: auto; }
+
+  .install { font-family: ui-monospace, SF Mono, Menlo, monospace; font-size: 12px; color: var(--ink); background: #ece8e2; border-radius: 14px; padding: 16px 18px; white-space: pre; overflow-x: auto; }
+
+  .home-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px 18px;
+    padding: 28px 24px 16px;
+    background:
+      radial-gradient(ellipse 100% 60% at 50% 0%, rgba(255,255,255,0.18), transparent 60%),
+      linear-gradient(180deg, #2a3458, #1a2240);
+    border-radius: 38px;
+  }
+  .home-icon { aspect-ratio: 1/1; border-radius: 22%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 8px rgba(0,0,0,0.25); }
+  .home-icon .lbl { display:none }
+  .home-row-2 { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .home-row-2 .lbl { font-family: var(--sans); color: #fff; font-size: 11px; opacity: 0.92; }
+
+  .frame-row { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; align-items: stretch; }
+  .frame-row .card { gap: 18px; }
+  .frame-cap { font-family: var(--sans); font-weight: 500; font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink-soft); }
+
+  /* The actual icon SVGs */
+  .icon-svg { width: 100%; height: 100%; display: block; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <div>
+      <div class="kicker">Habit · App icon set</div>
+      <h1>The orbit, alone.</h1>
+      <div class="sub">Six dots circling once. One filled coral dot at the top — the habit up next. The mark carries the whole product idea, so it stands on its own at any size.</div>
+    </div>
+  </div>
+
+  <div class="rule"></div>
+
+  <!-- HERO -->
+  <div class="hero-row">
+    <div class="hero-card">
+      <div class="frame-cap">Primary icon · light</div>
+      <div class="hero-icon-wrap">
+        <svg class="hero-svg" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" aria-label="Habit app icon">
+          <!-- defined by template; injected at runtime below -->
+        </svg>
+      </div>
+      <div class="meta">
+        <div class="name">icon.png</div>
+        <div class="spec">1024 × 1024 · sRGB · no alpha</div>
+        <div class="file">app-icons/icon.png</div>
+      </div>
+    </div>
+
+    <div class="notes">
+      <h2>Anatomy</h2>
+      <div class="anatomy">
+        <div class="row"><span class="swatch" style="background:#f5f1ec; border:1px solid var(--rule);"></span><span class="label">Bone field</span><span class="val">#f5f1ec</span></div>
+        <div class="row"><span class="swatch" style="background:#c96442;"></span><span class="label">Coral · active dot</span><span class="val">#c96442</span></div>
+        <div class="row"><span class="swatch" style="background:#1a1814;"></span><span class="label">Ink · ring + dots</span><span class="val">#1a1814</span></div>
+        <div class="row"><span class="swatch" style="background:#e7dccf;"></span><span class="label">Accent-dim · alt ring</span><span class="val">#e7dccf</span></div>
+      </div>
+      <h2 style="margin-top:8px;">In app.json</h2>
+<div class="install">"expo": {
+  "icon": "./app-icons/icon.png",
+  "splash": {
+    "image": "./app-icons/splash-icon.png",
+    "backgroundColor": "#f5f1ec"
+  },
+  "ios": {
+    "icon": {
+      "light": "./app-icons/icon.png",
+      "dark":  "./app-icons/icon-dark.png",
+      "tinted":"./app-icons/adaptive-icon-monochrome.png"
+    }
+  },
+  "android": {
+    "adaptiveIcon": {
+      "foregroundImage": "./app-icons/adaptive-icon.png",
+      "monochromeImage": "./app-icons/adaptive-icon-monochrome.png",
+      "backgroundColor": "#f5f1ec"
+    }
+  },
+  "notification": {
+    "icon": "./app-icons/notification-icon.png",
+    "color": "#c96442"
+  },
+  "web": { "favicon": "./app-icons/favicon.png" }
+}</div>
+    </div>
+  </div>
+
+  <div class="rule"></div>
+  <div class="section-label">The set · seven files</div>
+
+  <div class="grid" id="grid">
+    <!-- cards injected -->
+  </div>
+
+  <div class="rule"></div>
+  <div class="section-label">On a home screen</div>
+  <div style="background: var(--card); border-radius: 28px; padding: 28px; box-shadow: 0 1px 2px rgba(26,24,20,0.04), 0 8px 32px rgba(26,24,20,0.08);">
+    <div class="home-grid" id="home-grid"></div>
+  </div>
+
+  <div class="rule"></div>
+  <div class="section-label">Scale check · 16 → 1024</div>
+  <div style="background: var(--card); border-radius: 28px; padding: 32px; box-shadow: 0 1px 2px rgba(26,24,20,0.04), 0 8px 32px rgba(26,24,20,0.08); display: flex; align-items: flex-end; gap: 36px; flex-wrap: wrap;">
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+      <div id="size-16" style="width:16px;height:16px;"></div><div class="spec">16</div>
+    </div>
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+      <div id="size-32" style="width:32px;height:32px;"></div><div class="spec">32</div>
+    </div>
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+      <div id="size-48" style="width:48px;height:48px;"></div><div class="spec">48</div>
+    </div>
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+      <div id="size-64" style="width:64px;height:64px;"></div><div class="spec">64</div>
+    </div>
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+      <div id="size-96" style="width:96px;height:96px;"></div><div class="spec">96</div>
+    </div>
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+      <div id="size-128" style="width:128px;height:128px;"></div><div class="spec">128</div>
+    </div>
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+      <div id="size-180" style="width:180px;height:180px;"></div><div class="spec">180</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // ────────────────────────────────────────────────────────────
+  //  Orbit ring icon — generators for each variant.
+  //  All draw to a 1024x1024 viewBox, scaled by CSS.
+  // ────────────────────────────────────────────────────────────
+
+  // Build a square-rounded background path (iOS-style superellipse-ish).
+  // For simplicity we use rounded-rect; the OS clips to its own mask.
+  function frame(bg, radius=180) {
+    if (bg === 'none') return '';
+    return `<rect x="0" y="0" width="1024" height="1024" rx="${radius}" ry="${radius}" fill="${bg}"/>`;
+  }
+
+  // The orbit mark, parameterised.
+  //   cx, cy, r : ring geometry (in 1024 coords)
+  //   n          : dot count
+  //   ringStroke : color of outer thin ring
+  //   dotFill    : color of inactive dots
+  //   activeFill : color of the single active dot at 12 o'clock
+  //   innerDot   : color of the small white dot inside the active dot (or null)
+  //   strokeWidth: outer ring stroke
+  //   activeR    : radius of the active dot
+  //   dotR       : radius of inactive dots
+  //   tickOpacity: 0..1 tick visibility (set 0 to hide)
+  function orbitMark({
+    cx=512, cy=512, r=340, n=6,
+    ringStroke='#1a1814', strokeWidth=10,
+    dotFill='#1a1814', dotR=28,
+    activeFill='#c96442', activeR=68, activeInner=null, activeInnerR=20,
+    tickOpacity=0.0, tickColor='#1a1814',
+    haloFill=null, haloR=110, haloOpacity=0.12,
+  } = {}) {
+    let parts = [];
+    // Outer thin ring
+    parts.push(`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${ringStroke}" stroke-width="${strokeWidth}" stroke-opacity="1"/>`);
+
+    // Tick marks
+    if (tickOpacity > 0) {
+      for (let i = 0; i < n; i++) {
+        const a = ((i + 0.5) / n) * 360 - 90;
+        const rad = a * Math.PI / 180;
+        const r1 = r - 12, r2 = r + 12;
+        const x1 = cx + r1 * Math.cos(rad), y1 = cy + r1 * Math.sin(rad);
+        const x2 = cx + r2 * Math.cos(rad), y2 = cy + r2 * Math.sin(rad);
+        parts.push(`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${tickColor}" stroke-width="4" stroke-opacity="${tickOpacity}" stroke-linecap="round"/>`);
+      }
+    }
+
+    // Dots — index 0 is the active one at 12 o'clock
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * 360 - 90;
+      const rad = a * Math.PI / 180;
+      const x = cx + r * Math.cos(rad);
+      const y = cy + r * Math.sin(rad);
+      if (i === 0) {
+        if (haloFill) {
+          parts.push(`<circle cx="${x}" cy="${y}" r="${haloR}" fill="${haloFill}" fill-opacity="${haloOpacity}"/>`);
+        }
+        parts.push(`<circle cx="${x}" cy="${y}" r="${activeR}" fill="${activeFill}"/>`);
+        if (activeInner) {
+          parts.push(`<circle cx="${x}" cy="${y}" r="${activeInnerR}" fill="${activeInner}"/>`);
+        }
+      } else {
+        parts.push(`<circle cx="${x}" cy="${y}" r="${dotR}" fill="${dotFill}"/>`);
+      }
+    }
+    return parts.join('\n');
+  }
+
+  // The full SVG strings per variant.
+  const variants = {
+    // Main iOS icon — bone field, ink ring + dots, coral active dot with white punched core.
+    icon: () => `
+      <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+        ${frame('#f5f1ec')}
+        ${orbitMark({
+          ringStroke:'#1a1814', strokeWidth:6,
+          dotFill:'#1a1814', dotR:30,
+          activeFill:'#c96442', activeR:74, activeInner:'#f5f1ec', activeInnerR:22,
+          haloFill:'#c96442', haloR:118, haloOpacity:0.10,
+        })}
+      </svg>`,
+
+    // iOS dark icon — evening field, sand-coral active dot.
+    iconDark: () => `
+      <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+        ${frame('#1c1d20')}
+        ${orbitMark({
+          ringStroke:'#ece8e2', strokeWidth:6,
+          dotFill:'#ece8e2', dotR:30,
+          activeFill:'#e3a37a', activeR:74, activeInner:'#1c1d20', activeInnerR:22,
+          haloFill:'#e3a37a', haloR:118, haloOpacity:0.12,
+        })}
+      </svg>`,
+
+    // Android adaptive foreground — mark only, no background.
+    //   Safe zone is the central 66% (≈ a 676px diameter circle).
+    //   We scale the ring to fit a 540px radius from center → r=270 in mark.
+    adaptive: () => `
+      <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+        <!-- no background; Android composites with the configured color -->
+        ${orbitMark({
+          r:260, strokeWidth:5,
+          ringStroke:'#1a1814',
+          dotFill:'#1a1814', dotR:23,
+          activeFill:'#c96442', activeR:58, activeInner:'#f5f1ec', activeInnerR:17,
+        })}
+      </svg>`,
+
+    // Monochrome variant — single colour, used by Android themed icons + iOS tinted.
+    //   Must be a single colour silhouette on transparent. We use #ffffff;
+    //   the OS recolours / tints based on the user's theme.
+    mono: () => `
+      <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+        ${orbitMark({
+          r:260, strokeWidth:6,
+          ringStroke:'#ffffff',
+          dotFill:'#ffffff', dotR:24,
+          activeFill:'#ffffff', activeR:60, activeInner:null,
+        })}
+      </svg>`,
+
+    // Splash icon — mark on bone, with more breathing room.
+    splash: () => `
+      <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+        ${frame('#f5f1ec', 0)}
+        ${orbitMark({
+          r:220, strokeWidth:4,
+          ringStroke:'#1a1814',
+          dotFill:'#1a1814', dotR:20,
+          activeFill:'#c96442', activeR:50, activeInner:'#f5f1ec', activeInnerR:15,
+          haloFill:'#c96442', haloR:84, haloOpacity:0.10,
+        })}
+      </svg>`,
+
+    // Favicon — simplified; coral on bone, fewer pixels to lose.
+    favicon: () => `
+      <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+        ${frame('#f5f1ec', 220)}
+        ${orbitMark({
+          r:320, strokeWidth:14,
+          ringStroke:'#1a1814',
+          dotFill:'#1a1814', dotR:48,
+          activeFill:'#c96442', activeR:112, activeInner:'#f5f1ec', activeInnerR:36,
+        })}
+      </svg>`,
+
+    // Notification icon — Android requires WHITE silhouette on TRANSPARENT
+    //   (the OS tints to system color). Bold, simple.
+    notification: () => `
+      <svg viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+        ${orbitMark({
+          r:340, strokeWidth:30,
+          ringStroke:'#ffffff',
+          dotFill:'#ffffff', dotR:54,
+          activeFill:'#ffffff', activeR:128, activeInner:null,
+        })}
+      </svg>`,
+  };
+
+  // Inject the hero SVG
+  document.querySelector('.hero-svg').outerHTML =
+    `<div class="hero-svg" style="overflow:hidden;">${variants.icon()}</div>`;
+
+  // Grid of all variants
+  const cards = [
+    { key:'icon',         name:'icon.png',                    spec:'1024 × 1024 · sRGB',                  file:'app-icons/icon.png',                  bg:'bone',     svg: variants.icon() },
+    { key:'iconDark',     name:'icon-dark.png',               spec:'1024 × 1024 · iOS 18 dark icon',      file:'app-icons/icon-dark.png',             bg:'dark',     svg: variants.iconDark() },
+    { key:'adaptive',     name:'adaptive-icon.png',           spec:'1024 × 1024 · Android foreground',    file:'app-icons/adaptive-icon.png',         bg:'checker',  svg: variants.adaptive() },
+    { key:'mono',         name:'adaptive-icon-monochrome.png',spec:'1024 × 1024 · themed / tinted',       file:'app-icons/adaptive-icon-monochrome.png', bg:'dark',  svg: variants.mono() },
+    { key:'splash',       name:'splash-icon.png',             spec:'1024 × 1024 · splash mark',           file:'app-icons/splash-icon.png',           bg:'bone',     svg: variants.splash() },
+    { key:'favicon',      name:'favicon.png',                 spec:'48 × 48 · web',                       file:'app-icons/favicon.png',               bg:'bone',     svg: variants.favicon() },
+    { key:'notification', name:'notification-icon.png',       spec:'96 × 96 · Android, white silhouette', file:'app-icons/notification-icon.png',     bg:'checker',  svg: variants.notification() },
+  ];
+
+  const grid = document.getElementById('grid');
+  for (const c of cards) {
+    grid.insertAdjacentHTML('beforeend', `
+      <div class="card">
+        <div class="preview ${c.bg}">${c.svg}</div>
+        <div class="meta">
+          <div class="name">${c.name}</div>
+          <div class="spec">${c.spec}</div>
+          <div class="file">${c.file}</div>
+        </div>
+      </div>
+    `);
+  }
+
+  // Home screen mockup — simulated iOS-style grid with a few neighbours.
+  const homeGrid = document.getElementById('home-grid');
+  const homeNeighbours = [
+    { bg:'#1d2a4d', label:'Mail',     glyph:'✉' },
+    { bg:'#fff',    label:'Photos',   glyph:'❀', fg:'#e35' },
+    { bg:'#22c55e', label:'Messages', glyph:'💬' },
+    null, // our icon
+    { bg:'#0ea5e9', label:'Maps',     glyph:'◐' },
+    { bg:'#111',    label:'Camera',   glyph:'◉', fg:'#fff' },
+    { bg:'#fde047', label:'Notes',    glyph:'✎' },
+    { bg:'#a78bfa', label:'Music',    glyph:'♪', fg:'#fff' },
+  ];
+  homeNeighbours.forEach((n, i) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'home-row-2';
+    if (n === null) {
+      wrap.innerHTML = `<div class="home-icon" style="background:transparent;overflow:hidden;border-radius:22%;padding:0;">${variants.icon()}</div><div class="lbl">Habit</div>`;
+    } else {
+      const fg = n.fg || '#fff';
+      wrap.innerHTML = `<div class="home-icon" style="background:${n.bg};color:${fg};font-size:34px;">${n.glyph}</div><div class="lbl">${n.label}</div>`;
+    }
+    homeGrid.appendChild(wrap);
+  });
+
+  // Scale check
+  for (const s of [16,32,48,64,96,128,180]) {
+    const el = document.getElementById('size-'+s);
+    el.innerHTML = variants.icon();
+    el.style.overflow = 'hidden';
+    el.style.borderRadius = (s * 0.22) + 'px';
+  }
+</script>
+
+</body>
+</html>
