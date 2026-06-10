@@ -170,9 +170,8 @@ const styles = StyleSheet.create(theme => ({
     marginTop: theme.spacing.sm,
   },
   daySectionLabel: {
-    ...theme.typography.caption,
+    ...theme.typography.label,
     color: theme.colors.textSecondary,
-    fontWeight: '500',
   },
   restrictSection: {
     gap: theme.spacing.md,

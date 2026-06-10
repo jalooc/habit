@@ -30,7 +30,7 @@ const Description = ({ description }: Props) => {
         link: { color: theme.colors.accent, underline: true },
         strong: { color: theme.colors.text },
         em: { color: theme.colors.textSecondary },
-        code: { color: theme.colors.textSecondary, backgroundColor: '#F5F5F4' },
+        code: { color: theme.colors.textSecondary, backgroundColor: theme.colors.background },
       }}
       onLinkPress={({ url }) => void Linking.openURL(url)}
     />

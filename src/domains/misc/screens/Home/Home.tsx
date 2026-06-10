@@ -88,12 +88,10 @@ const addCardStyles = StyleSheet.create(theme => ({
   },
   plus: {
     fontSize: 20,
-    fontWeight: '600',
     color: theme.colors.accent,
   },
   label: {
     ...theme.typography.body,
-    fontWeight: '500',
     color: theme.colors.accent,
   },
 }))

@@ -1,4 +1,4 @@
-import { Pressable, Text, View, ViewStyle } from 'react-native'
+import { Pressable, Text, View } from 'react-native'
 import { StyleSheet } from 'react-native-unistyles'
 import { useObservable, useValue } from '@legendapp/state/react'
 import { useNavigation } from '@react-navigation/native'
@@ -14,12 +14,11 @@ import Description from './Description'
 type Props = {
   id: string,
   groupId: string,
-  style?: ViewStyle,
   showTickOffControls?: boolean,
   onAction?: () => void,
 }
 
-const HabitCard = ({ id, groupId, style, showTickOffControls, onAction }: Props) => {
+const HabitCard = ({ id, groupId, showTickOffControls, onAction }: Props) => {
   const habit$ = habits$[id]
   const { name, images, description } = useValue(habit$)
   const viewer$ = useObservable({ visible: false, index: 0 })
@@ -63,7 +62,7 @@ const HabitCard = ({ id, groupId, style, showTickOffControls, onAction }: Props)
           />
         )}
       >
-        <View style={[habitStyles.container, style]}>
+        <View style={habitStyles.container(id)}>
           <Pressable onPress={() => void navigation.navigate('HabitForm', { groupId, habitId: id })}>
             <Text style={habitStyles.name}>{name}</Text>
           </Pressable>
@@ -97,15 +96,19 @@ const HabitCard = ({ id, groupId, style, showTickOffControls, onAction }: Props)
 export default HabitCard
 
 const habitStyles = StyleSheet.create(theme => ({
-  container: {
-    borderRadius: theme.radii.lg,
-    borderWidth: 1.5,
-    padding: theme.spacing.lg,
-    gap: theme.spacing.sm,
+  container: (id: string) => {
+    const { bg, border } = theme.pastelOf(id)
+    return {
+      borderRadius: theme.radii.md,
+      borderWidth: 1.5,
+      padding: theme.spacing.lg,
+      gap: theme.spacing.sm,
+      backgroundColor: bg,
+      borderColor: border,
+    }
   },
   name: {
     ...theme.typography.body,
-    fontWeight: '500',
     color: theme.colors.text,
   },
 }))

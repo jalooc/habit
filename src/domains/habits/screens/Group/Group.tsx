@@ -6,7 +6,6 @@ import groups$ from 'src/domains/habits/stores/groups'
 import habits$ from 'src/domains/habits/stores/habits'
 import Box from '../../../misc/components/Box'
 import { StyleSheet } from 'react-native-unistyles'
-import { pastelOf } from '../../../misc/utils/theme'
 import RecurrenceSummary from './RecurrenceSummary'
 import { GROUP_ID_PARAM } from 'src/domains/habits/utils/linking'
 import HabitCard from './HabitCard'
@@ -39,18 +38,14 @@ const Group = ({ route }: Props) => {
         keyboardShouldPersistTaps="handled"
         data={habitIds}
         keyExtractor={id => id}
-        renderItem={({ item: id, index }) => {
-          const { bg, border } = pastelOf(id)
-          return (
-            <HabitCard
-              id={id}
-              groupId={groupId}
-              style={{ backgroundColor: bg, borderColor: border }}
-              showTickOffControls={withTickOff && index === 0}
-              onAction={() => void navigation.setParams({ withTickOff: false })}
-            />
-          )
-        }}
+        renderItem={({ item: id, index }) => (
+          <HabitCard
+            id={id}
+            groupId={groupId}
+            showTickOffControls={withTickOff && index === 0}
+            onAction={() => void navigation.setParams({ withTickOff: false })}
+          />
+        )}
         contentContainerStyle={groupStyles.list}
         showsVerticalScrollIndicator={false}
         ListEmptyComponent={<EmptyState />}
@@ -68,6 +63,7 @@ export default Group
 const groupStyles = StyleSheet.create(theme => ({
   title: {
     ...theme.typography.title,
+    fontFamily: theme.fonts.serifItalic,
     color: theme.colors.text,
     paddingBottom: theme.spacing.xl,
   },

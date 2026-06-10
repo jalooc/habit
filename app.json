@@ -33,7 +33,7 @@
       [
         "expo-notifications",
         {
-          "color": "#e67e22",
+          "color": "#c96442",
           "defaultChannel": "reminders",
           "enableBackgroundRemoteNotifications": false
         }
@@ -51,7 +51,47 @@
         }
       ],
       "@react-native-vector-icons/ionicons",
-      "expo-font",
+      [
+        "expo-font",
+        {
+          "ios": {
+            "fonts": [
+              "node_modules/@expo-google-fonts/fraunces/400Regular/Fraunces_400Regular.ttf",
+              "node_modules/@expo-google-fonts/fraunces/400Regular_Italic/Fraunces_400Regular_Italic.ttf",
+              "node_modules/@expo-google-fonts/inter/400Regular/Inter_400Regular.ttf",
+              "node_modules/@expo-google-fonts/inter/500Medium/Inter_500Medium.ttf"
+            ]
+          },
+          "android": {
+            "fonts": [
+              {
+                "fontFamily": "Fraunces-Regular",
+                "fontDefinitions": [
+                  { "path": "node_modules/@expo-google-fonts/fraunces/400Regular/Fraunces_400Regular.ttf", "weight": 400, "style": "normal" }
+                ]
+              },
+              {
+                "fontFamily": "Fraunces-Italic",
+                "fontDefinitions": [
+                  { "path": "node_modules/@expo-google-fonts/fraunces/400Regular_Italic/Fraunces_400Regular_Italic.ttf", "weight": 400, "style": "italic" }
+                ]
+              },
+              {
+                "fontFamily": "Inter-Regular",
+                "fontDefinitions": [
+                  { "path": "node_modules/@expo-google-fonts/inter/400Regular/Inter_400Regular.ttf", "weight": 400, "style": "normal" }
+                ]
+              },
+              {
+                "fontFamily": "Inter-Medium",
+                "fontDefinitions": [
+                  { "path": "node_modules/@expo-google-fonts/inter/500Medium/Inter_500Medium.ttf", "weight": 500, "style": "normal" }
+                ]
+              }
+            ]
+          }
+        }
+      ],
       "react-native-enriched-markdown"
     ]
   }

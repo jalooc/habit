@@ -1,5 +1,5 @@
 import { Text, TextInput, View } from 'react-native'
-import { StyleSheet } from 'react-native-unistyles'
+import { StyleSheet, useUnistyles } from 'react-native-unistyles'
 import { $TextInput } from '@legendapp/state/react-native'
 import { useObservable } from '@legendapp/state/react'
 import { randomUUID } from 'expo-crypto'
@@ -10,6 +10,7 @@ import groups$ from 'src/domains/habits/stores/groups'
 
 const NewGroup = () => {
   const navigation = useNavigation()
+  const { theme } = useUnistyles()
   const name$ = useObservable('')
   const inputRef = useRef<TextInput>(null)
 
@@ -30,7 +31,7 @@ const NewGroup = () => {
         ref={inputRef}
         autoFocus
         placeholder="Group name"
-        placeholderTextColor="#A8A29E"
+        placeholderTextColor={theme.colors.textTertiary}
         onKeyPress={e => {
           if (e.nativeEvent.key === 'Enter') create()
         }}
@@ -55,7 +56,7 @@ const styles = StyleSheet.create(theme => ({
   },
   input: {
     backgroundColor: theme.colors.background,
-    borderRadius: theme.radii.md,
+    borderRadius: theme.radii.xs,
     borderWidth: 1,
     borderColor: theme.colors.border,
     padding: theme.spacing.md,

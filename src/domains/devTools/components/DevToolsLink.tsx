@@ -23,7 +23,7 @@ const homeStyles = StyleSheet.create(theme => ({
   container: {
     paddingHorizontal: theme.spacing.sm,
     paddingVertical: theme.spacing.xs,
-    borderRadius: theme.radii.sm,
+    borderRadius: theme.radii.pill,
     borderWidth: 1,
     borderColor: theme.colors.border,
   },
@@ -32,9 +32,7 @@ const homeStyles = StyleSheet.create(theme => ({
     borderColor: theme.colors.accent,
   },
   text: {
-    ...theme.typography.caption,
+    ...theme.typography.label,
     color: theme.colors.textTertiary,
-    fontWeight: '600',
-    letterSpacing: 1,
   },
 }))

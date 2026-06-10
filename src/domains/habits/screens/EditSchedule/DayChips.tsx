@@ -44,21 +44,20 @@ const styles = StyleSheet.create(theme => ({
   chip: {
     paddingVertical: theme.spacing.sm,
     paddingHorizontal: theme.spacing.md,
-    borderRadius: theme.radii.sm,
+    borderRadius: theme.radii.pill,
     borderWidth: 1,
     borderColor: theme.colors.border,
-    backgroundColor: theme.colors.background,
+    backgroundColor: theme.colors.surface,
   },
   chipSelected: {
-    backgroundColor: theme.colors.accent,
-    borderColor: theme.colors.accent,
+    backgroundColor: theme.colors.text,
+    borderColor: theme.colors.text,
   },
   chipText: {
     ...theme.typography.caption,
-    fontWeight: '500',
     color: theme.colors.textSecondary,
   },
   chipTextSelected: {
-    color: theme.colors.accentText,
+    color: theme.colors.background,
   },
 }))

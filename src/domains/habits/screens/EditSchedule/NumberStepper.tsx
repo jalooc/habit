@@ -53,7 +53,7 @@ const styles = StyleSheet.create(theme => ({
   button: {
     width: 36,
     height: 36,
-    borderRadius: theme.radii.sm,
+    borderRadius: theme.radii.pill,
     backgroundColor: theme.colors.background,
     borderWidth: 1,
     borderColor: theme.colors.border,
@@ -66,11 +66,10 @@ const styles = StyleSheet.create(theme => ({
   },
   buttonText: {
     fontSize: 18,
-    fontWeight: '600',
     color: theme.colors.text,
   },
   buttonTextDisabled: {
-    color: theme.colors.disabled,
+    opacity: 0.5,
   },
   value: {
     ...theme.typography.heading,

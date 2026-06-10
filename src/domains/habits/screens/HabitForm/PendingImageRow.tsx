@@ -126,7 +126,6 @@ const styles = StyleSheet.create(theme => ({
     color: theme.colors.background,
     fontSize: 14,
     lineHeight: 16,
-    fontWeight: '700',
   },
   actions: {
     flexDirection: 'row',
@@ -135,7 +134,7 @@ const styles = StyleSheet.create(theme => ({
   actionButton: {
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
-    borderRadius: theme.radii.md,
+    borderRadius: theme.radii.sm,
     borderWidth: 1,
     borderColor: theme.colors.border,
     backgroundColor: theme.colors.surface,

@@ -10,20 +10,16 @@ type Props = {
 
 const Button = ({ title, onPress, variant = 'primary', disabled }: Props) => (
   <Pressable
-    style={[
+    style={({ pressed }) => [
       styles.button,
       variant === 'secondary' && styles.buttonSecondary,
-      disabled && styles.buttonDisabled,
+      disabled && styles.disabled,
+      pressed && styles.pressed,
     ]}
     onPress={onPress}
     disabled={disabled}
   >
-    <Text style={[
-      styles.text,
-      variant === 'secondary' && styles.textSecondary,
-      disabled && styles.textDisabled,
-    ]}
-    >
+    <Text style={[styles.text, variant === 'secondary' && styles.textSecondary]}>
       {title}
     </Text>
   </Pressable>
@@ -31,31 +27,29 @@ const Button = ({ title, onPress, variant = 'primary', disabled }: Props) => (
 
 const styles = StyleSheet.create(theme => ({
   button: {
-    backgroundColor: theme.colors.accent,
-    borderRadius: theme.radii.md,
+    backgroundColor: theme.colors.text,
+    borderRadius: theme.radii.pill,
     paddingVertical: theme.spacing.md,
     paddingHorizontal: theme.spacing['2xl'],
     alignItems: 'center',
   },
   buttonSecondary: {
-    backgroundColor: 'transparent',
+    backgroundColor: theme.colors.surface,
     borderWidth: 1.5,
-    borderColor: theme.colors.accent,
+    borderColor: theme.colors.accentDim,
   },
-  buttonDisabled: {
-    backgroundColor: theme.colors.disabled,
-    borderColor: theme.colors.disabled,
+  disabled: {
+    opacity: 0.5,
+  },
+  pressed: {
+    opacity: 0.6,
   },
   text: {
-    color: theme.colors.accentText,
-    ...theme.typography.body,
-    fontWeight: '600',
+    ...theme.typography.button,
+    color: theme.colors.background,
   },
   textSecondary: {
-    color: theme.colors.accent,
-  },
-  textDisabled: {
-    color: theme.colors.disabledText,
+    color: theme.colors.textSecondary,
   },
 }))
 

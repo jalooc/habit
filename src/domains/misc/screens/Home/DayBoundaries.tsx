@@ -129,20 +129,18 @@ const TIME_SLOT_LABEL_SIZE = 20
 const styles = StyleSheet.create(theme => ({
   dayCard: {
     backgroundColor: theme.colors.surface,
-    borderRadius: theme.radii.lg,
+    borderRadius: theme.radii.md,
     borderWidth: 1,
     borderColor: theme.colors.border,
     padding: theme.spacing.lg,
     paddingBottom: theme.spacing.lg + TIME_SLOT_LABEL_SIZE,
     gap: theme.spacing.md,
     marginBottom: theme.spacing.xl,
+    ...theme.shadows.card,
   },
   dayCardLabel: {
-    ...theme.typography.caption,
+    ...theme.typography.label,
     color: theme.colors.textSecondary,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-    fontWeight: '600',
   },
   container: {
     flexDirection: 'row',
@@ -173,7 +171,6 @@ const timeSlotStyles = StyleSheet.create(theme => ({
   colon: {
     ...theme.typography.heading,
     color: theme.colors.text,
-    fontWeight: '700',
   },
   label: {
     ...theme.typography.caption,
@@ -188,7 +185,7 @@ const digitInputStyles = StyleSheet.create(theme => ({
     ...theme.typography.heading,
     color: theme.colors.text,
     backgroundColor: theme.colors.surface,
-    borderRadius: theme.radii.md,
+    borderRadius: theme.radii.xs,
     borderWidth: 1,
     borderColor: theme.colors.border,
     paddingVertical: theme.spacing.sm,

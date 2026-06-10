@@ -99,7 +99,6 @@ const styles = StyleSheet.create(theme => ({
   },
   label: {
     ...theme.typography.body,
-    fontWeight: '600',
     color: theme.colors.text,
     flex: 1,
   },
@@ -116,7 +115,6 @@ const styles = StyleSheet.create(theme => ({
   clearButton: {
     ...theme.typography.body,
     color: theme.colors.accent,
-    fontWeight: '600',
   },
   empty: {
     paddingVertical: theme.spacing['4xl'],

@@ -110,7 +110,7 @@ const styles = StyleSheet.create(theme => ({
   },
   input: {
     backgroundColor: theme.colors.background,
-    borderRadius: theme.radii.md,
+    borderRadius: theme.radii.xs,
     borderWidth: 1,
     borderColor: theme.colors.border,
     padding: theme.spacing.md,

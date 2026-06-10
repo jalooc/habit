@@ -44,7 +44,7 @@ export default RecurrenceSummary
 
 const styles = StyleSheet.create(theme => ({
   empty: {
-    borderRadius: theme.radii.lg,
+    borderRadius: theme.radii.md,
     borderWidth: 1.5,
     borderColor: theme.colors.border,
     borderStyle: 'dashed',
@@ -60,11 +60,10 @@ const styles = StyleSheet.create(theme => ({
   },
   emptyLabel: {
     ...theme.typography.body,
-    fontWeight: '500',
     color: theme.colors.accent,
   },
   filled: {
-    borderRadius: theme.radii.lg,
+    borderRadius: theme.radii.md,
     borderWidth: 1,
     borderColor: theme.colors.border,
     backgroundColor: theme.colors.surface,
@@ -73,6 +72,7 @@ const styles = StyleSheet.create(theme => ({
     alignItems: 'center',
     gap: theme.spacing.sm,
     marginBottom: theme.spacing.md,
+    ...theme.shadows.card,
   },
   filledPressed: {
     backgroundColor: theme.colors.accentSubtle,

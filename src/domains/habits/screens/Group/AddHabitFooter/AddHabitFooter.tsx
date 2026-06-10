@@ -27,7 +27,7 @@ export default AddHabitFooter
 
 const addCardStyles = StyleSheet.create(theme => ({
   container: {
-    borderRadius: theme.radii.lg,
+    borderRadius: theme.radii.md,
     borderWidth: 1.5,
     borderColor: theme.colors.border,
     borderStyle: 'dashed',
@@ -43,12 +43,10 @@ const addCardStyles = StyleSheet.create(theme => ({
   },
   plus: {
     fontSize: 20,
-    fontWeight: '600',
     color: theme.colors.accent,
   },
   label: {
     ...theme.typography.body,
-    fontWeight: '500',
     color: theme.colors.accent,
   },
 }))

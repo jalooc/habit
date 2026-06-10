@@ -92,7 +92,7 @@ These are easy to violate by accident:
 
 ### Styling (Unistyles)
 
-Use `StyleSheet.create` with the theme callback for static styles — avoid plain RN `StyleSheet` or inline style objects unless values are dynamic (e.g. derived from user data, an API response, or randomised at runtime):
+Use `StyleSheet.create` with the theme callback for static styles — avoid plain RN `StyleSheet` and inline style objects. For styles that mix theme values with runtime values (entity ids, user data), use a dynamic style function inside the stylesheet — the inline alternative would need `useUnistyles()`, which re-renders on every theme change, while stylesheet styles update without re-rendering. Plain inline styles remain fine for values with no theme dependency at all (e.g. a width computed from user data):
 
 ```ts
 import { StyleSheet } from 'react-native-unistyles'
@@ -102,7 +102,20 @@ const styles = StyleSheet.create(theme => ({
     padding: theme.spacing.lg,
     backgroundColor: theme.colors.background,
   },
+  pastel: (id: string) => {
+    const { bg, border } = theme.pastelOf(id)
+    return { backgroundColor: bg, borderColor: border }
+  },
 }))
 ```
 
-Theme tokens are defined in `src/domains/misc/utils/theme.ts` (`colors`, `spacing`, `typography`, `radii`, `pastels`). Group pastel colors by entity ID via `pastelOf(id)` from that module.
+Theme tokens are defined in `src/domains/misc/utils/theme.ts`: `colors`, `shadows` (RN `boxShadow` strings), `fonts`, `spacing`, `typography`, `radii`, plus `theme.pastelOf(id)` (stable per-entity pastel; the palette differs per theme). There are two themes (`light`/`dark`) with `adaptiveThemes: true` — dark mode is live, so never hardcode colors that assume a light background.
+
+### Design system
+
+Visual guidelines come from the `/orbit-design-system` skill (`.claude/skills/orbit-design-system/`) — consult it before building new UI. Rules already encoded in this codebase:
+
+- **Fonts**: Fraunces (serif — titles, headings, body) + Inter (sans — captions, labels, buttons), embedded natively via the `expo-font` config plugin in `app.json` (no runtime `useFonts`). `fontFamily` strings must match the TTFs' PostScript names — `theme.fonts` holds the verified ones (e.g. `serifItalic` for group names).
+- **`fontWeight` is ESLint-banned outside `theme.ts`** (`no-restricted-syntax` registry in `eslint.config.js`; `theme.ts` is exempted via `omit`). Spread a `theme.typography` role instead. Only Fraunces 400 (+ italic) and Inter 400/500 are bundled — any other weight would render as synthetic faux-bold on Android.
+- **Primary CTAs are ink-on-bone** (`colors.text` fill, `colors.background` text) — never coral. The coral accent is reserved for small markers and highlights.
+- **Disabled = `opacity: 0.5`, pressed = `opacity: 0.6`** — opacity states, not color swaps.

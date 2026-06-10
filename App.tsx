@@ -1,4 +1,4 @@
-import { light as theme } from 'src/domains/misc/utils/theme'
+import 'src/domains/misc/utils/theme'
 import 'src/domains/notifications/utils/notifications'
 import 'src/domains/habits/utils/habitsNotificationsScheduler'
 import { useEffect } from 'react'
@@ -18,20 +18,24 @@ import { Navigation } from 'src/domains/misc/utils/navigation'
 import { cleanupPendingImages } from 'src/domains/habits/utils/usePendingImages'
 import { cleanupOrphanedImages } from 'src/domains/habits/utils/habitImages'
 import useRozeniteStorageDevtools from 'src/domains/devTools/utils/useRozeniteStorageDevtools'
-
-const navigationTheme = {
-  ...DefaultTheme,
-  colors: {
-    ...DefaultTheme.colors,
-    primary: theme.colors.accent,
-    background: theme.colors.background,
-    card: theme.colors.background,
-    text: theme.colors.text,
-    border: theme.colors.border,
-  },
-}
+import { useUnistyles } from 'react-native-unistyles'
 
 const App = () => {
+  const { theme, rt } = useUnistyles()
+
+  const navigationTheme = {
+    ...DefaultTheme,
+    dark: rt.themeName === 'dark',
+    colors: {
+      ...DefaultTheme.colors,
+      primary: theme.colors.accent,
+      background: theme.colors.background,
+      card: theme.colors.background,
+      text: theme.colors.text,
+      border: theme.colors.border,
+    },
+  }
+
   useRozeniteStorageDevtools()
 
   const navigationRef = useNavigationContainerRef()

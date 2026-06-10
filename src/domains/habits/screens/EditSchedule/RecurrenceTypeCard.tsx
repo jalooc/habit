@@ -35,7 +35,7 @@ export default RecurrenceTypeCard
 
 const styles = StyleSheet.create(theme => ({
   card: {
-    borderRadius: theme.radii.lg,
+    borderRadius: theme.radii.md,
     borderWidth: 1.5,
     borderColor: theme.colors.border,
     padding: theme.spacing.lg,
@@ -49,7 +49,6 @@ const styles = StyleSheet.create(theme => ({
   },
   label: {
     ...theme.typography.body,
-    fontWeight: '600',
     color: theme.colors.text,
   },
   labelSelected: {

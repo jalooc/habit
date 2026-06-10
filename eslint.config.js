@@ -10,6 +10,26 @@ import arrowFunctionsPlugin from 'eslint-plugin-prefer-arrow-functions'
 import hooksPlugin from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
+import { omit } from 'remeda'
+
+const restrictedInstanceof = {
+  selector: 'BinaryExpression[operator=\'instanceof\']',
+  message:
+    'The `instanceof` operator might produce false negatives if the value and the instance' +
+    ' originate in different realms, which is especially likely in browser extensions. Use with' +
+    ' caution at own risk.',
+}
+
+const restrictedFontWeight = {
+  selector: 'Property[key.name=\'fontWeight\']',
+  message: 'fontWeight is owned by the typography roles in theme.ts — spread a role like' +
+    ' theme.typography.button instead of overriding the weight.',
+}
+
+const noRestrictedSyntaxRules = {
+  restrictedInstanceof,
+  restrictedFontWeight,
+}
 
 export default [
   globalIgnores(['.claude/skills/orbit-design-system']),
@@ -177,16 +197,7 @@ export default [
         '@typescript-eslint/no-misused-promises': ['error', {
           checksVoidReturn: false,
         }],
-        'no-restricted-syntax': [
-          'error',
-          {
-            selector: 'BinaryExpression[operator=\'instanceof\']',
-            message:
-              'The `instanceof` operator might produce false negatives if the value and the instance' +
-              ' originate in different realms, which is especially likely in browser extensions. Use with' +
-              ' caution at own risk.',
-          },
-        ],
+        'no-restricted-syntax': ['error', ...Object.values(noRestrictedSyntaxRules)],
         'react-refresh/only-export-components': [
           'warn',
           { allowConstantExport: true },
@@ -194,4 +205,11 @@ export default [
       },
     }
   ),
+  {
+    // theme.ts is where the typography roles (and thus fontWeight) are defined
+    files: ['src/domains/misc/utils/theme.ts'],
+    rules: {
+      'no-restricted-syntax': ['error', ...Object.values(omit(noRestrictedSyntaxRules, ['restrictedFontWeight']))],
+    },
+  },
 ]

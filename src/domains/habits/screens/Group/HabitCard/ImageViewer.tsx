@@ -88,6 +88,5 @@ const styles = StyleSheet.create(theme => ({
     color: '#fff',
     fontSize: 24,
     lineHeight: 28,
-    fontWeight: '300',
   },
 }))
