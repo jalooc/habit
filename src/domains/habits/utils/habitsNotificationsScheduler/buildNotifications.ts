@@ -1,6 +1,7 @@
 import { GroupsStore } from 'src/domains/habits/stores/groups'
 import { HabitsStores } from 'src/domains/habits/stores/habits'
 import { createGroupScreenLink } from 'src/domains/habits/utils/linking'
+import { RRuleTemporal } from 'rrule-temporal'
 import { Temporal } from '@js-temporal/polyfill'
 
 const MAX_NOTIFICATIONS = 64 // iOS allows max 64 scheduled notifications per app
@@ -48,16 +49,51 @@ const findSortedHabitsNames = (
     .map(h => h.name)
 }
 
+type Recurrence = NonNullable<GroupsStore[string]['recurrence']>
+
+// Every rrule-temporal query re-iterates occurrences from DTSTART (through the
+// slow Temporal polyfill, with a hard 10k-iteration cap), so the cost of a
+// rebuild grows with a group's age. Remember the last occurrence at or before
+// "now" per rule instance and resume iteration from there on later rebuilds.
+const iterationStarts = new WeakMap<Recurrence, Temporal.ZonedDateTime>()
+
+// Shifting dtstart onto a known occurrence preserves the occurrence sequence,
+// except when the rule counts occurrences or pins extra/excluded dates.
+const canResumeIteration = (rule: Recurrence) => {
+  const { count, rDate, exDate } = rule.options()
+  return !count && !rDate?.length && !exDate?.length
+}
+
 const getOccurrencesAfter = (
-  recurrence: NonNullable<GroupsStore[string]['recurrence']>,
+  recurrence: Recurrence,
   after: Date,
   count: number
 ) => {
+  if (count <= 0) return []
+
+  const resumeFrom = iterationStarts.get(recurrence)
+  const rule = resumeFrom ?
+    new RRuleTemporal({ ...recurrence.options(), dtstart: resumeFrom }) :
+    recurrence
+
+  const afterMs = after.getTime()
   const occurrences: Temporal.ZonedDateTime[] = []
-  for (let i = 0; i < count; i++) {
-    const occurrence = recurrence.next(occurrences.at(-1) ?? after, false)
-    if (occurrence) occurrences.push(occurrence)
-    else break
-  }
+  let lastPast: Temporal.ZonedDateTime | undefined
+
+  // The iterator can re-yield an occurrence (e.g. around generator jump
+  // optimizations), so only accept strictly increasing ones.
+  rule.all(occurrence => {
+    if (occurrence.epochMilliseconds <= afterMs) {
+      lastPast = occurrence
+      return true
+    }
+    if (occurrences.length >= count) return false
+    const prev = occurrences.at(-1)
+    if (!prev || occurrence.epochMilliseconds > prev.epochMilliseconds) occurrences.push(occurrence)
+    return occurrences.length < count
+  })
+
+  if (lastPast && canResumeIteration(recurrence)) iterationStarts.set(recurrence, lastPast)
+
   return occurrences
 }
