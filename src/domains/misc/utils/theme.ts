@@ -9,27 +9,11 @@ const fontFamilies = {
   sansMedium: 'Inter-Medium',
 } as const
 
-// 20 hues stepped 12° across the red→blue arc (no violets/pinks)
-const pastelHues = Array.from({ length: 20 }, (_, i) => i * 12)
-
-const pastelsLight = pastelHues.map(hue => ({
-  bg: `hsl(${hue}, 85%, 96%)`,
-  border: `hsl(${hue}, 72%, 72%)`,
-}))
-
-// Dimmed variants so near-white text stays readable on pastel surfaces
-const pastelsDark = pastelHues.map(hue => ({
-  bg: `hsl(${hue}, 28%, 21%)`,
-  border: `hsl(${hue}, 35%, 40%)`,
-}))
-
-const hashWithDjb2 = (s: string) =>
-  Array.from(s).reduce((h, c) => ((h << 5) + h + c.charCodeAt(0)) | 0, 5381)
-
-const pastelOfFrom = (pastels: typeof pastelsLight) => (id: string) =>
-  pastels[Math.abs(hashWithDjb2(id)) % pastels.length]
-
 const lh = (size: number, ratio: number) => Math.round(size * ratio)
+
+// translucent variant of a hex color token (not for rgba() tokens like `border`)
+export const withAlpha = (color: string, alpha: number) =>
+  `${color}${Math.round(alpha * 255).toString(16).padStart(2, '0')}`
 
 const spacing = {
   xs: 4,
@@ -107,10 +91,11 @@ const light = {
     border: 'rgba(26,24,20,0.10)',
   },
   shadows: {
-    card: { boxShadow: '0 1px 2px rgba(26,24,20,0.04), 0 8px 32px rgba(26,24,20,0.08)' },
+    // tighter ambient layer than the DS web token (0 8px 32px @ 0.08): its reach must stay under
+    // the 12dp card gap, or Android's boxShadow plateau floods the gap into a flat gray band
+    card: { boxShadow: '0 1px 2px rgba(26,24,20,0.05), 0 4px 12px rgba(26,24,20,0.06)' },
   },
   fonts: fontFamilies,
-  pastelOf: pastelOfFrom(pastelsLight),
   spacing,
   typography,
   radii,
@@ -134,7 +119,6 @@ const dark = {
     card: { boxShadow: '0 1px 2px rgba(0,0,0,0.25), 0 12px 36px rgba(0,0,0,0.4)' },
   },
   fonts: fontFamilies,
-  pastelOf: pastelOfFrom(pastelsDark),
   spacing,
   typography,
   radii,

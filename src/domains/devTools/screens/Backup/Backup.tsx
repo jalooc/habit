@@ -92,7 +92,7 @@ type Action = {
   key: string,
   title: string,
   subtitle: string,
-  onPress: () => void,
+  onPress: () => unknown,
 }
 
 const ActionRow = ({ action, disabled }: { action: Action, disabled: boolean }) => (

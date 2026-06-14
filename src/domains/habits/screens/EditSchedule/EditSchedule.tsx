@@ -79,7 +79,7 @@ const EditSchedule = ({ route }: Props) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Schedule</Text>
+      <Text style={styles.kicker}>Schedule</Text>
       <ScrollView nestedScrollEnabled contentContainerStyle={styles.content}>
 
         <View style={styles.typeList}>
@@ -103,6 +103,7 @@ const EditSchedule = ({ route }: Props) => {
                   <DayChips
                     selected={specificDays}
                     onChange={days => void specificDays$.set(days)}
+                    onDark
                   />
                 </View>
               )}
@@ -128,13 +129,13 @@ const EditSchedule = ({ route }: Props) => {
 
         <View style={styles.actions}>
           <Button
-            title="Save"
+            title="Save schedule"
             onPress={handleSave}
             disabled={!selectedType}
           />
           {hasExistingRecurrence && (
             <Button
-              title="Remove Schedule"
+              title="Remove schedule"
               onPress={handleClear}
               variant="secondary"
             />
@@ -158,12 +159,13 @@ const styles = StyleSheet.create(theme => ({
     padding: theme.spacing['3xl'],
     gap: theme.spacing.xl,
   },
-  title: {
-    ...theme.typography.heading,
-    color: theme.colors.text,
+  kicker: {
+    ...theme.typography.label,
+    color: theme.colors.textTertiary,
+    paddingHorizontal: theme.spacing['3xl'],
   },
   typeList: {
-    gap: theme.spacing.md,
+    gap: theme.spacing.sm,
   },
   daySection: {
     gap: theme.spacing.sm,
@@ -171,7 +173,8 @@ const styles = StyleSheet.create(theme => ({
   },
   daySectionLabel: {
     ...theme.typography.label,
-    color: theme.colors.textSecondary,
+    color: theme.colors.background,
+    opacity: 0.6,
   },
   restrictSection: {
     gap: theme.spacing.md,

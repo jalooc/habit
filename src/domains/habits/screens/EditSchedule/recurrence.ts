@@ -127,7 +127,7 @@ export const parseRRule = (rruleString: string): RecurrenceConfig => {
   const byDay = opts.byDay?.filter((d): d is Weekday => weekdaySet.has(d))
   const days = byDay?.length ? byDay : undefined
 
-  const parsers: Record<string, () => RecurrenceConfig> = {
+  const parsers: Partial<Record<string, () => RecurrenceConfig>> = {
     HOURLY: () => ({ type: 'every-x-hours', value: opts.interval ?? 1, restrictDays: days }),
     DAILY: () =>
       opts.byHour?.length ?
@@ -145,7 +145,7 @@ export const parseRRule = (rruleString: string): RecurrenceConfig => {
     }),
   }
 
-  return parsers[opts.freq]()
+  return parsers[opts.freq]?.() ?? { type: 'every-x-days', value: 1 }
 }
 
 export const RECURRENCE_TYPES = [

@@ -5,7 +5,7 @@ import { imageFileUri } from 'src/domains/habits/utils/habitImages'
 
 type Props = {
   images: string[],
-  onPress: (index: number) => void,
+  onPress: (index: number) => unknown,
 }
 
 const ImageThumbnailRow = ({ images, onPress }: Props) => (

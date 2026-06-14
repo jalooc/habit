@@ -1,12 +1,14 @@
 import { View, Text, Pressable } from 'react-native'
 import { StyleSheet } from 'react-native-unistyles'
+import Lucide from '@react-native-vector-icons/lucide'
+import { withAlpha } from 'src/domains/misc/utils/theme'
 
 type Props = {
   value: number,
   min: number,
   max: number,
   label: string,
-  onChange: (value: number) => void,
+  onChange: (value: number) => unknown,
 }
 
 const NumberStepper = ({ value, min, max, label, onChange }: Props) => (
@@ -14,19 +16,27 @@ const NumberStepper = ({ value, min, max, label, onChange }: Props) => (
     <Text style={styles.label}>{label}</Text>
     <View style={styles.stepper}>
       <Pressable
-        style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
+        style={({ pressed }) => [
+          styles.button,
+          value <= min && styles.buttonDisabled,
+          pressed && styles.buttonPressed,
+        ]}
         onPress={() => void onChange(Math.max(min, value - 1))}
         disabled={value <= min}
       >
-        <Text style={[styles.buttonText, value <= min && styles.buttonTextDisabled]}>-</Text>
+        <Lucide name="minus" size={16} style={[styles.buttonIcon, value <= min && styles.buttonIconDisabled]} />
       </Pressable>
       <Text style={styles.value}>{value}</Text>
       <Pressable
-        style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
+        style={({ pressed }) => [
+          styles.button,
+          value >= max && styles.buttonDisabled,
+          pressed && styles.buttonPressed,
+        ]}
         onPress={() => void onChange(Math.min(max, value + 1))}
         disabled={value >= max}
       >
-        <Text style={[styles.buttonText, value >= max && styles.buttonTextDisabled]}>+</Text>
+        <Lucide name="plus" size={16} style={[styles.buttonIcon, value >= max && styles.buttonIconDisabled]} />
       </Pressable>
     </View>
   </View>
@@ -39,11 +49,12 @@ const styles = StyleSheet.create(theme => ({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
   },
   label: {
-    ...theme.typography.body,
-    color: theme.colors.textSecondary,
+    ...theme.typography.caption,
+    color: theme.colors.background,
+    opacity: 0.75,
   },
   stepper: {
     flexDirection: 'row',
@@ -51,29 +62,31 @@ const styles = StyleSheet.create(theme => ({
     gap: theme.spacing.md,
   },
   button: {
-    width: 36,
-    height: 36,
+    width: 34,
+    height: 34,
     borderRadius: theme.radii.pill,
-    backgroundColor: theme.colors.background,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
+    backgroundColor: withAlpha(theme.colors.background, 0.15),
     alignItems: 'center',
     justifyContent: 'center',
   },
+  buttonDisabled: {
+    opacity: 0.35,
+  },
   buttonPressed: {
-    backgroundColor: theme.colors.accentSubtle,
-    borderColor: theme.colors.accent,
+    opacity: 0.6,
   },
-  buttonText: {
-    fontSize: 18,
-    color: theme.colors.text,
+  buttonIcon: {
+    color: theme.colors.background,
   },
-  buttonTextDisabled: {
+  buttonIconDisabled: {
     opacity: 0.5,
   },
   value: {
-    ...theme.typography.heading,
-    color: theme.colors.text,
+    fontFamily: theme.fonts.serifItalic,
+    fontSize: 22,
+    lineHeight: 24,
+    letterSpacing: -0.3,
+    color: theme.colors.background,
     minWidth: 32,
     textAlign: 'center',
   },

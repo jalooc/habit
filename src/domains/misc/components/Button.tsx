@@ -3,8 +3,8 @@ import { StyleSheet } from 'react-native-unistyles'
 
 type Props = {
   title: string,
-  onPress: () => void,
-  variant?: 'primary' | 'secondary',
+  onPress: () => unknown,
+  variant?: 'primary' | 'secondary' | 'ghost',
   disabled?: boolean,
 }
 
@@ -13,13 +13,20 @@ const Button = ({ title, onPress, variant = 'primary', disabled }: Props) => (
     style={({ pressed }) => [
       styles.button,
       variant === 'secondary' && styles.buttonSecondary,
+      variant === 'ghost' && styles.buttonGhost,
       disabled && styles.disabled,
       pressed && styles.pressed,
     ]}
     onPress={onPress}
     disabled={disabled}
   >
-    <Text style={[styles.text, variant === 'secondary' && styles.textSecondary]}>
+    <Text
+      style={[
+        styles.text,
+        variant === 'secondary' && styles.textSecondary,
+        variant === 'ghost' && styles.textGhost,
+      ]}
+    >
       {title}
     </Text>
   </Pressable>
@@ -38,6 +45,11 @@ const styles = StyleSheet.create(theme => ({
     borderWidth: 1.5,
     borderColor: theme.colors.accentDim,
   },
+  buttonGhost: {
+    backgroundColor: 'transparent',
+    borderWidth: 1.5,
+    borderColor: theme.colors.accentDim,
+  },
   disabled: {
     opacity: 0.5,
   },
@@ -49,6 +61,9 @@ const styles = StyleSheet.create(theme => ({
     color: theme.colors.background,
   },
   textSecondary: {
+    color: theme.colors.textSecondary,
+  },
+  textGhost: {
     color: theme.colors.textSecondary,
   },
 }))

@@ -33,8 +33,8 @@ const EditGroup = ({ route }: Props) => {
 
   const handleDelete = () => {
     Alert.alert(
-      'Delete Group?',
-      'Habits not shared with other groups will also be permanently deleted.',
+      'Delete rotation?',
+      'Habits not shared with other rotations will also be permanently deleted.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -71,7 +71,6 @@ const EditGroup = ({ route }: Props) => {
               })
               groups$[groupId].delete()
             })
-
           },
         },
       ],
@@ -80,18 +79,18 @@ const EditGroup = ({ route }: Props) => {
 
   return (
     <View style={styles.sheet}>
-      <Text style={styles.title}>Edit Group</Text>
+      <Text style={styles.kicker}>Edit rotation</Text>
       <$TextInput
         style={styles.input}
         $value={name$}
-        placeholder="Group name"
+        placeholder="Rotation name"
         placeholderTextColor={theme.colors.textTertiary}
         onKeyPress={e => {
           if (e.nativeEvent.key === 'Enter' && canSave) void save()
         }}
       />
       <Button title="Save" onPress={save} disabled={!canSave} />
-      <Button title="Delete Group" onPress={handleDelete} variant="secondary" />
+      <Button title="Delete rotation" onPress={handleDelete} variant="secondary" />
     </View>
   )
 }
@@ -104,17 +103,18 @@ const styles = StyleSheet.create(theme => ({
     paddingBottom: theme.spacing['4xl'],
     gap: theme.spacing.xl,
   },
-  title: {
-    ...theme.typography.heading,
-    color: theme.colors.text,
+  kicker: {
+    ...theme.typography.label,
+    color: theme.colors.textTertiary,
   },
   input: {
-    backgroundColor: theme.colors.background,
+    backgroundColor: theme.colors.surface,
     borderRadius: theme.radii.xs,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
     padding: theme.spacing.md,
-    ...theme.typography.body,
+    fontFamily: theme.fonts.serif,
+    fontSize: 18,
+    lineHeight: 25,
+    letterSpacing: -0.2,
     color: theme.colors.text,
   },
 }))

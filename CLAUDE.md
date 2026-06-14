@@ -28,7 +28,7 @@ This is an Expo dev-client project: `npm start` alone is not enough — `npm run
 - **React Navigation `formSheet`** for bottom sheets (native iOS sheet) — use `presentation: 'formSheet'` + `sheetAllowedDetents` in screen options; **rrule-temporal** for recurrence, **zod** for schema validation, **dayjs** for dates
 - **`expo-image`** for image display (drop-in for RN `Image`); **`react-native-enriched-markdown`** for markdown rendering
 - **remeda** preferred over lodash; **tsafe** + **type-fest** for type-level helpers
-- **`@react-native-vector-icons/ionicons`** for icons — import from the `/static` sub-path: `import Ionicons from '@react-native-vector-icons/ionicons/static'`
+- **Icons**: `@react-native-vector-icons/lucide` — the only icon set; don't add others. Unicode stays fine for typographic marks (`·` `¶` `↗`), styled Views for custom shapes (ring dots)
 
 ### Domain-oriented structure
 
@@ -36,8 +36,10 @@ Code is organized by domain under `src/domains/`, not by technical layer:
 
 ```
 src/domains/
-  habits/        screens/, stores/ (habits, groups), utils/ (notifications scheduler, deep-link config)
-  misc/          screens/Home, stores/dayBoundaries, utils/ (navigation, theme)
+  habits/        screens/ (Group, Habit, NewHabit, forms), stores/ (habits, groups, lastAction),
+                 components/ (UndoToast, HabitEditor, ImageViewer, Description),
+                 utils/ (habitActions, orderQueue, groupDueness, formatCadence, formatNextTurn, notifications scheduler, deep-link config)
+  misc/          screens/ (Home, ActiveHours), stores/dayBoundaries, utils/ (navigation, theme), components/ (Box, Button, Chip)
   notifications/ utils/notifications.ts — the *only* file that imports `expo-notifications` directly
   devTools/      Dev-only screens (DevTools, DevLog, Backup) and devLog util
 ```
@@ -102,20 +104,24 @@ const styles = StyleSheet.create(theme => ({
     padding: theme.spacing.lg,
     backgroundColor: theme.colors.background,
   },
-  pastel: (id: string) => {
-    const { bg, border } = theme.pastelOf(id)
-    return { backgroundColor: bg, borderColor: border }
-  },
+  bar: (widthFraction: number) => ({
+    backgroundColor: theme.colors.accent,
+    width: `${widthFraction * 100}%`,
+  }),
 }))
 ```
 
-Theme tokens are defined in `src/domains/misc/utils/theme.ts`: `colors`, `shadows` (RN `boxShadow` strings), `fonts`, `spacing`, `typography`, `radii`, plus `theme.pastelOf(id)` (stable per-entity pastel; the palette differs per theme). There are two themes (`light`/`dark`) with `adaptiveThemes: true` — dark mode is live, so never hardcode colors that assume a light background.
+Theme tokens are defined in `src/domains/misc/utils/theme.ts`: `colors`, `shadows` (RN `boxShadow` strings), `fonts`, `spacing`, `typography`, `radii`. There are two themes (`light`/`dark`) with `adaptiveThemes: true` — dark mode is live, so never hardcode colors that assume a light background. For translucent overlays on theme colors, use `withAlpha(theme.colors.background, 0.15)` (exported from `theme.ts`; hex tokens only, not the rgba `border` token).
 
 ### Design system
 
-Visual guidelines come from the `/orbit-design-system` skill (`.claude/skills/orbit-design-system/`) — consult it before building new UI. Rules already encoded in this codebase:
+Visual guidelines come from the `/orbit-design-system` skill (`.claude/skills/orbit-design-system/`) — consult it before building new UI. `STATUS.md` in the skill folder is the register of which DS surfaces are implemented vs backlog — keep it updated when porting more of the system. Rules already encoded in this codebase:
 
-- **Fonts**: Fraunces (serif — titles, headings, body) + Inter (sans — captions, labels, buttons), embedded natively via the `expo-font` config plugin in `app.json` (no runtime `useFonts`). `fontFamily` strings must match the TTFs' PostScript names — `theme.fonts` holds the verified ones (e.g. `serifItalic` for group names).
+- **Fonts**: Fraunces (serif — titles, headings, body) + Inter (sans — captions, labels, buttons), embedded natively via the `expo-font` config plugin in `app.json` (no runtime `useFonts`). `fontFamily` strings must match the TTFs' PostScript names — `theme.fonts` holds the verified ones (e.g. `serifItalic` for group names). Android quirk: `serifItalic` at small sizes (13–14) silently drops trailing colon-digit runs (`9:09`) from rendered text (glyphs exist in the TTF; it's a measure/shaping bug) — don't set times in italic, use `serif`.
 - **`fontWeight` is ESLint-banned outside `theme.ts`** (`no-restricted-syntax` registry in `eslint.config.js`; `theme.ts` is exempted via `omit`). Spread a `theme.typography` role instead. Only Fraunces 400 (+ italic) and Inter 400/500 are bundled — any other weight would render as synthetic faux-bold on Android.
 - **Primary CTAs are ink-on-bone** (`colors.text` fill, `colors.background` text) — never coral. The coral accent is reserved for small markers and highlights.
 - **Disabled = `opacity: 0.5`, pressed = `opacity: 0.6`** — opacity states, not color swaps.
+- **Interaction model**: slide/swipe = act, tap = open (never tick). The hero's up-next habit is ticked via `SlideToConfirm` (slide-to-log) with a ghost "Skip this turn" beside it; queue rows tick out-of-order via swipe-right over a coral `SwipeToLog` pane (no skip on rows — skip only means something for the current turn). Tapping a queue row or the hero habit name opens the `Habit` sheet (read + edit); image thumbnails tap-open the viewer. Long-press is reserved for the group title (→ `EditGroup`) and must activate on hold-elapsed (`Gesture.LongPress().onStart`), never on release.
+- **Never stack sheets** — a `formSheet` must not open another sheet/modal on top of itself. Expand in place instead (see the image source chips in `HabitEditor`) or navigate within the sheet.
+- **Ticking goes through `habits/utils/habitActions`** (`actionHabit` / `undoLastAction`) — never set `lastActioned` directly; the undo toast depends on it. The queue is *derived*: habits sorted by `lastActioned` ascending (`orderQueue`), index 0 is up next; `groupDueness` + `formatCadence` provide due-state and concise cadence labels.
+- **One chromatic accent** — cards are `colors.surface` on `colors.background`; coral only for small markers (active ring dot, due markers, kickers, chips).

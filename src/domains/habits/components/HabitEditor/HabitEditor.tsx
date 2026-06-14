@@ -1,6 +1,5 @@
 import { useEffect, useRef } from 'react'
 import { Alert, Text, TextInput, View } from 'react-native'
-import { StaticScreenProps, useNavigation } from '@react-navigation/native'
 import { StyleSheet, useUnistyles } from 'react-native-unistyles'
 import { useObservable, useSelector } from '@legendapp/state/react'
 import { $TextInput } from '@legendapp/state/react-native'
@@ -17,17 +16,18 @@ import groups$ from 'src/domains/habits/stores/groups'
 import Button from 'src/domains/misc/components/Button'
 import usePendingImages from 'src/domains/habits/utils/usePendingImages'
 import { imageFileUri, imagesDir } from 'src/domains/habits/utils/habitImages'
-import PendingImageRow from './PendingImageRow'
 import useUnmountPromise from 'src/domains/misc/utils/useUnmountPromise'
+import PendingImageRow from './PendingImageRow'
 
-type Props = StaticScreenProps<{
+type Props = {
   groupId: string,
   habitId?: string,
-}>
+  onDone: () => unknown,
+  onCancel: () => unknown,
+  onRemoved?: () => unknown,
+}
 
-const HabitForm = ({ route }: Props) => {
-  const { groupId, habitId } = route.params
-  const navigation = useNavigation()
+const HabitEditor = ({ groupId, habitId, onDone, onCancel, onRemoved }: Props) => {
   const isEditMode = isNonNullish(habitId)
   const { theme } = useUnistyles()
   const name$ = useObservable(() => habitId ? habits$[habitId].name.get() : '')
@@ -57,7 +57,7 @@ const HabitForm = ({ route }: Props) => {
 
   const { pendingImages, addPendingImage, commitPendingImages, clearPendingImages } = usePendingImages()
 
-  useEffect(() => () => { clearPendingImages() }, [])
+  useEffect(() => () => void clearPendingImages(), [])
 
   const submit = async () => {
     const [description, newFilenames] = await Promise.all([
@@ -69,7 +69,7 @@ const HabitForm = ({ route }: Props) => {
     const name = name$.peek().trim()
     const filesToDelete = originalFilenames.current.filter(f => !remainingFilenames.includes(f))
 
-    navigation.goBack()
+    onDone()
 
     if (isEditMode) {
       filesToDelete.forEach(filename => {
@@ -101,22 +101,18 @@ const HabitForm = ({ route }: Props) => {
     payload.uris.forEach(uri => void new File(uri).delete())
   }
 
-  const handleRemove = () => {
-    if (habitId === undefined) {
-      throw new Error('removing habit is not possible if habitId is undefined')
-    }
-
+  const handleRemove = (habitId: string, onRemoved: () => unknown) => () => {
     if (isInOtherGroup) {
       Alert.alert(
-        'Remove from Group?',
-        'This habit will be removed from this group but remain in other groups.',
+        'Remove from rotation?',
+        'This habit will be removed from this rotation but remain in others.',
         [
           { text: 'Cancel', style: 'cancel' },
           {
             text: 'Remove',
             style: 'destructive',
             onPress: async () => {
-              navigation.goBack()
+              onRemoved()
               await unmountPromise
 
               groups$[groupId].habits[habitId].delete()
@@ -126,15 +122,15 @@ const HabitForm = ({ route }: Props) => {
       )
     } else {
       Alert.alert(
-        'Delete Habit?',
-        'This habit isn\'t in any other group. It will be permanently deleted.',
+        'Delete habit?',
+        'This habit isn\'t in any other rotation. It will be permanently deleted.',
         [
           { text: 'Cancel', style: 'cancel' },
           {
             text: 'Delete',
             style: 'destructive',
             onPress: async () => {
-              navigation.goBack()
+              onRemoved()
               await unmountPromise
 
               const images = habits$[habitId].images.peek() ?? []
@@ -155,43 +151,69 @@ const HabitForm = ({ route }: Props) => {
 
   return (
     <View style={styles.sheet}>
-      <Text style={styles.title}>{isEditMode ? 'Edit Habit' : 'New Habit'}</Text>
-      <TextInputWrapper onPaste={handlePaste}>
-        <$TextInput
-          style={styles.input}
-          $value={name$}
-          // @ts-expect-error ref type in Legend State components doesn't match
-          ref={nameInputRef}
-          autoFocus={!isEditMode}
-          placeholder="Habit name"
+      <Text style={styles.kicker}>{isEditMode ? 'Edit habit' : 'New habit'}</Text>
+
+      <View style={styles.fieldGroup}>
+        <Text style={styles.fieldLabel}>Name</Text>
+        <TextInputWrapper onPaste={handlePaste}>
+          <$TextInput
+            style={styles.input}
+            $value={name$}
+            // @ts-expect-error ref type in Legend State components doesn't match
+            ref={nameInputRef}
+            autoFocus={!isEditMode}
+            placeholder="e.g. Hollow hold"
+            placeholderTextColor={theme.colors.textTertiary}
+            onKeyPress={e => {
+              if (e.nativeEvent.key === 'Enter' && canSubmit) void submit()
+            }}
+          />
+        </TextInputWrapper>
+      </View>
+
+      <View style={styles.fieldGroup}>
+        <View style={styles.fieldLabelRow}>
+          <Text style={styles.fieldLabel}>Note</Text>
+          <Text style={styles.fieldLabelOptional}>· optional</Text>
+        </View>
+        <EnrichedMarkdownTextInput
+          ref={descInputRef}
+          defaultValue={habitId ? habits$[habitId].description.peek() : ''}
+          multiline
+          style={styles.descriptionInput}
+          placeholder="Form cues, why it matters, links."
           placeholderTextColor={theme.colors.textTertiary}
-          onKeyPress={e => {
-            if (e.nativeEvent.key === 'Enter' && canSubmit) void submit()
-          }}
+          markdownStyle={{ link: { color: theme.colors.accent }} satisfies MarkdownTextInputStyle}
         />
-      </TextInputWrapper>
-      <EnrichedMarkdownTextInput
-        ref={descInputRef}
-        defaultValue={habitId ? habits$[habitId].description.peek() : ''}
-        multiline
-        style={styles.descriptionInput}
-        placeholder="Description (optional)"
-        placeholderTextColor={theme.colors.textTertiary}
-        markdownStyle={{ link: { color: theme.colors.accent }} satisfies MarkdownTextInputStyle}
-      />
-      <PendingImageRow
-        pendingImages={[...existingAsUnified, ...pendingImages]}
-        onAddImage={addPendingImage}
-      />
-      <Button
-        title={isEditMode ? 'Save' : 'Create'}
-        onPress={submit}
-        disabled={!canSubmit}
-      />
-      {isEditMode && (
+      </View>
+
+      <View style={styles.fieldGroup}>
+        <View style={styles.fieldLabelRow}>
+          <Text style={styles.fieldLabel}>Images</Text>
+          <Text style={styles.fieldLabelOptional}>· optional</Text>
+        </View>
+        <PendingImageRow
+          pendingImages={[...existingAsUnified, ...pendingImages]}
+          onAddImage={addPendingImage}
+        />
+      </View>
+
+      <View style={styles.footerRow}>
+        <View style={styles.footerCancel}>
+          <Button title="Cancel" variant="ghost" onPress={onCancel} />
+        </View>
+        <View style={styles.footerSubmit}>
+          <Button
+            title={isEditMode ? 'Save' : 'Create'}
+            onPress={submit}
+            disabled={!canSubmit}
+          />
+        </View>
+      </View>
+      {isEditMode && onRemoved && (
         <Button
-          title={isInOtherGroup ? 'Remove from Group' : 'Delete Habit'}
-          onPress={handleRemove}
+          title={isInOtherGroup ? 'Remove from rotation' : 'Delete habit'}
+          onPress={handleRemove(habitId, onRemoved)}
           variant="secondary"
         />
       )}
@@ -199,7 +221,7 @@ const HabitForm = ({ route }: Props) => {
   )
 }
 
-export default HabitForm
+export default HabitEditor
 
 const styles = StyleSheet.create(theme => ({
   sheet: {
@@ -207,27 +229,59 @@ const styles = StyleSheet.create(theme => ({
     paddingBottom: theme.spacing['4xl'],
     gap: theme.spacing.xl,
   },
-  title: {
-    ...theme.typography.heading,
-    color: theme.colors.text,
+  kicker: {
+    ...theme.typography.label,
+    color: theme.colors.textTertiary,
+  },
+  fieldGroup: {
+    gap: theme.spacing.sm,
+  },
+  fieldLabelRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: theme.spacing.xs,
+  },
+  fieldLabel: {
+    ...theme.typography.label,
+    color: theme.colors.textSecondary,
+  },
+  fieldLabelOptional: {
+    fontFamily: theme.fonts.sans,
+    fontSize: 9,
+    lineHeight: 9,
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    color: theme.colors.textTertiary,
   },
   input: {
-    backgroundColor: theme.colors.background,
+    backgroundColor: theme.colors.surface,
     borderRadius: theme.radii.xs,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
     padding: theme.spacing.md,
-    ...theme.typography.body,
+    fontFamily: theme.fonts.serif,
+    fontSize: 18,
+    lineHeight: 25,
+    letterSpacing: -0.2,
     color: theme.colors.text,
   },
   descriptionInput: {
-    backgroundColor: theme.colors.background,
+    backgroundColor: theme.colors.surface,
     borderRadius: theme.radii.xs,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
     padding: theme.spacing.md,
-    ...theme.typography.body,
+    fontFamily: theme.fonts.serif,
+    fontSize: 16,
+    lineHeight: 22,
+    letterSpacing: -0.2,
     color: theme.colors.text,
     minHeight: 120,
+  },
+  footerRow: {
+    flexDirection: 'row',
+    gap: theme.spacing.sm,
+  },
+  footerCancel: {
+    flex: 1,
+  },
+  footerSubmit: {
+    flex: 1.3,
   },
 }))

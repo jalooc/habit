@@ -13,11 +13,11 @@ const AddHabitFooter = ({ groupId, hasHabits }: Props) => {
   return (
     <Pressable
       style={({ pressed }) => [addCardStyles.container, pressed && addCardStyles.pressed]}
-      onPress={() => void navigation.navigate('HabitForm', { groupId })}
+      onPress={() => void navigation.navigate('NewHabit', { groupId })}
     >
       <Text style={addCardStyles.plus}>+</Text>
       <Text style={addCardStyles.label}>
-        {hasHabits ? 'Add Habit' : 'Add First Habit'}
+        {hasHabits ? 'Add a habit' : 'Add your first habit'}
       </Text>
     </Pressable>
   )

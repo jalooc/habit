@@ -3,8 +3,10 @@ import Home from 'src/domains/misc/screens/Home'
 import NewGroup from 'src/domains/habits/screens/NewGroup'
 import Group from 'src/domains/habits/screens/Group'
 import EditGroup from 'src/domains/habits/screens/EditGroup'
-import HabitForm from 'src/domains/habits/screens/HabitForm'
+import NewHabit from 'src/domains/habits/screens/NewHabit'
 import EditSchedule from 'src/domains/habits/screens/EditSchedule'
+import Habit from 'src/domains/habits/screens/Habit'
+import ActiveHours from 'src/domains/misc/screens/ActiveHours'
 import { groupScreenLinkingConfig } from 'src/domains/habits/utils/linking'
 import DevTools from 'src/domains/devTools/screens/DevTools'
 import DevLog from 'src/domains/devTools/screens/DevLog'
@@ -42,8 +44,8 @@ const RootStack = createNativeStackNavigator({
         sheetAllowedDetents: 'fitToContents',
       },
     },
-    HabitForm: {
-      screen: HabitForm,
+    NewHabit: {
+      screen: NewHabit,
       options: {
         presentation: 'formSheet',
         sheetAllowedDetents: 'fitToContents',
@@ -54,6 +56,20 @@ const RootStack = createNativeStackNavigator({
       options: {
         presentation: 'formSheet',
         sheetAllowedDetents: [0.65] as number[],
+      },
+    },
+    Habit: {
+      screen: Habit,
+      options: {
+        presentation: 'formSheet',
+        sheetAllowedDetents: 'fitToContents',
+      },
+    },
+    ActiveHours: {
+      screen: ActiveHours,
+      options: {
+        presentation: 'formSheet',
+        sheetAllowedDetents: 'fitToContents',
       },
     },
     DevTools: {

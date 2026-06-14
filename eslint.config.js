@@ -34,7 +34,6 @@ const noRestrictedSyntaxRules = {
 export default [
   globalIgnores(['.claude/skills/orbit-design-system']),
   ...defineConfig(
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument,@typescript-eslint/no-unsafe-call,@typescript-eslint/no-unsafe-member-access
     includeIgnoreFile(path.resolve(path.dirname(fileURLToPath(import.meta.url)), '.gitignore')),
     eslint.configs.recommended,
     ...tseslint.configs.strictTypeChecked,
@@ -57,7 +56,6 @@ export default [
               'metro.config.js',
             ],
           },
-          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           tsconfigRootDir: import.meta.dirname,
         },
       },

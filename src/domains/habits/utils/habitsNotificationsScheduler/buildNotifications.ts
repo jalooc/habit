@@ -28,7 +28,7 @@ export default (
       title: group.name,
       body: names[i % names.length],
       date: new Date(occurence.epochMilliseconds),
-      data: { url: createGroupScreenLink(groupId, { withTickOff: true }) },
+      data: { url: createGroupScreenLink(groupId) },
     }))
   })
 

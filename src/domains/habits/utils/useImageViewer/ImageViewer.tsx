@@ -1,14 +1,15 @@
-import { Modal, Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native'
+import { Modal, Pressable, ScrollView, useWindowDimensions, View } from 'react-native'
 import { StyleSheet } from 'react-native-unistyles'
 import { Image } from 'expo-image'
 import { useEffect, useRef } from 'react'
+import Lucide from '@react-native-vector-icons/lucide'
 import { imageFileUri } from 'src/domains/habits/utils/habitImages'
 
 type Props = {
   images: string[],
   initialIndex: number,
   visible: boolean,
-  onClose: () => void,
+  onClose: () => unknown,
 }
 
 const ImageViewer = ({ images, initialIndex, visible, onClose }: Props) => {
@@ -52,7 +53,7 @@ const ImageViewer = ({ images, initialIndex, visible, onClose }: Props) => {
           ))}
         </ScrollView>
         <Pressable style={styles.closeButton} onPress={onClose} hitSlop={16}>
-          <Text style={styles.closeButtonText}>×</Text>
+          <Lucide name="x" size={22} style={styles.closeIcon} />
         </Pressable>
       </View>
     </Modal>
@@ -84,9 +85,7 @@ const styles = StyleSheet.create(theme => ({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  closeButtonText: {
+  closeIcon: {
     color: '#fff',
-    fontSize: 24,
-    lineHeight: 28,
   },
 }))
