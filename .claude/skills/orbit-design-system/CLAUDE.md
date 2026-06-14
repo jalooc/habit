@@ -51,8 +51,13 @@ the right one per screen instead of defaulting everything to a card push.
 5. **Status bar and safe areas**: card and fullScreenModal own the full safe
    area; modal/formSheet leave the system status bar on the underlying
    screen.
-6. **Stacking**: a modal can present another modal. Show this clearly when
-   prototyping — don't collapse stacked modals into a single screen.
+6. **Never stack sheets.** On iOS `formSheet`, presenting a sheet from a
+   sheet is broken — do not present a modal/sheet from another modal/sheet.
+   Instead **expand the current sheet in place** (e.g. grow a medium detent to
+   large) or **flip the same sheet between modes** (reader → editor in one
+   sheet). A full-screen `card` push *from within* a sheet is fine; a second
+   stacked sheet is not. When prototyping, show the single sheet changing
+   state — never two sheets layered.
 
 ### Tweaks
 

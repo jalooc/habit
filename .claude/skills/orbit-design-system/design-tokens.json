@@ -2,103 +2,171 @@
   "$schema": "https://design-tokens.github.io/community-group/format/",
   "meta": {
     "name": "Orbit + Ink",
-    "version": "0.4.0",
+    "version": "0.5.0",
     "themes": ["light", "dark"],
-    "description": "Design tokens for a rotating-habits app. One chromatic accent (coral / sand-coral). Calm, literary, warm."
+    "description": "Design tokens for a rotating-habits app. One chromatic accent (coral / sand-coral). Calm, literary, warm.",
+    "target": {
+      "platform": "React Native / Expo",
+      "styling": "Unistyles 3 — StyleSheet.create(theme => …) with live adaptive light/dark",
+      "comment": "This token map is authored for a native target. Names below match RN/Unistyles theme conventions. The web view of these tokens (CSS custom properties + @import fonts) lives in colors_and_type.css and is a secondary consumer — see legacyNames for the old web variable names."
+    }
+  },
+
+  "legacyNames": {
+    "comment": "Old web-era token name → canonical name. The lab (index.html + *.jsx + colors_and_type.css) still uses the legacy CSS variable names (--bg, --ink, …); colors_and_type.css now also exposes the canonical names as aliases. New native ports should use the canonical names only.",
+    "color": {
+      "bg": "background",
+      "card": "surface",
+      "ink": "text",
+      "inkSoft": "textSecondary",
+      "inkFaint": "textTertiary",
+      "accent": "accent",
+      "accentDim": "accentDim",
+      "accentSoft": "accentSubtle",
+      "rule": "border"
+    },
+    "type": {
+      "h1": "title",
+      "groupDisplay": "heading",
+      "bodySerif": "body",
+      "meta": "caption",
+      "kicker": "label",
+      "sectionLabel": "label",
+      "buttonPrimary": "button",
+      "ringCenter": "ringCenter (optional)",
+      "buttonSmall": "buttonSmall (optional)"
+    },
+    "radius": {
+      "hero": "xl",
+      "card": "lg",
+      "inner": "md",
+      "subtle": "sm",
+      "input": "xs",
+      "pill": "pill"
+    }
   },
 
   "color": {
     "light": {
-      "bg":         { "value": "#f5f1ec", "comment": "Bone — page background" },
-      "card":       { "value": "#ffffff", "comment": "White — surface (cards, inputs, modals)" },
-      "ink":        { "value": "#1a1814", "comment": "Near-black — primary text, primary CTA fill" },
-      "inkSoft":    { "value": "#7a766e", "comment": "Secondary text" },
-      "inkFaint":   { "value": "#b5b0a6", "comment": "Tertiary text, placeholders, disabled" },
-      "accent":     { "value": "#c96442", "comment": "Coral — single chromatic. Active rotation dot, NOW labels, kickers." },
-      "accentDim":  { "value": "#e7dccf", "comment": "Coral pastel — outline of inactive dots, dividers." },
-      "accentSoft": { "value": "#f4dccf", "comment": "Coral wash — soft background tint (chips, paused card)." },
-      "rule":       { "value": "rgba(26,24,20,0.10)", "comment": "Subtle dividing line." }
+      "background":    { "value": "#f5f1ec", "comment": "Bone — page background (was: bg)" },
+      "surface":       { "value": "#ffffff", "comment": "White — cards, inputs, sheets (was: card)" },
+      "text":          { "value": "#1a1814", "comment": "Near-black — primary text, primary CTA fill (was: ink)" },
+      "textSecondary": { "value": "#7a766e", "comment": "Secondary text (was: inkSoft)" },
+      "textTertiary":  { "value": "#b5b0a6", "comment": "Tertiary text, placeholders, disabled (was: inkFaint)" },
+      "accent":        { "value": "#c96442", "comment": "Coral — single chromatic. Active rotation dot, NOW labels, kickers." },
+      "accentDim":     { "value": "#e7dccf", "comment": "Coral pastel — outline of inactive dots, dividers." },
+      "accentSubtle":  { "value": "#f4dccf", "comment": "Coral wash — soft background tint, swipe-to-tick pane (was: accentSoft)." },
+      "border":        { "value": "rgba(26,24,20,0.10)", "comment": "Subtle dividing line (was: rule)." }
     },
     "dark": {
-      "bg":         { "value": "#1c1d20" },
-      "card":       { "value": "#252629" },
-      "ink":        { "value": "#ece8e2" },
-      "inkSoft":    { "value": "#9a958c" },
-      "inkFaint":   { "value": "#5d594f" },
-      "accent":     { "value": "#e3a37a", "comment": "Sand-coral — softened for dark surfaces." },
-      "accentDim":  { "value": "#3a342d" },
-      "accentSoft": { "value": "#2b2723" },
-      "rule":       { "value": "rgba(236,232,226,0.10)" }
+      "background":    { "value": "#1c1d20" },
+      "surface":       { "value": "#252629" },
+      "text":          { "value": "#ece8e2" },
+      "textSecondary": { "value": "#9a958c" },
+      "textTertiary":  { "value": "#5d594f" },
+      "accent":        { "value": "#e3a37a", "comment": "Sand-coral — softened for dark surfaces." },
+      "accentDim":     { "value": "#3a342d" },
+      "accentSubtle":  { "value": "#2b2723" },
+      "border":        { "value": "rgba(236,232,226,0.10)" }
     }
   },
 
   "shadow": {
+    "comment": "Express as a single RN boxShadow string per theme — Unistyles/RN 0.81+ accept the CSS-style shorthand. Used on all cards.",
+    "_caveat": "Keep the ambient layer's reach tight. Android's boxShadow renders as a plateau, not a true gaussian falloff — if the blur radius is large relative to the inter-card gap, the shadows of adjacent cards merge and flood the gap into a flat gray band. The 32px ambient blur below is tuned against the cozy card gap (12–16px); if you widen the blur, widen the gap too.",
     "light": {
-      "card": { "value": "0 1px 2px rgba(26,24,20,0.04), 0 8px 32px rgba(26,24,20,0.08)" },
-      "paused": { "value": "0 6px 22px rgba(201,100,66,0.28)" }
+      "card":   { "value": "0 1px 2px rgba(26,24,20,0.04), 0 8px 32px rgba(26,24,20,0.08)" },
+      "paused": { "value": "0 6px 22px rgba(201,100,66,0.28)", "comment": "Coral-tinted glow on the paused banner only." }
     },
     "dark": {
-      "card": { "value": "0 1px 2px rgba(0,0,0,0.25), 0 12px 36px rgba(0,0,0,0.4)" },
+      "card":   { "value": "0 1px 2px rgba(0,0,0,0.25), 0 12px 36px rgba(0,0,0,0.4)" },
       "paused": { "value": "0 6px 22px rgba(227,163,122,0.20)" }
     }
   },
 
   "font": {
-    "serif":  { "value": "\"Fraunces\", Georgia, serif", "comment": "Display + body. ital + opsz axes used (variable)." },
-    "sans":   { "value": "\"Inter\", system-ui, -apple-system, sans-serif", "comment": "UI text, labels, buttons. Weights 400 / 500 / 600." }
+    "comment": "Native target: embed discrete TTFs (expo-font / useFonts). fontFamily MUST equal each file's PostScript name — not 'Fraunces' + a weight prop. No Google Fonts @import, no variable-font axes (the opsz axis cannot be relied on across platforms — pick fixed sizes per role, see `type`).",
+    "_shipped": "We bundle exactly four faces: Fraunces-Regular, Fraunces-Italic, Inter-Regular, Inter-Medium. Any weight you reference but do not bundle renders as synthetic faux-bold on Android — do not assume Inter SemiBold/600 exists unless you add the file.",
+    "_caveats": [
+      "Inter 600/SemiBold is intentionally NOT shipped (was a web dependency). Drop it or bundle Inter-SemiBold explicitly before using it.",
+      "Italic serif at small sizes (13–14px) silently drops trailing colon-digit runs (e.g. \"9:09\" loses the \":09\") on Android — a HarfBuzz shaping bug with Fraunces-Italic. Never set clock times in italic; use Inter-Regular (caption) for times, or upright Fraunces."
+    ],
+    "families": {
+      "serifRegular": { "value": "Fraunces-Regular", "comment": "PostScript name. Display + body, upright." },
+      "serifItalic":  { "value": "Fraunces-Italic",  "comment": "PostScript name. Group names, literary quotes. Avoid at <15px with colon-digit runs (Android)." },
+      "sansRegular":  { "value": "Inter-Regular",    "comment": "PostScript name. Meta, captions, body chrome." },
+      "sansMedium":   { "value": "Inter-Medium",     "comment": "PostScript name. Kickers, labels, buttons." }
+    }
   },
 
   "type": {
-    "h1":           { "font": "serif", "size": 32, "weight": 400, "lineHeight": 1.1, "letterSpacing": -0.4, "comment": "Screen titles" },
-    "groupDisplay": { "font": "serif", "size": 22, "weight": 400, "lineHeight": 1.1, "letterSpacing": -0.3 },
-    "bodySerif":    { "font": "serif", "size": 16, "weight": 400, "lineHeight": 1.4, "letterSpacing": -0.2, "comment": "Habit names, body copy" },
-    "ringCenter":   { "font": "serif", "size": 21, "weight": 400, "lineHeight": 1.2, "letterSpacing": -0.2, "comment": "Up-next text inside the orbit ring" },
-    "kicker":       { "font": "sans",  "size": 11, "weight": 500, "lineHeight": 1.0, "letterSpacing": 1.8, "transform": "uppercase", "comment": "Labels above titles, section headers" },
-    "sectionLabel": { "font": "sans",  "size": 11, "weight": 500, "lineHeight": 1.0, "letterSpacing": 1.5, "transform": "uppercase" },
-    "buttonPrimary":{ "font": "sans",  "size": 12, "weight": 500, "lineHeight": 1.0, "letterSpacing": 1.5, "transform": "uppercase" },
-    "buttonSmall":  { "font": "sans",  "size": 11, "weight": 500, "lineHeight": 1.0, "letterSpacing": 1.2 },
-    "meta":         { "font": "sans",  "size": 13, "weight": 400, "lineHeight": 1.3 }
+    "comment": "Fixed sizes per role (no opsz axis). `family` is a PostScript name from font.families.",
+    "title":     { "family": "Fraunces-Regular", "size": 32, "lineHeight": 1.1, "letterSpacing": -0.4, "comment": "Screen titles (was: h1)" },
+    "heading":   { "family": "Fraunces-Regular", "size": 22, "lineHeight": 1.1, "letterSpacing": -0.3, "comment": "Group / list-card names (was: groupDisplay). Italic-eligible via Fraunces-Italic." },
+    "body":      { "family": "Fraunces-Regular", "size": 16, "lineHeight": 1.4, "letterSpacing": -0.2, "comment": "Habit names, body copy (was: bodySerif)" },
+    "caption":   { "family": "Inter-Regular",    "size": 13, "lineHeight": 1.3, "comment": "Meta lines, times (was: meta)" },
+    "label":     { "family": "Inter-Medium",     "size": 11, "lineHeight": 1.0, "letterSpacing": 1.8, "transform": "uppercase", "comment": "Kickers + section headers (was: kicker / sectionLabel). Section headers used 1.5 tracking — tighten to 1.5 if a label sits inline with body." },
+    "button":    { "family": "Inter-Medium",     "size": 12, "lineHeight": 1.0, "letterSpacing": 1.5, "transform": "uppercase", "comment": "Primary CTA pill text (was: buttonPrimary)" },
+    "ringCenter":  { "family": "Fraunces-Regular", "size": 21, "lineHeight": 1.2, "letterSpacing": -0.2, "optional": true, "comment": "Up-next text inside the orbit ring. Optional — no app equivalent in the current port (the ring center is empty); restore if you label the center." },
+    "buttonSmall": { "family": "Inter-Medium",     "size": 11, "lineHeight": 1.0, "letterSpacing": 1.2, "optional": true, "comment": "Optional — no app equivalent. Use `button` at a smaller padding instead." }
   },
 
   "radius": {
-    "hero":   { "value": 28, "comment": "Hero / active rotation cards" },
-    "card":   { "value": 22, "comment": "List cards (rotations)" },
-    "inner":  { "value": 18, "comment": "Inputs blocks, secondary cards" },
-    "subtle": { "value": 16 },
-    "input":  { "value": 14, "comment": "Single inputs (name field)" },
-    "pill":   { "value": 100, "comment": "Buttons, chips, badges" }
+    "comment": "Flat T-shirt scale. Intent-per-size kept as comments, not as key names (the old hero/card/inner/subtle/input names collided with component names).",
+    "xl":   { "value": 28, "comment": "Hero / active rotation cards (was: hero)" },
+    "lg":   { "value": 22, "comment": "List cards — rotations index (was: card)" },
+    "md":   { "value": 18, "comment": "Inputs blocks, secondary cards, queue list (was: inner)" },
+    "sm":   { "value": 16, "comment": "Inner clusters, settings rows (was: subtle)" },
+    "xs":   { "value": 14, "comment": "Single inputs — name field (was: input)" },
+    "pill": { "value": 100, "comment": "Buttons, chips, badges, slide-to-confirm track" }
   },
 
-  "density": {
-    "compact": { "screenPad": 18, "cardPad": 12, "gap": 8,  "ringBoxPad": "18px 12px 14px" },
-    "cozy":    { "screenPad": 22, "cardPad": 16, "gap": 12, "ringBoxPad": "24px 14px 20px", "comment": "Default" },
-    "roomy":   { "screenPad": 26, "cardPad": 20, "gap": 16, "ringBoxPad": "32px 18px 26px" }
+  "spacing": {
+    "comment": "Single flat scale (replaces the old compact/cozy/roomy density model — RN apps don't carry a density mode). Values in px.",
+    "xs":  { "value": 4 },
+    "sm":  { "value": 8 },
+    "md":  { "value": 12 },
+    "lg":  { "value": 16 },
+    "xl":  { "value": 20 },
+    "2xl": { "value": 24 },
+    "3xl": { "value": 32 },
+    "4xl": { "value": 48 },
+    "_usage": {
+      "comment": "The old 'cozy' defaults, expressed against this scale (cozy was the only canonical mode):",
+      "screenPaddingX": "xl (20) — rounded from the old cozy 22",
+      "cardPadding":    "lg (16)",
+      "stackGap":       "md (12)",
+      "heroRingBox":    "top 2xl (24) · sides lg (16) · bottom xl (20) — from the old ringBoxPad '24px 14px 20px'",
+      "bottomSafeArea": "3xl (32) below the last content block (plus the device safe-area inset)"
+    }
   },
 
   "ring": {
+    "comment": "OrbitRing sizing. RN: build from Views + transforms (Reanimated) rather than SVG — see _impl. SVG remains valid on web.",
+    "_impl": "Native recipe: lay dots out with absolute Views positioned by transform: [{rotate}, {translateY: -radius}, {rotate: '-…'}] so each dot stays upright; rotate the container View for the one-notch settle and counter-rotate dot content. Drive the 550ms settle + the halo pulse with Reanimated (useSharedValue + withTiming/withRepeat). SVG is optional and only worth it if you also draw the thin outer ring stroke.",
     "small":   { "hero": 216, "mini": 56, "miniSmall": 48, "font": 19 },
     "default": { "hero": 244, "mini": 72, "miniSmall": 56, "font": 21 },
     "large":   { "hero": 276, "mini": 88, "miniSmall": 64, "font": 24 },
 
-    "outerRingStroke":     { "value": 1, "comment": "Outer ring stroke width (px)" },
+    "outerRingStroke":     { "value": 1, "comment": "Thin outer ring stroke width (px). Web/SVG only; on native draw as a 1px bordered circular View or omit." },
     "inactiveDotRadius":   { "value": 5 },
     "inactiveDotStroke":   { "value": 1.5 },
     "activeDotRadius":     { "value": 12 },
     "activeInnerDotRadius":{ "value": 4, "comment": "White punched-out dot inside the active coral dot" },
-    "tickMarkOpacity":     { "value": 0.4 }
+    "tickMarkOpacity":     { "value": 0.4, "optional": true, "comment": "Tick marks between dots are OPTIONAL — dropped in the current port. No progress arc, ever (the rotation loops forever)." }
   },
 
   "motion": {
-    "ringRotate":   { "duration": 550, "easing": "cubic-bezier(.55,.06,.3,1)", "comment": "Headline rotation when a habit is ticked" },
+    "ringRotate":   { "duration": 550, "easing": "cubic-bezier(.55,.06,.3,1)", "comment": "Headline rotation when a habit is ticked. RN: withTiming(target, { duration: 550, easing: Easing.bezier(.55,.06,.3,1) })." },
     "settleHold":   { "duration": 50,  "comment": "Pause after rotation before cursor commits" },
     "uiFast":       { "duration": 200, "easing": "ease" },
     "uiMedium":     { "duration": 250, "easing": "ease" },
-    "haloPulse":    { "duration": 2400,"easing": "ease-in-out", "iteration": "infinite" }
+    "haloPulse":    { "duration": 2400,"easing": "ease-in-out", "iteration": "infinite", "comment": "Active-dot halo: r 14→20→14, opacity .16→.06→.16. RN: withRepeat(withTiming(...), -1, true)." }
   },
 
   "device": {
     "width":  { "value": 412 },
     "height": { "value": 892 },
-    "comment": "Android Pixel-class, design canvas. Mobile-first."
+    "comment": "Android Pixel-class, design canvas. Mobile-first. Real builds use the device safe-area insets, not these fixed numbers."
   }
 }

@@ -1,14 +1,32 @@
 /* ─────────────────────────────────────────────────────────────────
    Orbit + Ink — colors_and_type.css
 
-   Canonical CSS variables for both themes + semantic typography +
-   spacing + motion. Drop this in once at the document root.
+   The WEB view of the design system. Drop this in once at the document
+   root for a static site / HTML mock. Theme switches by setting
+   `data-theme="dark"` on <html> or <body>; the dark block overrides.
 
-   Theme switches by setting `data-theme="dark"` on <html> or <body>.
-   The dark block overrides the light vars.
+   ── This is NOT the primary target ──
+   The system is authored for React Native / Expo (Unistyles 3). See the
+   "Porting to React Native / Expo" section in README.md and the canonical
+   token map in design-tokens.json. Native ports must NOT consume this file
+   (no CSS vars, no @import, no hover, no cursor on native). The variable
+   names below carry both the legacy web names (--bg, --ink, …, which the
+   lab still depends on) AND the canonical names (--background, --text, …)
+   as aliases so new web work can use the same vocabulary as native.
+
+   FONTS — native vs web:
+   • Web (this file): @import below loads Fraunces + Inter from Google.
+   • Native: embed discrete TTFs via expo-font; fontFamily must equal the
+     PostScript name (Fraunces-Regular / Fraunces-Italic / Inter-Regular /
+     Inter-Medium). No variable-font axes — opsz is unreliable across
+     platforms, so roles use fixed sizes (see design-tokens.json `type`).
+   • Inter 600 is intentionally dropped (faux-bold on Android if unbundled).
+     The import + classes below ship only Inter 400/500.
+   • Caveat: italic Fraunces at 13–14px drops trailing colon-digit runs
+     ("9:09") on Android. Never set clock times in italic.
    ───────────────────────────────────────────────────────────────── */
 
-@import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Inter:wght@400;500;600&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Inter:wght@400;500&display=swap");
 
 :root, [data-theme="light"] {
   /* ── color · semantic ── */
@@ -24,6 +42,20 @@
 
   --shadow:        0 1px 2px rgba(26,24,20,0.04), 0 8px 32px rgba(26,24,20,0.08);
   --shadow-paused: 0 6px 22px rgba(201,100,66,0.28);
+  /* Shadow caveat (native): keep the ambient blur (32px) tight relative to
+     the card gap. Android's boxShadow is a plateau, not a gaussian falloff —
+     too-large a blur floods the inter-card gap into a flat gray band. */
+
+  /* ── canonical token aliases (match design-tokens.json / RN theme) ──
+     The legacy names above stay (the lab depends on them); these map the
+     canonical native names onto the same values for new web work. */
+  --background:     var(--bg);
+  --surface:        var(--card);
+  --text:           var(--ink);
+  --text-secondary: var(--ink-soft);
+  --text-tertiary:  var(--ink-faint);
+  --accent-subtle:  var(--accent-soft);
+  --border:         var(--rule);
 
   /* status bar colour expectation — dark icons on a light background */
   color-scheme: light;
@@ -46,7 +78,9 @@
   color-scheme: dark;
 }
 
-/* ── type · font stacks ─────────────────────────────────────────── */
+/* ── type · font stacks ───────────────────────────────────────────
+   Web stacks. Native equivalents are the PostScript names
+   Fraunces-Regular/-Italic and Inter-Regular/-Medium (see header). */
 :root {
   --serif: "Fraunces", Georgia, serif;
   --sans:  "Inter", system-ui, -apple-system, sans-serif;
@@ -59,7 +93,13 @@
   --radius-input:  14px;
   --radius-pill:   100px;
 
-  /* ── density (cozy default) ── */
+  /* ── spacing (cozy default) ──
+     NATIVE: there is no density mode. Use the flat spacing scale in
+     design-tokens.json (xs 4 / sm 8 / md 12 / lg 16 / xl 20 / 2xl 24 /
+     3xl 32 / 4xl 48). The cozy values below map to: screen pad → xl(20)
+     [rounded from 22], card pad → lg(16), gap → md(12), ring box → top
+     2xl(24) / sides lg(16) / bottom xl(20). The compact/cozy/roomy blocks
+     below are retained only for the web lab's density Tweak. */
   --pad-screen:    22px;
   --pad-card:      16px;
   --gap:           12px;
@@ -262,7 +302,9 @@ html, body {
 }
 
 /* ── focus / interaction ──────────────────────────────────────────
-   Subtle. Coral 1px outline.
+   Subtle. Coral 1px outline. WEB-ONLY: native has no hover, no cursor,
+   no focus-visible. On native, press feedback = opacity 0.6 (Pressable);
+   there is no hover state and no cursor to set.
    ───────────────────────────────────────────────────────────────── */
 :focus-visible {
   outline: 1.5px solid var(--accent);
@@ -272,7 +314,7 @@ html, body {
 
 .oi-pill:disabled, .oi-pill[aria-disabled="true"] {
   opacity: 0.5;
-  cursor: default;
+  cursor: default;     /* web-only; native uses disabled Pressable, no cursor */
 }
 
 /* ── ring animation primitive ──
