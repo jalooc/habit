@@ -1,4 +1,4 @@
-import { ReactNode } from 'react'
+import { ReactElement } from 'react'
 import { useSelector, useValue } from '@legendapp/state/react'
 import { FlatList, Text, Pressable, View } from 'react-native'
 import { StyleSheet } from 'react-native-unistyles'
@@ -8,30 +8,32 @@ import habits$ from 'src/domains/habits/stores/habits'
 import orderQueue from 'src/domains/habits/utils/orderQueue'
 import OrbitMini from './OrbitMini'
 import isGroupDue from 'src/domains/habits/utils/groupDueness'
+import lastCompletedInGroup from 'src/domains/habits/utils/lastCompletedInGroup'
 import formatCadence from 'src/domains/habits/utils/formatCadence'
 
 type Props = {
-  footer?: ReactNode,
+  groupIds: string[],
+  isAppEmpty: boolean,
+  header?: ReactElement,
+  footer?: ReactElement,
 }
 
-const Groups = ({ footer }: Props) => {
-  const groupIds = useSelector(() => Object.keys(groups$.get()))
-
-  return (
-    <FlatList
-      data={groupIds}
-      renderItem={({ item: groupId }) => <GroupCard id={groupId} />}
-      keyExtractor={id => id}
-      // Android clips each cell's soft boxShadow into a hard-edged band between cards
-      removeClippedSubviews={false}
-      style={listStyles.bleed}
-      contentContainerStyle={listStyles.list}
-      showsVerticalScrollIndicator={false}
-      ListEmptyComponent={<EmptyState />}
-      ListFooterComponent={footer ? <>{footer}</> : null}
-    />
-  )
-}
+const Groups = ({ groupIds, isAppEmpty, header, footer }: Props) => (
+  <FlatList
+    data={groupIds}
+    renderItem={({ item: groupId }) => <GroupCard id={groupId} />}
+    keyExtractor={id => id}
+    // Android clips each cell's soft boxShadow into a hard-edged band between cards
+    removeClippedSubviews={false}
+    style={listStyles.bleed}
+    contentContainerStyle={listStyles.list}
+    showsVerticalScrollIndicator={false}
+    ListHeaderComponent={header}
+    // empty only when the app has no rotations at all — not when every rotation is surfaced above
+    ListEmptyComponent={isAppEmpty ? <EmptyState /> : null}
+    ListFooterComponent={footer ? <>{footer}</> : null}
+  />
+)
 
 export default Groups
 
@@ -63,8 +65,11 @@ const GroupCard = ({ id }: GroupCardProps) => {
 
     const upNextId = ordered[0]
     const upNextName = upNextId ? habitsMap[upNextId].name : null
-    const upNextLastActioned = upNextId ? habitsMap[upNextId].lastActioned?.timestamp : undefined
-    const due = isGroupDue({ recurrence, upNextLastActioned, now: new Date() })
+    const due = isGroupDue({
+      recurrence,
+      lastCompletedMs: lastCompletedInGroup(habitIds, habitsMap),
+      now: new Date(),
+    })
     const cadenceLabel = recurrence ? formatCadence(recurrence) : null
     const habitCount = habitIds.length
 

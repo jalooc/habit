@@ -10,6 +10,7 @@ import UndoToast from 'src/domains/habits/components/UndoToast'
 import { actionHabit } from 'src/domains/habits/utils/habitActions'
 import orderQueue from 'src/domains/habits/utils/orderQueue'
 import isGroupDue from 'src/domains/habits/utils/groupDueness'
+import lastCompletedInGroup from 'src/domains/habits/utils/lastCompletedInGroup'
 import formatCadence from 'src/domains/habits/utils/formatCadence'
 import formatNextTurn from 'src/domains/habits/utils/formatNextTurn'
 import Chip from 'src/domains/misc/components/Chip'
@@ -52,9 +53,8 @@ const Group = ({ route }: Props) => {
 
   const isDue = useSelector(() => {
     const habitsMap = habits$.get()
-    const [upNextId] = orderedHabitIds
-    const upNextLastActioned = upNextId ? habitsMap[upNextId].lastActioned?.timestamp : undefined
-    return isGroupDue({ recurrence, upNextLastActioned, now: new Date() })
+    const groupHabitIds = Object.keys(groups$[groupId].habits.get())
+    return isGroupDue({ recurrence, lastCompletedMs: lastCompletedInGroup(groupHabitIds, habitsMap), now: new Date() })
   })
 
   const ringSize = Math.max(220, Math.min(276, width - 2 * SCREEN_PADDING - 2 * CARD_PADDING))

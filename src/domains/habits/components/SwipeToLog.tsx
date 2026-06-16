@@ -53,11 +53,6 @@ const SwipeToLog = ({ label, onTrigger, children }: Props) => {
   const rowStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: tx.value }],
   }))
-  // The pane stays invisible until the row actually moves — the row above it turns
-  // translucent while pressed and would reveal it otherwise.
-  const paneStyle = useAnimatedStyle(() => ({
-    opacity: tx.value < 1 ? 0 : 1,
-  }))
   const paneContentStyle = useAnimatedStyle(() => {
     const progress = tx.value / (width.value || 1)
     return {
@@ -72,14 +67,14 @@ const SwipeToLog = ({ label, onTrigger, children }: Props) => {
         style={styles.wrapper}
         onLayout={e => { width.value = e.nativeEvent.layout.width }}
       >
-        <Animated.View style={[styles.pane, paneStyle]}>
+        <View style={styles.pane}>
           <Animated.View style={[styles.paneContent, paneContentStyle]}>
             <View style={styles.checkCircle}>
               <Lucide name="check" size={12} style={styles.check} />
             </View>
             <Text style={styles.paneLabel}>{label}</Text>
           </Animated.View>
-        </Animated.View>
+        </View>
         <Animated.View style={rowStyle}>
           {children}
         </Animated.View>

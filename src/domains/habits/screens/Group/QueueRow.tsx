@@ -3,7 +3,7 @@ import { StyleSheet } from 'react-native-unistyles'
 import { useNavigation } from '@react-navigation/native'
 import { actionHabit } from 'src/domains/habits/utils/habitActions'
 import useImageViewer from 'src/domains/habits/utils/useImageViewer'
-import SwipeToLog from './SwipeToLog'
+import SwipeToLog from 'src/domains/habits/components/SwipeToLog'
 import QueueMosaic from './QueueMosaic'
 
 type Props = {
@@ -25,23 +25,27 @@ const QueueRow = ({ id, name, images, hasNote, isFirst, groupId }: Props) => {
       <SwipeToLog label="Logged" onTrigger={() => void actionHabit(id, 'completed')}>
         <Pressable
           onPress={() => void navigation.navigate('Habit', { habitId: id, groupId })}
-          style={({ pressed }) => [styles.row, !isFirst && styles.rowBorder, pressed && styles.rowPressed]}
+          style={[styles.row, !isFirst && styles.rowBorder]}
         >
-          <View style={styles.indicatorSlot}>
-            <View style={styles.hollowDot} />
-          </View>
-          <View style={styles.content}>
-            <Text style={styles.habitName} numberOfLines={2}>
-              {name}
-              {hasNote && <Text style={styles.noteHint}>{'  ¶'}</Text>}
-            </Text>
-            {images.length > 0 && (
-              <QueueMosaic
-                images={images}
-                onOpen={index => void setVisibleImageIndex(index)}
-              />
-            )}
-          </View>
+          {({ pressed }) => (
+            <View style={[styles.rowContent, pressed && styles.contentPressed]}>
+              <View style={styles.indicatorSlot}>
+                <View style={styles.hollowDot} />
+              </View>
+              <View style={styles.content}>
+                <Text style={styles.habitName} numberOfLines={2}>
+                  {name}
+                  {hasNote && <Text style={styles.noteHint}>{'  ¶'}</Text>}
+                </Text>
+                {images.length > 0 && (
+                  <QueueMosaic
+                    images={images}
+                    onOpen={index => void setVisibleImageIndex(index)}
+                  />
+                )}
+              </View>
+            </View>
+          )}
         </Pressable>
       </SwipeToLog>
       {images.length > 0 && renderImageViewer(images)}
@@ -53,18 +57,20 @@ export default QueueRow
 
 const styles = StyleSheet.create(theme => ({
   row: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: theme.spacing.md,
     paddingVertical: 14,
     paddingHorizontal: theme.spacing.lg,
     backgroundColor: theme.colors.surface,
+  },
+  rowContent: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: theme.spacing.md,
   },
   rowBorder: {
     borderTopWidth: 1,
     borderTopColor: theme.colors.border,
   },
-  rowPressed: {
+  contentPressed: {
     opacity: 0.6,
   },
   indicatorSlot: {

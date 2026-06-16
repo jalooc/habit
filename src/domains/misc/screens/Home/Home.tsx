@@ -1,28 +1,52 @@
+import { useCallback, useMemo, useState } from 'react'
 import { Text, View, Pressable } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { useSelector } from '@legendapp/state/react'
+import { useValue } from '@legendapp/state/react'
 import { StyleSheet } from 'react-native-unistyles'
-import { useNavigation } from '@react-navigation/native'
+import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import dayjs from 'dayjs'
 import Lucide from '@react-native-vector-icons/lucide'
 import Box from 'src/domains/misc/components/Box'
 import Chip from 'src/domains/misc/components/Chip'
+import UndoToast from 'src/domains/habits/components/UndoToast'
 import Groups from './Groups'
+import TodaySections from './TodaySections'
+import OtherRotationsHeader from './OtherRotationsHeader'
 import DevToolsLink from 'src/domains/devTools/components/DevToolsLink'
 import dayBoundaries$ from 'src/domains/misc/stores/dayBoundaries'
 import groups$ from 'src/domains/habits/stores/groups'
+import habits$ from 'src/domains/habits/stores/habits'
+import buildHomeSections from './buildHomeSections'
+
+const NOW_REFRESH_MS = 60_000
 
 const Home = () => {
   const navigation = useNavigation()
   const { top } = useSafeAreaInsets()
 
-  const activeHoursLabel = useSelector(() => {
-    const s = dayBoundaries$.start.get()
-    const e = dayBoundaries$.end.get()
-    return `Active hours · ${formatTime(s.hour, s.minute)} – ${formatTime(e.hour, e.minute)}`
-  })
+  const groups = useValue(groups$)
+  const habits = useValue(habits$)
+  const dayBoundaries = useValue(dayBoundaries$)
 
-  const isEmpty = useSelector(() => Object.keys(groups$.get()).length === 0)
+  // `now` drives the carried/up-next buckets; refresh on focus and on a slow tick
+  // so a "now" row ages into "carried" and upcoming turns surface without a store change.
+  const [now, setNow] = useState(() => Date.now())
+  useFocusEffect(useCallback(() => {
+    setNow(Date.now())
+    const interval = setInterval(() => void setNow(Date.now()), NOW_REFRESH_MS)
+    return () => void clearInterval(interval)
+  }, []))
+
+  const sections = useMemo(
+    () => buildHomeSections({ groups, habits, dayBoundaries, now }),
+    [groups, habits, dayBoundaries, now],
+  )
+
+  const hasNoGroups = Object.keys(groups).length === 0
+  const hasSurfaced = sections.carried.length > 0 || sections.upNext.length > 0
+  const activeHoursLabel =
+    `Active hours · ${formatTime(dayBoundaries.start.hour, dayBoundaries.start.minute)}` +
+    ` – ${formatTime(dayBoundaries.end.hour, dayBoundaries.end.minute)}`
 
   return (
     <Box style={{ paddingTop: top + 16 }}>
@@ -46,13 +70,24 @@ const Home = () => {
         />
       </View>
       <Groups
+        groupIds={sections.otherGroupIds}
+        isAppEmpty={hasNoGroups}
+        header={
+          <View style={homeStyles.listHeader}>
+            <TodaySections sections={sections} />
+            {hasSurfaced && sections.otherGroupIds.length > 0 && (
+              <OtherRotationsHeader />
+            )}
+          </View>
+        }
         footer={
           <AddRotationCard
             onPress={() => void navigation.navigate('NewGroup')}
-            isEmpty={isEmpty}
+            isEmpty={hasNoGroups}
           />
         }
       />
+      <UndoToast />
     </Box>
   )
 }
@@ -95,6 +130,9 @@ const homeStyles = StyleSheet.create(theme => ({
   },
   chipRow: {
     marginBottom: theme.spacing.lg,
+  },
+  listHeader: {
+    gap: theme.spacing.lg,
   },
 }))
 
