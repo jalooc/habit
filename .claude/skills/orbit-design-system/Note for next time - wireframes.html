@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Note for next time — wireframes</title>
+<style>
+  :root{
+    --line:#1c1b18;
+    --soft:#dcdbd5;
+    --soft2:#ebeae4;
+    --dash:#aeaca3;
+    --anno:#8a8780;
+    --paper:#fffdf9;
+    --canvas:#e7e5df;
+    --coral:#c96442;
+    --coral-tint:#f5e4dc;
+    --mono:'SF Mono',ui-monospace,'Menlo',monospace;
+    --sans:system-ui,-apple-system,'Segoe UI',sans-serif;
+    --serif:Georgia,'Times New Roman',serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--canvas);color:var(--line);font-family:var(--sans);}
+  .page{max-width:1500px;margin:0 auto;padding:44px 40px 120px;}
+
+  header.mast{margin-bottom:8px;}
+  .mast .ey{font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--anno);}
+  .mast h1{font-size:30px;font-weight:600;letter-spacing:-0.6px;margin:8px 0 6px;}
+  .mast p{max-width:820px;font-size:14px;line-height:1.55;color:#56544e;margin:0;}
+  .legend{display:flex;flex-wrap:wrap;gap:18px;margin-top:18px;padding-top:16px;border-top:1px solid #cfcdc5;}
+  .legend span{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:10.5px;letter-spacing:.3px;color:var(--anno);text-transform:uppercase;}
+  .sw{width:22px;height:11px;border-radius:3px;display:inline-block;}
+
+  /* recommendation strip */
+  .rec{margin-top:28px;border:1.3px solid var(--line);border-radius:18px;padding:18px 22px;background:#fffdf9;display:grid;grid-template-columns:170px 1fr;gap:22px;align-items:start;}
+  .rec .stamp{font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--coral);padding-top:3px;}
+  .rec h3{font-size:16px;font-weight:600;margin:0 0 8px;letter-spacing:-.2px;}
+  .rec p{font-size:13px;line-height:1.55;color:#3c3a35;margin:0 0 6px;max-width:860px;}
+  .rec ul{margin:8px 0 0;padding-left:18px;font-size:13px;line-height:1.6;color:#3c3a35;}
+  .rec ul li b{color:var(--line);}
+
+  /* bands */
+  .band{margin-top:54px;}
+  .band-head{display:flex;align-items:baseline;gap:14px;margin-bottom:24px;}
+  .band-head .n{font-family:var(--mono);font-size:11px;color:var(--anno);letter-spacing:1px;}
+  .band-head h2{font-size:18px;font-weight:600;letter-spacing:-0.2px;margin:0;}
+  .band-head .sub{font-size:13px;color:#6c6a63;max-width:600px;}
+
+  .row{display:flex;flex-wrap:wrap;gap:34px;align-items:flex-start;}
+
+  /* caption */
+  .opt{width:300px;}
+  .cap .tag{display:inline-block;font-family:var(--mono);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#fff;background:var(--line);border-radius:4px;padding:3px 7px;}
+  .cap .tag.rec-pick{background:var(--coral);}
+  .cap .tag.ghost{background:#fff;color:var(--line);border:1.3px solid var(--line);}
+  .cap h3{font-size:15.5px;font-weight:600;margin:11px 0 5px;letter-spacing:-0.2px;}
+  .cap p{font-size:12.5px;line-height:1.5;color:#605e57;margin:0 0 16px;}
+  .cap .mode{font-family:var(--mono);font-size:10.5px;color:var(--coral);letter-spacing:.3px;margin:0 0 14px;}
+
+  .phone{width:300px;height:600px;background:var(--paper);border:2px solid var(--line);border-radius:30px;overflow:hidden;position:relative;box-shadow:0 12px 30px rgba(28,27,24,.10);}
+  .scr{position:absolute;inset:0;display:flex;flex-direction:column;}
+  .statusbar{height:24px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 16px;}
+  .statusbar .o{font-family:var(--mono);font-size:8px;letter-spacing:1.5px;color:var(--anno);text-transform:uppercase;}
+  .content{flex:1;overflow:hidden;padding:0 16px;display:flex;flex-direction:column;}
+
+  .ln{height:8px;border-radius:5px;background:var(--soft);}
+  .ln.dk{background:#cbcabf;}
+  .label{font-family:var(--mono);font-size:8.5px;letter-spacing:1.4px;text-transform:uppercase;color:var(--anno);}
+  .label.coral{color:var(--coral);}
+  .navbar{display:flex;align-items:center;justify-content:space-between;height:30px;flex-shrink:0;}
+  .navbar .t{font-family:var(--mono);font-size:9px;letter-spacing:.8px;color:#56544e;text-transform:uppercase;}
+  .navbar .a{font-family:var(--mono);font-size:9px;color:var(--anno);}
+  .navbar .a.act{color:var(--coral);}
+
+  .card{border:1.5px solid #d3d1c7;border-radius:14px;padding:10px;background:#fff;}
+  .card.coral{border-color:var(--coral);background:#fdf3ec;}
+  .card.coral-soft{border-color:#e9c9bb;background:#fdf6f1;}
+
+  .edit{border:1.3px dashed var(--dash);border-radius:10px;padding:11px;background:#fdfcf8;}
+  .edit.coral{border-color:var(--coral);background:#fdf6f1;}
+  .stack{display:flex;flex-direction:column;}
+  .row-c{display:flex;align-items:center;}
+
+  .lk{color:var(--coral);border-bottom:1.5px solid var(--coral);font-family:var(--sans);font-size:11px;padding-bottom:1px;}
+
+  /* grabber */
+  .grab{width:36px;height:4px;border-radius:3px;background:#cbcabf;margin:8px auto;}
+  .peek{background:#f0efe9;}
+
+  /* WYSIWYG */
+  .ghost{color:#bdbcb3;font-family:var(--mono);font-size:10.5px;}
+  .bold{font-weight:700;}
+  .ital{font-style:italic;}
+
+  /* caret */
+  .caret{display:inline-block;width:1.3px;height:11px;background:var(--coral);vertical-align:-1px;animation:blink 1s steps(2,end) infinite;}
+  @keyframes blink{50%{opacity:0;}}
+
+  /* annotation pins */
+  .pin{display:flex;gap:8px;margin-top:10px;}
+  .pin .b{font-family:var(--mono);font-size:10px;color:var(--coral);flex-shrink:0;}
+  .pin .x{font-family:var(--mono);font-size:10.5px;line-height:1.5;color:#605e57;}
+  .undernotes{margin-top:14px;}
+
+  .btn-pill{border:1.5px solid var(--line);border-radius:100px;height:30px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:9.5px;letter-spacing:1px;text-transform:uppercase;color:var(--line);}
+  .btn-pill.solid{background:var(--line);color:#fff;}
+  .btn-pill.coral{background:var(--coral);color:#fff;border-color:var(--coral);}
+  .btn-pill.ghost{border-style:dashed;color:var(--anno);}
+  .btn-pill.sm{height:24px;font-size:8.5px;}
+
+  /* the whisper indicator glyphs */
+  .gly{display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:var(--coral);color:#fff;font-family:var(--mono);font-size:9px;flex-shrink:0;line-height:1;}
+  .gly-dot{width:6px;height:6px;border-radius:50%;background:var(--coral);display:inline-block;}
+  .gly-quote{color:var(--coral);font-family:var(--serif);font-style:italic;font-size:14px;line-height:1;}
+
+  /* mini queue row */
+  .qrow{display:flex;align-items:center;gap:9px;padding:9px 11px;border:1px solid #e7e5dc;border-radius:12px;background:#fff;}
+  .qrow .qcir{width:14px;height:14px;border-radius:50%;border:1.4px solid var(--line);flex-shrink:0;}
+  .qrow.act .qcir{background:var(--coral);border-color:var(--coral);color:#fff;display:flex;align-items:center;justify-content:center;font-size:8px;}
+  .qrow .qname{font-family:var(--serif);font-size:13px;flex:1;}
+  .qrow .qmeta{font-family:var(--mono);font-size:9px;color:var(--anno);letter-spacing:.4px;}
+
+  /* whisper preview card (display) */
+  .whisper{
+    border:1.3px solid var(--coral);
+    background:linear-gradient(180deg,#fdf6f1 0%, #fbeee5 100%);
+    border-radius:14px;
+    padding:10px 12px 11px;
+  }
+  .whisper .wkick{font-family:var(--mono);font-size:8.5px;letter-spacing:1.4px;text-transform:uppercase;color:var(--coral);display:flex;align-items:center;gap:6px;}
+  .whisper .wtext{font-family:var(--serif);font-style:italic;font-size:13px;line-height:1.45;color:var(--line);margin-top:6px;}
+  .whisper .wfoot{font-family:var(--mono);font-size:8.5px;color:#a87862;letter-spacing:.5px;margin-top:6px;text-transform:uppercase;}
+
+  /* comparison table */
+  .ctable{width:100%;font-size:12.5px;border-collapse:collapse;}
+  .ctable th,.ctable td{text-align:left;padding:9px 10px;border-bottom:1px solid #eceae1;vertical-align:top;}
+  .ctable th{font-family:var(--mono);font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--anno);font-weight:500;}
+  .ctable td:first-child{font-family:var(--mono);font-size:10.5px;color:var(--anno);text-transform:uppercase;letter-spacing:.5px;width:24%;}
+  .ctable .same{color:#3c3a35;}
+  .ctable .diff{color:var(--coral);}
+
+  /* arrows */
+  .arrow{display:flex;flex-direction:column;align-items:center;font-family:var(--mono);font-size:10px;color:var(--anno);letter-spacing:.5px;text-transform:uppercase;gap:6px;padding-top:230px;}
+  .arrow svg{width:34px;height:34px;}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="mast">
+    <div class="ey">Orbit + Ink · Wireframes</div>
+    <h1>A whisper for next time</h1>
+    <p>An ephemeral, one-line note that past-you leaves for future-you at the moment of ticking. Lives <i>once</i> — read on next pickup, then consumed. Different from the habit description (persistent metadata). Three things to design: <b>1)</b> how it gets in, <b>2)</b> how it shows up next time, <b>3)</b> the indicator that one is waiting.</p>
+    <div class="legend">
+      <span><i class="sw" style="background:var(--soft)"></i>placeholder / body</span>
+      <span><i class="sw" style="background:#fff;border:1.3px dashed var(--dash)"></i>editable zone</span>
+      <span><i class="sw" style="background:var(--coral-tint);border:1.3px solid var(--coral)"></i>whisper surface</span>
+      <span><i class="sw" style="background:var(--line)"></i>active / chrome</span>
+      <span style="color:var(--coral)">mono coral = annotation · pink tag = recommended</span>
+    </div>
+  </header>
+
+  <!-- ════════════ RECOMMENDATION ════════════ -->
+  <section class="rec">
+    <div class="stamp">Concept · the whisper</div>
+    <div>
+      <h3>One ephemeral line. Written on tick, read on next pickup, gone after.</h3>
+      <p>It's <i>not</i> a habit description (those are persistent and live in the form sheet you already designed). It's a self-addressed sticky note that travels with the rotation cursor — attached to the <i>next instance</i> of this habit, not to the habit itself.</p>
+
+      <table class="ctable" style="margin-top:12px;">
+        <thead>
+          <tr><th>&nbsp;</th><th>Habit description (existing)</th><th>Whisper for next time (new)</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Lifespan</td><td class="same">Permanent until edited</td><td class="diff">One pickup, then consumed</td></tr>
+          <tr><td>Attached to</td><td class="same">The habit itself</td><td class="diff">The next instance of the habit</td></tr>
+          <tr><td>Format</td><td class="same">Markdown · multi-line · images</td><td class="diff">One line · plain text · ~140 chars</td></tr>
+          <tr><td>Written</td><td class="same">In the form sheet</td><td class="diff">At the moment of ticking</td></tr>
+          <tr><td>Read</td><td class="same">Always visible in hero</td><td class="diff">Once · on the up-next hero · then cleared</td></tr>
+          <tr><td>Voice</td><td class="same">Notes to self about the practice</td><td class="diff">Notes to self about <i>the next rep</i></td></tr>
+        </tbody>
+      </table>
+
+      <p style="margin-top:14px;">Picks below. The recommended path is highlighted in <span style="color:var(--coral);">coral</span>.</p>
+      <ul>
+        <li><b>Insertion:</b> 1B — a slim "+ for next time" affordance under <i>Mark done</i> that expands inline into a single italic field. Lowest friction, never blocks the tick.</li>
+        <li><b>Display:</b> 2A — a coral-tinted "From last time" card directly above the habit name on the hero. Impossible to miss; doesn't compete with the ring.</li>
+        <li><b>Indicator:</b> 3A — a small coral italic quote glyph <span class="gly-quote">"</span> next to queued habits that have a whisper waiting. Read-only marker; tapping the row still ticks (the whisper appears on hero, not on a list row).</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ════════════ BAND 1 — INSERTION ════════════ -->
+  <section class="band">
+    <div class="band-head">
+      <span class="n">01</span>
+      <h2>How the whisper gets in — at tick time</h2>
+      <span class="sub">Three alternatives. All show the active hero (post-rotation or pre-rotation, depending). The whisper is always <i>optional</i> — every option supports a one-tap "no, just tick".</span>
+    </div>
+
+    <div class="row">
+
+      <!-- 1A · Post-tick toast -->
+      <figure class="opt" style="margin:0;">
+        <figcaption class="cap">
+          <span class="tag">1A</span>
+          <h3>Post-tick toast</h3>
+          <div class="mode">overlay · auto-dismiss 6s</div>
+          <p>Tick → ring rotates → a quiet coral toast slides up from the bottom asking. Single field, no chrome. Easy to ignore. Slides away on its own.</p>
+        </figcaption>
+        <div class="phone" data-screen-label="1A · post-tick toast">
+          <div class="scr">
+            <div class="statusbar"><span class="o">◯ orbit</span><span class="o">9:41</span></div>
+            <div class="content">
+              <div class="navbar"><span class="t">← core</span><span class="a">edit</span></div>
+              <div class="row-c" style="justify-content:center;margin:8px 0 10px;opacity:.55;">
+                <div style="width:110px;height:110px;border-radius:50%;border:1.5px dashed var(--dash);display:flex;align-items:center;justify-content:center;">
+                  <span class="label">ring · advancing</span>
+                </div>
+              </div>
+              <div class="label" style="text-align:center;color:var(--coral);">logged ✓</div>
+              <div style="font-family:var(--serif);font-size:17px;font-weight:600;text-align:center;margin:5px 0 12px;opacity:.55;">Hollow hold</div>
+
+              <div style="flex:1;"></div>
+
+              <!-- the toast -->
+              <div class="whisper" style="margin-bottom:8px;">
+                <div class="wkick"><span class="gly-quote">"</span>&nbsp;leave a note for next time?</div>
+                <div class="edit coral" style="padding:8px 10px;margin-top:7px;background:#fff;">
+                  <span style="font-family:var(--serif);font-style:italic;color:#b6b3aa;font-size:12.5px;">e.g. do 11 next time<span class="caret"></span></span>
+                </div>
+                <div class="row-c" style="gap:7px;margin-top:8px;">
+                  <div class="btn-pill ghost sm" style="flex:1;">no, thanks</div>
+                  <div class="btn-pill coral sm" style="flex:1;">leave it</div>
+                </div>
+              </div>
+              <div class="label" style="text-align:center;color:#cbcabf;margin-bottom:12px;">auto-dismiss · 6s</div>
+            </div>
+          </div>
+        </div>
+        <div class="undernotes">
+          <div class="pin"><span class="b">+</span><span class="x">Zero pre-tick friction. The tick still feels instant.</span></div>
+          <div class="pin"><span class="b">−</span><span class="x">If you blink, you miss it. Auto-dismiss is awkward when keyboard is up.</span></div>
+        </div>
+      </figure>
+
+      <!-- 1B · Inline pre-tick affordance — RECOMMENDED -->
+      <figure class="opt" style="margin:0;">
+        <figcaption class="cap">
+          <span class="tag rec-pick">1B · pick</span>
+          <h3>Inline affordance — under <i>Mark done</i></h3>
+          <div class="mode">expand-in-place · pre-tick</div>
+          <p>A small dashed pill beneath Mark done: <i>"+ a note for next time"</i>. Tap to expand into a single italic line. Tap Mark done — the whisper goes with the tick.</p>
+        </figcaption>
+        <div class="phone" data-screen-label="1B · inline pre-tick · expanded">
+          <div class="scr">
+            <div class="statusbar"><span class="o">◯ orbit</span><span class="o">9:41</span></div>
+            <div class="content">
+              <div class="navbar"><span class="t">← core</span><span class="a">edit</span></div>
+              <div class="row-c" style="justify-content:center;margin:6px 0 8px;">
+                <div style="width:96px;height:96px;border-radius:50%;border:1.5px dashed var(--dash);display:flex;align-items:center;justify-content:center;">
+                  <span class="label">ring · 5</span>
+                </div>
+              </div>
+              <div class="label" style="text-align:center;color:var(--coral);">up next</div>
+              <div style="font-family:var(--serif);font-size:19px;font-weight:600;text-align:center;margin:4px 0 12px;">Hollow hold</div>
+
+              <div class="card stack" style="gap:8px;">
+                <div style="font-family:var(--serif);font-size:12.5px;line-height:1.45;color:var(--line);">Ribs <span class="bold">down</span>, lower back pressed. 30s on, 30s off.</div>
+              </div>
+
+              <div class="label coral" style="margin:14px 0 6px;display:flex;align-items:center;gap:6px;"><span class="gly-quote">"</span>&nbsp;a note for next time</div>
+              <div class="edit coral" style="padding:9px 11px;">
+                <span style="font-family:var(--serif);font-style:italic;font-size:13px;">Do 11 next time<span class="caret"></span></span>
+              </div>
+
+              <div style="flex:1;"></div>
+              <div class="btn-pill solid" style="margin-bottom:8px;">mark done</div>
+              <div class="label" style="text-align:center;color:#cbcabf;margin-bottom:10px;">tap done · whisper travels with the tick</div>
+            </div>
+          </div>
+        </div>
+        <div class="undernotes">
+          <div class="pin"><span class="b">›</span><span class="x">Collapsed state: just a quiet <i>"+ a note for next time"</i> dashed pill where the expanded field is now.</span></div>
+          <div class="pin"><span class="b">+</span><span class="x">Composable with everything else (skip turn, edit time, etc) — sits in the same vertical stack.</span></div>
+          <div class="pin"><span class="b">+</span><span class="x">User decides <i>before</i> committing. No race with the ring rotation.</span></div>
+        </div>
+      </figure>
+
+      <!-- 1C · Long-press on Mark done -->
+      <figure class="opt" style="margin:0;">
+        <figcaption class="cap">
+          <span class="tag">1C</span>
+          <h3>Long-press on Mark done</h3>
+          <div class="mode">gesture · hidden affordance</div>
+          <p>Tap = tick. Long-press = "tick with note". A formSheet rises with a single field; saving ticks-and-attaches in one motion.</p>
+        </figcaption>
+        <div class="phone" data-screen-label="1C · long-press sheet">
+          <div class="scr">
+            <div class="peek" style="height:130px;flex-shrink:0;padding:0 16px;">
+              <div class="statusbar"><span class="o">◯ orbit</span><span class="o">9:41</span></div>
+              <div class="row-c" style="justify-content:center;margin:14px 0 6px;opacity:.6;">
+                <div style="width:70px;height:70px;border-radius:50%;border:1.5px dashed var(--dash);display:flex;align-items:center;justify-content:center;">
+                  <span class="label">ring</span>
+                </div>
+              </div>
+            </div>
+            <div style="flex:1;background:#fff;border-radius:18px 18px 0 0;border-top:1.5px solid var(--line);display:flex;flex-direction:column;box-shadow:0 -8px 24px rgba(0,0,0,.14);">
+              <div class="grab"></div>
+              <div style="padding:0 16px;flex:1;display:flex;flex-direction:column;">
+                <div class="navbar"><span class="a">cancel</span><span class="t">tick · with note</span><span class="a">&nbsp;</span></div>
+                <div class="label" style="margin:8px 0 4px;">Habit</div>
+                <div style="font-family:var(--serif);font-size:15px;">Hollow hold</div>
+
+                <div class="label coral" style="margin:14px 0 5px;display:flex;align-items:center;gap:6px;"><span class="gly-quote">"</span>&nbsp;a note for next time</div>
+                <div class="edit coral" style="padding:9px 11px;min-height:54px;">
+                  <span style="font-family:var(--serif);font-style:italic;font-size:13px;">Do 11 next time<span class="caret"></span></span>
+                </div>
+                <div class="label" style="margin-top:6px;color:#cbcabf;">read once · then cleared</div>
+
+                <div style="flex:1;"></div>
+                <div class="btn-pill solid" style="margin-bottom:14px;">log + leave note</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="undernotes">
+          <div class="pin"><span class="b">+</span><span class="x">Keeps the hero tidy — no extra controls when not needed.</span></div>
+          <div class="pin"><span class="b">−</span><span class="x">Hidden gesture. Requires education. Less discoverable for the first few weeks.</span></div>
+        </div>
+      </figure>
+
+    </div>
+
+    <!-- 1B collapsed state (companion to the pick) -->
+    <div class="row" style="margin-top:34px;">
+      <figure class="opt" style="margin:0;">
+        <figcaption class="cap">
+          <span class="tag ghost">1B · collapsed</span>
+          <h3>Collapsed default — companion state</h3>
+          <div class="mode">resting state · before tap</div>
+          <p>What the hero looks like when the user hasn't engaged with the whisper affordance. A single dashed pill — quiet, optional, never demanded.</p>
+        </figcaption>
+        <div class="phone" data-screen-label="1B collapsed · resting state">
+          <div class="scr">
+            <div class="statusbar"><span class="o">◯ orbit</span><span class="o">9:41 · tue 4 jun</span></div>
+            <div class="content">
+              <div class="navbar"><span class="t">← core</span><span class="a">edit</span></div>
+              <div class="row-c" style="justify-content:center;margin:8px 0 10px;">
+                <div style="width:120px;height:120px;border-radius:50%;border:1.5px dashed var(--dash);display:flex;align-items:center;justify-content:center;">
+                  <span class="label">ring · 5</span>
+                </div>
+              </div>
+              <div class="label" style="text-align:center;color:var(--coral);">up next</div>
+              <div style="font-family:var(--serif);font-size:22px;font-weight:600;text-align:center;margin:5px 0 12px;">Hollow hold</div>
+
+              <div class="card stack" style="gap:9px;">
+                <div style="font-family:var(--serif);font-size:13px;line-height:1.45;color:var(--line);">Ribs <span class="bold">down</span>, lower back pressed. 30s on, 30s off.</div>
+              </div>
+
+              <div style="flex:1;"></div>
+              <div class="btn-pill solid" style="margin-bottom:8px;">mark done</div>
+              <div class="btn-pill ghost" style="margin-bottom:12px;color:var(--coral);border-color:var(--coral);font-style:italic;text-transform:none;letter-spacing:0;font-family:var(--serif);font-size:11.5px;"><span class="gly-quote" style="margin-right:6px;">"</span>+ a note for next time</div>
+            </div>
+          </div>
+        </div>
+        <div class="undernotes">
+          <div class="pin"><span class="b">›</span><span class="x">The pill is the only new control. It expands into the 1B field above when tapped.</span></div>
+          <div class="pin"><span class="b">›</span><span class="x">Set in Fraunces italic + coral dashed border so it feels like a margin note, not a button.</span></div>
+        </div>
+      </figure>
+
+      <div style="width:300px;font-family:var(--mono);font-size:11px;line-height:1.6;color:#605e57;padding-top:20px;">
+        <div style="font-family:var(--mono);font-size:10px;letter-spacing:1.5px;color:var(--coral);text-transform:uppercase;margin-bottom:8px;">Microcopy</div>
+        <table class="ctable" style="font-size:11.5px;">
+          <tbody>
+            <tr><td>Affordance</td><td>+ a note for next time</td></tr>
+            <tr><td>Placeholder</td><td><i>e.g. do 11 next time</i></td></tr>
+            <tr><td>Kicker on hero</td><td>FROM LAST TIME</td></tr>
+            <tr><td>Foot hint</td><td>read once · then cleared</td></tr>
+            <tr><td>Toast confirm (1A)</td><td>leave a note for next time?</td></tr>
+            <tr><td>Functional tone</td><td>note for next time / next-time note</td></tr>
+          </tbody>
+        </table>
+        <div style="font-family:var(--mono);font-size:10px;letter-spacing:1.5px;color:var(--coral);text-transform:uppercase;margin:18px 0 8px;">Constraints</div>
+        <ul style="padding-left:16px;margin:0;font-size:11.5px;line-height:1.55;">
+          <li>One line. ~140 chars hard cap.</li>
+          <li>Plain text (no markdown — the habit description does that job).</li>
+          <li>Stored on the habit. Cleared the moment the user opens the hero of that habit again.</li>
+          <li>Undo within the existing 5.5s undo window restores it.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ════════════ BAND 2 — DISPLAY ════════════ -->
+  <section class="band">
+    <div class="band-head">
+      <span class="n">02</span>
+      <h2>How the whisper shows up — to future you</h2>
+      <span class="sub">Three placements for the same content. All on the group hero, on the up-next card. Note is rendered then cleared from storage on first view (or on tick — TBD; see annotation).</span>
+    </div>
+
+    <div class="row">
+
+      <!-- 2A · Above the name — RECOMMENDED -->
+      <figure class="opt" style="margin:0;">
+        <figcaption class="cap">
+          <span class="tag rec-pick">2A · pick</span>
+          <h3>Whisper card above the name</h3>
+          <div class="mode">hero · above up-next title</div>
+          <p>Coral-tinted card sits between the "Up next" kicker and the habit name. First thing the eye lands on after the ring. Impossible to miss; doesn't compete with anything.</p>
+        </figcaption>
+        <div class="phone" data-screen-label="2A · whisper above name">
+          <div class="scr">
+            <div class="statusbar"><span class="o">◯ orbit</span><span class="o">9:41 · wed 5 jun</span></div>
+            <div class="content">
+              <div class="navbar"><span class="t">← core</span><span class="a">edit</span></div>
+              <div class="row-c" style="justify-content:center;margin:6px 0 8px;">
+                <div style="width:100px;height:100px;border-radius:50%;border:1.5px dashed var(--dash);display:flex;align-items:center;justify-content:center;">
+                  <span class="label">ring · 5</span>
+                </div>
+              </div>
+              <div class="label" style="text-align:center;color:var(--coral);">up next</div>
+
+              <!-- whisper card -->
+              <div class="whisper" style="margin:8px 0 8px;">
+                <div class="wkick"><span class="gly-quote">"</span>&nbsp;from last time</div>
+                <div class="wtext">Do 11 next time.</div>
+                <div class="wfoot">noted yesterday · clears on tick</div>
+              </div>
+
+              <div style="font-family:var(--serif);font-size:20px;font-weight:600;text-align:center;margin:4px 0 10px;">Hollow hold</div>
+
+              <div class="card stack" style="gap:8px;">
+                <div style="font-family:var(--serif);font-size:12.5px;line-height:1.45;color:var(--line);">Ribs <span class="bold">down</span>, lower back pressed. 30s on, 30s off.</div>
+              </div>
+
+              <div style="flex:1;"></div>
+              <div class="btn-pill solid" style="margin-bottom:14px;">mark done</div>
+            </div>
+          </div>
+        </div>
+        <div class="undernotes">
+          <div class="pin"><span class="b">›</span><span class="x">Card is dismissible (small × top-right, not shown) — also auto-clears on Mark done.</span></div>
+          <div class="pin"><span class="b">?</span><span class="x">Open question: clear on <b>first view</b> or on <b>tick</b>? Recommend tick — so re-entering the screen doesn't lose it. Undo restores.</span></div>
+        </div>
+      </figure>
+
+      <!-- 2B · Inline inside the ring center -->
+      <figure class="opt" style="margin:0;">
+        <figcaption class="cap">
+          <span class="tag">2B</span>
+          <h3>Inside the ring center</h3>
+          <div class="mode">hero · ring center text</div>
+          <p>Replaces the habit name in the ring center with a stack: italic whisper on top, name below. Most centered, most prominent — but crowds the ring.</p>
+        </figcaption>
+        <div class="phone" data-screen-label="2B · in ring center">
+          <div class="scr">
+            <div class="statusbar"><span class="o">◯ orbit</span><span class="o">9:41 · wed 5 jun</span></div>
+            <div class="content">
+              <div class="navbar"><span class="t">← core</span><span class="a">edit</span></div>
+              <div class="row-c" style="justify-content:center;margin:14px 0 10px;">
+                <div style="width:170px;height:170px;border-radius:50%;border:1.5px dashed var(--dash);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px;gap:6px;">
+                  <div style="font-family:var(--mono);font-size:8.5px;color:var(--coral);letter-spacing:1.4px;text-transform:uppercase;">from last time</div>
+                  <div style="font-family:var(--serif);font-style:italic;font-size:13px;text-align:center;line-height:1.3;color:var(--coral);">"Do 11 next time."</div>
+                  <div style="height:1px;width:40px;background:#e9c9bb;margin:3px 0;"></div>
+                  <div style="font-family:var(--serif);font-size:15px;font-weight:600;text-align:center;">Hollow hold</div>
+                </div>
+              </div>
+              <div class="card stack" style="gap:8px;">
+                <div style="font-family:var(--serif);font-size:12.5px;line-height:1.45;color:var(--line);">Ribs <span class="bold">down</span>, lower back pressed. 30s on, 30s off.</div>
+              </div>
+
+              <div style="flex:1;"></div>
+              <div class="btn-pill solid" style="margin-bottom:14px;">mark done</div>
+            </div>
+          </div>
+        </div>
+        <div class="undernotes">
+          <div class="pin"><span class="b">+</span><span class="x">Most "self-addressed letter" feel.</span></div>
+          <div class="pin"><span class="b">−</span><span class="x">Ring center is sacred. Two long whispers in a row would break the layout.</span></div>
+        </div>
+      </figure>
+
+      <!-- 2C · Above the CTA -->
+      <figure class="opt" style="margin:0;">
+        <figcaption class="cap">
+          <span class="tag">2C</span>
+          <h3>Above the CTA</h3>
+          <div class="mode">hero · just above mark done</div>
+          <p>Whisper sits in the same place where you'll write the next one. Closes the loop visually — last input, next reading, same slot.</p>
+        </figcaption>
+        <div class="phone" data-screen-label="2C · above CTA">
+          <div class="scr">
+            <div class="statusbar"><span class="o">◯ orbit</span><span class="o">9:41 · wed 5 jun</span></div>
+            <div class="content">
+              <div class="navbar"><span class="t">← core</span><span class="a">edit</span></div>
+              <div class="row-c" style="justify-content:center;margin:8px 0 10px;">
+                <div style="width:120px;height:120px;border-radius:50%;border:1.5px dashed var(--dash);display:flex;align-items:center;justify-content:center;">
+                  <span class="label">ring · 5</span>
+                </div>
+              </div>
+              <div class="label" style="text-align:center;color:var(--coral);">up next</div>
+              <div style="font-family:var(--serif);font-size:22px;font-weight:600;text-align:center;margin:5px 0 12px;">Hollow hold</div>
+
+              <div class="card stack" style="gap:8px;">
+                <div style="font-family:var(--serif);font-size:12.5px;line-height:1.45;color:var(--line);">Ribs <span class="bold">down</span>, lower back pressed. 30s on, 30s off.</div>
+              </div>
+
+              <div style="flex:1;"></div>
+
+              <div class="whisper" style="margin-bottom:10px;">
+                <div class="wkick"><span class="gly-quote">"</span>&nbsp;from last time</div>
+                <div class="wtext" style="font-size:12.5px;">Do 11 next time.</div>
+              </div>
+              <div class="btn-pill solid" style="margin-bottom:14px;">mark done</div>
+            </div>
+          </div>
+        </div>
+        <div class="undernotes">
+          <div class="pin"><span class="b">+</span><span class="x">Symmetric with insertion in 1B — input and output share the slot.</span></div>
+          <div class="pin"><span class="b">−</span><span class="x">Eye reaches it last. Easier to miss if user is fast on the CTA.</span></div>
+        </div>
+      </figure>
+
+    </div>
+  </section>
+
+  <!-- ════════════ BAND 3 — INDICATORS ════════════ -->
+  <section class="band">
+    <div class="band-head">
+      <span class="n">03</span>
+      <h2>The indicator — "there's a whisper waiting"</h2>
+      <span class="sub">Visible in: the group's queue list, the Today list, and the small overview cards. Three glyph candidates side by side — same data, three styles.</span>
+    </div>
+
+    <div class="row">
+
+      <!-- 3A · italic open-quote glyph — RECOMMENDED -->
+      <figure class="opt" style="margin:0;">
+        <figcaption class="cap">
+          <span class="tag rec-pick">3A · pick</span>
+          <h3>Open-quote glyph</h3>
+          <div class="mode">italic " in coral · 12px</div>
+          <p>A single italic quote mark in coral, sized to baseline. Reads as "there's something said here". Quiet, literary, matches the voice.</p>
+        </figcaption>
+        <div class="phone" data-screen-label="3A · quote indicator">
+          <div class="scr">
+            <div class="statusbar"><span class="o">◯ orbit</span><span class="o">9:41 · wed 5 jun</span></div>
+            <div class="content">
+              <div class="navbar"><span class="t">← core</span><span class="a">edit</span></div>
+              <div class="label" style="margin:10px 0 8px;">the queue</div>
+
+              <div class="qrow act" style="margin-bottom:6px;">
+                <div class="qcir">✓</div>
+                <div class="qname">Hollow hold</div>
+                <span class="gly-quote">"</span>
+                <span class="qmeta">now</span>
+              </div>
+              <div class="qrow" style="margin-bottom:6px;">
+                <div class="qcir"></div>
+                <div class="qname">Dead bug</div>
+                <span class="qmeta">02</span>
+              </div>
+              <div class="qrow" style="margin-bottom:6px;">
+                <div class="qcir"></div>
+                <div class="qname">Bird dog</div>
+                <span class="gly-quote">"</span>
+                <span class="qmeta">03</span>
+              </div>
+              <div class="qrow" style="margin-bottom:6px;">
+                <div class="qcir"></div>
+                <div class="qname">Pallof press</div>
+                <span class="qmeta">04</span>
+              </div>
+              <div class="qrow" style="margin-bottom:6px;">
+                <div class="qcir"></div>
+                <div class="qname">Side plank</div>
+                <span class="qmeta">05</span>
+              </div>
+
+              <div style="flex:1;"></div>
+              <div class="btn-pill ghost" style="margin-bottom:14px;">skip this turn</div>
+            </div>
+          </div>
+        </div>
+        <div class="undernotes">
+          <div class="pin"><span class="b">›</span><span class="x">Two habits here have a whisper (Hollow hold, Bird dog). The glyph alone communicates it; no label needed.</span></div>
+          <div class="pin"><span class="b">›</span><span class="x">Tap behavior unchanged — taps still tick. The whisper appears on the hero, not in a popover here.</span></div>
+        </div>
+      </figure>
+
+      <!-- 3B · coral dot -->
+      <figure class="opt" style="margin:0;">
+        <figcaption class="cap">
+          <span class="tag">3B</span>
+          <h3>Bare coral dot</h3>
+          <div class="mode">6px filled circle</div>
+          <p>The simplest possible indicator. Same chroma as the active dot in the ring — feels of a piece, but reads more "unread badge" than "note".</p>
+        </figcaption>
+        <div class="phone" data-screen-label="3B · coral dot">
+          <div class="scr">
+            <div class="statusbar"><span class="o">◯ orbit</span><span class="o">9:41 · wed 5 jun</span></div>
+            <div class="content">
+              <div class="navbar"><span class="t">← core</span><span class="a">edit</span></div>
+              <div class="label" style="margin:10px 0 8px;">the queue</div>
+
+              <div class="qrow act" style="margin-bottom:6px;">
+                <div class="qcir">✓</div>
+                <div class="qname">Hollow hold</div>
+                <span class="gly-dot"></span>
+                <span class="qmeta">now</span>
+              </div>
+              <div class="qrow" style="margin-bottom:6px;">
+                <div class="qcir"></div>
+                <div class="qname">Dead bug</div>
+                <span class="qmeta">02</span>
+              </div>
+              <div class="qrow" style="margin-bottom:6px;">
+                <div class="qcir"></div>
+                <div class="qname">Bird dog</div>
+                <span class="gly-dot"></span>
+                <span class="qmeta">03</span>
+              </div>
+              <div class="qrow" style="margin-bottom:6px;">
+                <div class="qcir"></div>
+                <div class="qname">Pallof press</div>
+                <span class="qmeta">04</span>
+              </div>
+              <div class="qrow" style="margin-bottom:6px;">
+                <div class="qcir"></div>
+                <div class="qname">Side plank</div>
+                <span class="qmeta">05</span>
+              </div>
+
+              <div style="flex:1;"></div>
+              <div class="btn-pill ghost" style="margin-bottom:14px;">skip this turn</div>
+            </div>
+          </div>
+        </div>
+        <div class="undernotes">
+          <div class="pin"><span class="b">+</span><span class="x">Tiniest possible footprint.</span></div>
+          <div class="pin"><span class="b">−</span><span class="x">Ambiguous. Could mean "new", "unread", "alert", "due". Doesn't say "note".</span></div>
+        </div>
+      </figure>
+
+      <!-- 3C · circled n -->
+      <figure class="opt" style="margin:0;">
+        <figcaption class="cap">
+          <span class="tag">3C</span>
+          <h3>Tiny coral chip — <i>note</i></h3>
+          <div class="mode">8.5px label · 1ch high</div>
+          <p>Most explicit. Tiny uppercase chip reading "note". No ambiguity. Heavier visually — repeated rows start to look chip-y.</p>
+        </figcaption>
+        <div class="phone" data-screen-label="3C · note chip">
+          <div class="scr">
+            <div class="statusbar"><span class="o">◯ orbit</span><span class="o">9:41 · wed 5 jun</span></div>
+            <div class="content">
+              <div class="navbar"><span class="t">← core</span><span class="a">edit</span></div>
+              <div class="label" style="margin:10px 0 8px;">the queue</div>
+
+              <div class="qrow act" style="margin-bottom:6px;">
+                <div class="qcir">✓</div>
+                <div class="qname">Hollow hold</div>
+                <span style="font-family:var(--mono);font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--coral);border:1px solid var(--coral);border-radius:100px;padding:2px 6px;">note</span>
+                <span class="qmeta">now</span>
+              </div>
+              <div class="qrow" style="margin-bottom:6px;">
+                <div class="qcir"></div>
+                <div class="qname">Dead bug</div>
+                <span class="qmeta">02</span>
+              </div>
+              <div class="qrow" style="margin-bottom:6px;">
+                <div class="qcir"></div>
+                <div class="qname">Bird dog</div>
+                <span style="font-family:var(--mono);font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--coral);border:1px solid var(--coral);border-radius:100px;padding:2px 6px;">note</span>
+                <span class="qmeta">03</span>
+              </div>
+              <div class="qrow" style="margin-bottom:6px;">
+                <div class="qcir"></div>
+                <div class="qname">Pallof press</div>
+                <span class="qmeta">04</span>
+              </div>
+              <div class="qrow" style="margin-bottom:6px;">
+                <div class="qcir"></div>
+                <div class="qname">Side plank</div>
+                <span class="qmeta">05</span>
+              </div>
+
+              <div style="flex:1;"></div>
+              <div class="btn-pill ghost" style="margin-bottom:14px;">skip this turn</div>
+            </div>
+          </div>
+        </div>
+        <div class="undernotes">
+          <div class="pin"><span class="b">+</span><span class="x">Zero confusion.</span></div>
+          <div class="pin"><span class="b">−</span><span class="x">Too loud. Pulls focus from habit names. Breaks the row rhythm.</span></div>
+        </div>
+      </figure>
+
+    </div>
+
+    <!-- 3 carried to other surfaces -->
+    <div class="row" style="margin-top:36px;">
+
+      <figure class="opt" style="margin:0;">
+        <figcaption class="cap">
+          <span class="tag ghost">3A · carry</span>
+          <h3>The indicator on Today</h3>
+          <div class="mode">today list · group card</div>
+          <p>The same coral quote glyph appears on the Today card when the up-next habit in that group has a whisper waiting. Pre-tap signal that future-you said something.</p>
+        </figcaption>
+        <div class="phone" data-screen-label="3A carry · today card">
+          <div class="scr">
+            <div class="statusbar"><span class="o">◯ orbit</span><span class="o">9:41 · wed 5 jun</span></div>
+            <div class="content">
+              <div class="label" style="margin:10px 0 6px;">today · 4 rotations</div>
+              <div style="font-family:var(--serif);font-size:22px;font-weight:600;letter-spacing:-.4px;margin:0 0 14px;">A few in rotation.</div>
+
+              <div class="card" style="padding:14px;margin-bottom:10px;border-color:var(--coral);background:#fdf6f1;">
+                <div class="label coral" style="display:flex;align-items:center;gap:6px;"><span class="gly-quote">"</span>&nbsp;up next · <span style="font-style:italic;font-family:var(--serif);font-size:11px;text-transform:none;letter-spacing:0;color:var(--coral);">core</span></div>
+                <div style="font-family:var(--serif);font-size:18px;font-weight:600;margin-top:4px;">Hollow hold</div>
+                <div style="font-family:var(--serif);font-style:italic;font-size:12px;color:#a87862;margin-top:4px;">"Do 11 next time."</div>
+              </div>
+
+              <div class="card" style="padding:14px;margin-bottom:10px;">
+                <div class="label">up next · <span style="font-style:italic;font-family:var(--serif);font-size:11px;text-transform:none;letter-spacing:0;color:var(--anno);">languages</span></div>
+                <div style="font-family:var(--serif);font-size:18px;font-weight:600;margin-top:4px;font-style:italic;">Polish</div>
+              </div>
+
+              <div class="card" style="padding:14px;margin-bottom:10px;">
+                <div class="label" style="display:flex;align-items:center;gap:6px;">up next · <span style="font-style:italic;font-family:var(--serif);font-size:11px;text-transform:none;letter-spacing:0;color:var(--anno);">calls</span> <span class="gly-quote" style="margin-left:auto;">"</span></div>
+                <div style="font-family:var(--serif);font-size:18px;font-weight:600;margin-top:4px;">Calling Maciek</div>
+              </div>
+
+              <div class="card" style="padding:14px;">
+                <div class="label">up next · <span style="font-style:italic;font-family:var(--serif);font-size:11px;text-transform:none;letter-spacing:0;color:var(--anno);">stretches</span></div>
+                <div style="font-family:var(--serif);font-size:18px;font-weight:600;margin-top:4px;">Couch stretch</div>
+              </div>
+
+              <div style="flex:1;"></div>
+            </div>
+          </div>
+        </div>
+        <div class="undernotes">
+          <div class="pin"><span class="b">›</span><span class="x">First card (Core) shows the whisper inline because the user is about to enter that hero. Calls card just shows the glyph — quieter, still informative.</span></div>
+          <div class="pin"><span class="b">?</span><span class="x">Show whisper inline on Today only for the <b>focused</b> rotation, or never? Lean toward "never" — keep the surprise for the hero.</span></div>
+        </div>
+      </figure>
+
+      <figure class="opt" style="margin:0;">
+        <figcaption class="cap">
+          <span class="tag ghost">3A · edge</span>
+          <h3>Edge case · whisper visible from past tick</h3>
+          <div class="mode">queue list · with body</div>
+          <p>What if user wants to <i>see</i> the pending whisper without ticking? Long-press on the queue row opens a tiny popover — same content as hero card, read-only, no clearing.</p>
+        </figcaption>
+        <div class="phone" data-screen-label="3A edge · long-press popover">
+          <div class="scr">
+            <div class="statusbar"><span class="o">◯ orbit</span><span class="o">9:41 · wed 5 jun</span></div>
+            <div class="content">
+              <div class="navbar"><span class="t">← core</span><span class="a">edit</span></div>
+              <div class="label" style="margin:10px 0 8px;">the queue</div>
+
+              <div class="qrow act" style="margin-bottom:6px;opacity:.55;">
+                <div class="qcir">✓</div>
+                <div class="qname">Hollow hold</div>
+                <span class="gly-quote">"</span>
+                <span class="qmeta">now</span>
+              </div>
+              <div class="qrow" style="margin-bottom:6px;opacity:.55;">
+                <div class="qcir"></div>
+                <div class="qname">Dead bug</div>
+                <span class="qmeta">02</span>
+              </div>
+
+              <!-- the popover -->
+              <div class="qrow" style="margin-bottom:0;border-color:var(--coral);background:#fdf6f1;">
+                <div class="qcir"></div>
+                <div class="qname">Bird dog</div>
+                <span class="gly-quote">"</span>
+                <span class="qmeta">03</span>
+              </div>
+              <div class="whisper" style="margin:0 6px;border-top-left-radius:0;border-top-right-radius:0;border-top:0;">
+                <div class="wkick"><span class="gly-quote">"</span>&nbsp;waiting for next pickup</div>
+                <div class="wtext" style="font-size:12.5px;">Slow the eccentric — felt the lower back last time.</div>
+                <div class="row-c" style="gap:7px;margin-top:8px;">
+                  <div class="btn-pill ghost sm" style="flex:1;">discard</div>
+                  <div class="btn-pill ghost sm" style="flex:1;border-color:var(--coral);color:var(--coral);">edit</div>
+                </div>
+              </div>
+
+              <div class="qrow" style="margin:6px 0 6px;opacity:.55;">
+                <div class="qcir"></div>
+                <div class="qname">Pallof press</div>
+                <span class="qmeta">04</span>
+              </div>
+
+              <div style="flex:1;"></div>
+            </div>
+          </div>
+        </div>
+        <div class="undernotes">
+          <div class="pin"><span class="b">›</span><span class="x">This is the <i>only</i> surface from which the user can edit or discard a pending whisper without ticking.</span></div>
+          <div class="pin"><span class="b">›</span><span class="x">Reading here does <b>not</b> clear it. Clearing happens on tick of that habit, or via the explicit discard button.</span></div>
+        </div>
+      </figure>
+
+      <!-- microcopy / decisions sidebar for indicator -->
+      <div style="width:300px;font-family:var(--mono);font-size:11px;line-height:1.55;color:#605e57;padding-top:20px;">
+        <div style="font-family:var(--mono);font-size:10px;letter-spacing:1.5px;color:var(--coral);text-transform:uppercase;margin-bottom:8px;">Open questions</div>
+        <ul style="padding-left:16px;margin:0;font-size:11.5px;line-height:1.6;">
+          <li><b>Clearing trigger.</b> On view, on tick, or on next ping? &nbsp;<span style="color:var(--coral);">→ recommend: on tick.</span></li>
+          <li><b>Skip turn.</b> Does skipping clear the whisper or carry it forward? &nbsp;<span style="color:var(--coral);">→ carry. The next instance is still next.</span></li>
+          <li><b>Out-of-order tick.</b> If the user ticks a different habit in the queue, the original whisper stays on its original habit. (Whispers travel with the habit, not the cursor.)</li>
+          <li><b>Carried habits.</b> If a habit carries over (missed day), the whisper waits with it.</li>
+          <li><b>Notification copy.</b> When pinged, push body becomes: <i>"A whisper from last time."</i> instead of the cadence label.</li>
+          <li><b>One whisper at a time.</b> Writing a new one while one already pending overwrites with a soft confirm.</li>
+        </ul>
+
+        <div style="font-family:var(--mono);font-size:10px;letter-spacing:1.5px;color:var(--coral);text-transform:uppercase;margin:20px 0 8px;">Not in scope (yet)</div>
+        <ul style="padding-left:16px;margin:0;font-size:11.5px;line-height:1.6;">
+          <li>Whisper history / archive.</li>
+          <li>Multiple whispers per habit.</li>
+          <li>Voice notes, photos, attachments.</li>
+          <li>Whisper inside the system notification (just the line in push body — no actions).</li>
+        </ul>
+      </div>
+
+    </div>
+  </section>
+
+</div>
+</body>
+</html>

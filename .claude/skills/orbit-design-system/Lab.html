@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Orbit + Ink — Lab</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; }
+  body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+  * { box-sizing: border-box; }
+  /* Hide React dev warning gutters from a clean canvas */
+  .device-host { position: relative; }
+  .device-host .android-bezel { background: rgba(116,119,117,0.5); }
+</style>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script src="shared-data.js"></script>
+<script type="text/babel" src="tokens.jsx"></script>
+<script type="text/babel" src="rings.jsx"></script>
+<script type="text/babel" src="swipeable.jsx"></script>
+<script type="text/babel" src="whisper.jsx"></script>
+<script type="text/babel" src="images.jsx"></script>
+<script type="text/babel" src="description.jsx"></script>
+<script type="text/babel" src="screens.jsx"></script>
+<script type="text/babel" src="today-list.jsx"></script>
+<script type="text/babel" src="screens-extra.jsx"></script>
+<script type="text/babel" src="edit-time.jsx"></script>
+<script type="text/babel" src="edit-time-hosts.jsx"></script>
+<script type="text/babel" src="prototype.jsx"></script>
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="android-frame.jsx"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react">
+// ── Wrap any screen in an Android device chrome ─────────────────────
+function Phone({ children, darkPalette }) {
+  return (
+    <AndroidDevice width={412} height={892} dark={darkPalette}>
+      <div style={{ width: '100%', height: '100%', background: '#fff' }}>{children}</div>
+    </AndroidDevice>
+  );
+}
+
+// Local-only TokenOverride wrapper so a single artboard can pin its own palette
+function PinnedTheme({ palette, children }) {
+  return <TokenOverride palette={palette}>{children}</TokenOverride>;
+}
+
+const G_CORE = SAMPLE_GROUPS.find(g => g.id === 'core');
+
+// ── Sections ────────────────────────────────────────────────────────
+function Lab() {
+  const [tw, setTw] = useTweaks(TWEAK_DEFAULTS);
+  const dark = !!tw.dark;
+
+  return (
+    <TokenProvider tweaks={tw}>
+      <DesignCanvas>
+
+        {/* ============ Section 1: Live prototype ============ */}
+        <DCSection id="proto" title="Live prototype"
+          subtitle="The full app — navigable. Tap through Today, Rotations, Group, Create, Stats, Settings. Try Mark done, swipe up on the ring, tap any queue item to mark it done, Undo.">
+          <DCArtboard id="live" label="Interactive · all screens" width={432} height={912}>
+            <Phone darkPalette={dark}>
+              <OrbitInkApp ringId="orbit" />
+            </Phone>
+          </DCArtboard>
+        </DCSection>
+
+        {/* ============ Section 2: New screens ============ */}
+        <DCSection id="images" title="Habit images"
+          subtitle="Reference photos live on a habit. Add them in the form (per-habit thumb strip + paste / gallery / camera), then they surface on the group hero (a quiet strip under the ring) and in the queue (a mosaic that only appears when a habit has images). Tap any thumbnail to open the viewer. Only some habits carry images. Drive presentation + shape from Tweaks.">
+
+          <DCArtboard id="img-group" label="Group · hero strip + queue mosaic" width={432} height={912}>
+            <Phone darkPalette={dark}><GroupImgHost /></Phone>
+          </DCArtboard>
+
+          <DCArtboard id="img-viewer" label="Viewer · transparentModal (tap a thumb)" width={432} height={912}>
+            <Phone darkPalette={dark}><GroupImgHost initialOverlay={{ habitId: 'h3', index: 0 }} /></Phone>
+          </DCArtboard>
+
+          <DCArtboard id="img-edit" label="Edit form · per-habit thumb strip" width={432} height={912}>
+            <Phone darkPalette={dark}><EditImgHost /></Phone>
+          </DCArtboard>
+
+          <DCArtboard id="img-add" label="Add images · sheet (presentation via Tweaks)" width={432} height={912}>
+            <Phone darkPalette={dark}><EditImgHost initialOverlay={{ kind: 'add', habitId: 'h3' }} /></Phone>
+          </DCArtboard>
+        </DCSection>
+
+        {/* ============ Section 2b: Habit description ============ */}
+        <DCSection id="description" title="Habit description"
+          subtitle="A markdown note on each habit. Surfaces only when it earns a reader's attention: under the up-next hero in the group view, and inside the habit-reader sheet when a habit is opened. Add + Edit share one form sheet (mode flips chrome). Reader is its own component.">
+
+          <DCArtboard id="desc-hero" label="Group hero · up-next with note" width={432} height={912}>
+            <Phone darkPalette={dark}><DescGroupHost /></Phone>
+          </DCArtboard>
+
+          <DCArtboard id="desc-reader" label="Sheet B · Reader (tap up-next note)" width={432} height={912}>
+            <Phone darkPalette={dark}><DescGroupHost initialNoteSheet={{ habitId: 'h3', mode: 'read' }} /></Phone>
+          </DCArtboard>
+
+          <DCArtboard id="desc-edit" label="Sheet A · Form (edit mode)" width={432} height={912}>
+            <Phone darkPalette={dark}><DescGroupHost initialNoteSheet={{ habitId: 'h3', mode: 'edit' }} /></Phone>
+          </DCArtboard>
+
+          <DCArtboard id="desc-add" label="Sheet A · Form (add mode)" width={432} height={912}>
+            <Phone darkPalette={dark}><DescGroupHost initialNoteSheet={{ mode: 'add' }} /></Phone>
+          </DCArtboard>
+
+          <DCArtboard id="desc-long" label="Group hero · long note (page scrolls)" width={432} height={912}>
+            <Phone darkPalette={dark}><DescGroupHost groupId="call" /></Phone>
+          </DCArtboard>
+
+          <DCArtboard id="desc-empty" label="Group hero · habit without a note" width={432} height={912}>
+            <Phone darkPalette={dark}><DescGroupHost groupId="study" /></Phone>
+          </DCArtboard>
+        </DCSection>
+
+        {/* ============ Section 2c: Note for next time ============ */}
+        <DCSection id="whisper" title="Note for next time"
+          subtitle="A one-line whisper from past-you to future-you. Written at tick time on the hero, attached to the habit, read on the next pickup, then cleared. A small quill mark on a queue row signals one is waiting; reading or editing happens on the habit sheet.">
+
+          <DCArtboard id="wh-receive" label="Group hero · whisper on arrival" width={432} height={912}>
+            <Phone darkPalette={dark}><DescGroupHost /></Phone>
+          </DCArtboard>
+
+          <DCArtboard id="wh-sheet-read" label="Habit sheet · reader (whisper visible)" width={432} height={912}>
+            <Phone darkPalette={dark}><DescGroupHost initialNoteSheet={{ habitId: 'h3', mode: 'read' }} /></Phone>
+          </DCArtboard>
+
+          <DCArtboard id="wh-sheet-edit" label="Habit sheet · form (whisper field)" width={432} height={912}>
+            <Phone darkPalette={dark}><DescGroupHost initialNoteSheet={{ habitId: 'h3', mode: 'edit' }} /></Phone>
+          </DCArtboard>
+        </DCSection>
+
+        {/* ============ Section 2: New screens ============ */}
+        <DCSection id="new" title="New screens"
+          subtitle="Empty / first-run, onboarding, edit, notification, settings, insights. All wired to the same data model.">
+
+          <DCArtboard id="empty" label="Empty · no groups yet" width={432} height={912}>
+            <Phone darkPalette={dark}><EmptyScreenWithNav /></Phone>
+          </DCArtboard>
+
+          <DCArtboard id="onb1" label="Onboarding · 1 of 3" width={432} height={912}>
+            <Phone darkPalette={dark}><OnboardingHost startStep={0} /></Phone>
+          </DCArtboard>
+
+          <DCArtboard id="onb3" label="Onboarding · 3 of 3" width={432} height={912}>
+            <Phone darkPalette={dark}><OnboardingHost startStep={2} /></Phone>
+          </DCArtboard>
+
+          <DCArtboard id="edit" label="Edit · existing group" width={432} height={912}>
+            <Phone darkPalette={dark}><EditHost group={G_CORE} /></Phone>
+          </DCArtboard>
+
+          <DCArtboard id="notif" label="Notification · lock screen" width={432} height={912}>
+            <AndroidDevice width={412} height={892} dark={true}>
+              <NotificationPreview group={G_CORE} />
+            </AndroidDevice>
+          </DCArtboard>
+
+          <DCArtboard id="settings" label="Settings" width={432} height={912}>
+            <Phone darkPalette={dark}><SettingsHost /></Phone>
+          </DCArtboard>
+
+          <DCArtboard id="stats" label="Insights · 12 weeks" width={432} height={912}>
+            <Phone darkPalette={dark}><StatsHost /></Phone>
+          </DCArtboard>
+        </DCSection>
+
+        {/* ============ Section 3: Edge states ============ */}
+        <DCSection id="edges" title="Edge states"
+          subtitle="What the app feels like in quieter moments — nothing due, a paused rotation, or a tick just landed and undo is still on the table.">
+
+          <DCArtboard id="all-done" label="A quiet moment · nothing due" width={432} height={912}>
+            <Phone darkPalette={dark}><AllCaughtUp /></Phone>
+          </DCArtboard>
+
+          <DCArtboard id="paused" label="Group · paused (prominent)" width={432} height={912}>
+            <Phone darkPalette={dark}><PausedGroupHost /></Phone>
+          </DCArtboard>
+
+          <DCArtboard id="just-ticked" label="Just ticked · undo visible" width={432} height={912}>
+            <Phone darkPalette={dark}><JustTickedHost /></Phone>
+          </DCArtboard>
+        </DCSection>
+
+        {/* ============ Section 4: Edit time of a tick ============ */}
+        <DCSection id="edit-time" title="Edit the time of a tick"
+          subtitle="For when you did the habit at 13:00 but ticked it off at 13:30. Invisible until needed — three progressive stages of the picker, plus a day-scoped log for any past day.">
+
+          <DCArtboard id="et-toast" label="Toast · time + EDIT (separated from UNDO)" width={432} height={912}>
+            <Phone darkPalette={dark}><ToastDemoHost /></Phone>
+          </DCArtboard>
+
+          <DCArtboard id="et-hero-default" label="Hero label · default (logging as now)" width={432} height={912}>
+            <Phone darkPalette={dark}><HeroLabelDefaultHost /></Phone>
+          </DCArtboard>
+
+          <DCArtboard id="et-hero-staged" label="Hero label · staged (logging as 13:04)" width={432} height={912}>
+            <Phone darkPalette={dark}><HeroLabelStagedHost /></Phone>
+          </DCArtboard>
+
+          <DCArtboard id="et-stage1" label="Picker · Stage 1 (quick chips)" width={432} height={912}>
+            <Phone darkPalette={dark}><PickerHost initialStage={1} /></Phone>
+          </DCArtboard>
+
+          <DCArtboard id="et-stage2" label="Picker · Stage 2 (today scrubber)" width={432} height={912}>
+            <Phone darkPalette={dark}><PickerHost initialStage={2} /></Phone>
+          </DCArtboard>
+
+          <DCArtboard id="et-stage3" label="Picker · Stage 3 (any past date)" width={432} height={912}>
+            <Phone darkPalette={dark}><PickerHost initialStage={3} /></Phone>
+          </DCArtboard>
+
+          <DCArtboard id="et-log-today" label="Log sheet · today" width={432} height={912}>
+            <Phone darkPalette={dark}><LogSheetHost startIdx={0} /></Phone>
+          </DCArtboard>
+
+          <DCArtboard id="et-log-past" label="Log sheet · 5 days ago" width={432} height={912}>
+            <Phone darkPalette={dark}><LogSheetHost startIdx={5} /></Phone>
+          </DCArtboard>
+
+          <DCArtboard id="et-insights" label="Insights · entry point (heatmap cell)" width={432} height={912}>
+            <Phone darkPalette={dark}><InsightsEntryHost /></Phone>
+          </DCArtboard>
+
+        </DCSection>
+
+        {/* ============ Section 5: Light & dark ============ */}
+        <DCSection id="visuals" title="Light & Dark"
+          subtitle="The two themes — Bone for light, Evening for dark. The Tweaks panel toggles between them globally.">
+
+          {['bone', 'evening'].map(pal => (
+            <DCArtboard key={pal} id={'pal-' + pal} label={PALETTES[pal].name} width={432} height={912}>
+              <PinnedTheme palette={pal}>
+                <AndroidDevice width={412} height={892} dark={PALETTES[pal].statusDark}>
+                  <PinnedTodayHost />
+                </AndroidDevice>
+              </PinnedTheme>
+            </DCArtboard>
+          ))}
+        </DCSection>
+
+      </DesignCanvas>
+
+      {/* ── Tweaks panel ── */}
+      <TweaksPanel title="Tweaks">
+        <TweakSection label="Theme" />
+        <TweakToggle label="Dark mode"
+                     value={tw.dark}
+                     onChange={(v) => setTw('dark', v)} />
+        <TweakSection label="Density & ring" />
+        <TweakRadio  label="Density"
+                     value={tw.density}
+                     options={['compact', 'cozy', 'roomy']}
+                     onChange={(v) => setTw('density', v)} />
+        <TweakRadio  label="Ring size"
+                     value={tw.ringSize}
+                     options={['small', 'default', 'large']}
+                     onChange={(v) => setTw('ringSize', v)} />
+        <TweakSection label="Copy" />
+        <TweakRadio  label="Tone"
+                     value={tw.tone}
+                     options={['literary', 'functional']}
+                     onChange={(v) => setTw('tone', v)} />
+        <TweakSection label="Images" />
+        <TweakSelect label="Add images via"
+                     value={tw.imgAdd}
+                     options={['formSheet', 'modal', 'fullScreenModal']}
+                     onChange={(v) => setTw('imgAdd', v)} />
+        <TweakRadio  label="Thumb shape"
+                     value={tw.thumbShape}
+                     options={['rounded', 'circle']}
+                     onChange={(v) => setTw('thumbShape', v)} />
+        <TweakToggle label="Hero strip under ring"
+                     value={tw.heroStrip}
+                     onChange={(v) => setTw('heroStrip', v)} />
+      </TweaksPanel>
+    </TokenProvider>
+  );
+}
+
+// ─── Hosted screens ────────────────────────────────────────────────
+
+function EmptyScreenWithNav() {
+  return (
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flex: 1, overflow: 'auto' }}><EmptyScreen go={() => {}} /></div>
+      <TabBar active="home" onTab={() => {}} />
+    </div>
+  );
+}
+
+function OnboardingHost({ startStep }) {
+  return <OnboardingScreen onFinish={() => {}} step={startStep} />;
+}
+
+function EditHost({ group }) {
+  return <CreateScreen back={() => {}} setGroups={() => {}} initial={group} />;
+}
+
+function SettingsHost() {
+  return (
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flex: 1, overflow: 'auto' }}><SettingsScreen /></div>
+      <TabBar active="settings" onTab={() => {}} />
+    </div>
+  );
+}
+
+function StatsHost() {
+  return (
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flex: 1, overflow: 'auto' }}><StatsScreen groups={SAMPLE_GROUPS} /></div>
+      <TabBar active="stats" onTab={() => {}} />
+    </div>
+  );
+}
+
+function AllCaughtUp() {
+  // Today with nothing due — every group on a non-due cadence
+  const groups = SAMPLE_GROUPS.map(g => ({ ...g, cadence: { ...g.cadence, kind: 'xweek', label: '3× per week' } }));
+  return (
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flex: 1, overflow: 'auto' }}>
+        <TodayScreen groups={groups} setGroups={() => {}} go={() => {}} ringId="orbit" />
+      </div>
+      <TabBar active="home" onTab={() => {}} />
+    </div>
+  );
+}
+
+function PausedGroupHost() {
+  const paused = { ...G_CORE, paused: true };
+  const [groups, setGroups] = React.useState([paused]);
+  const g = groups[0];
+  return (
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flex: 1, overflow: 'auto' }}>
+        <GroupScreen group={g} setGroups={setGroups} go={() => {}} back={() => {}} ringId="orbit" />
+      </div>
+      <TabBar active="groups" onTab={() => {}} />
+    </div>
+  );
+}
+
+// Just-ticked: show the Today screen + a synthetic undo toast pinned visible.
+function JustTickedHost() {
+  const { t, tone } = useTokens();
+  const groups = SAMPLE_GROUPS;
+  return (
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+      <div style={{ flex: 1, overflow: 'auto' }}>
+        <TodayScreen groups={groups} setGroups={() => {}} go={() => {}} ringId="orbit" />
+      </div>
+      <TabBar active="home" onTab={() => {}} />
+      {/* Always-visible undo toast for the artboard */}
+      <div style={{
+        position: 'absolute', bottom: 80, left: '50%', transform: 'translateX(-50%)',
+        background: t.ink, color: t.card, borderRadius: 100,
+        padding: '10px 14px 10px 18px', display: 'flex', alignItems: 'center', gap: 14,
+        boxShadow: t.shadow, whiteSpace: 'nowrap', pointerEvents: 'none',
+      }}>
+        <span style={{ font: `400 13px ${SERIF}` }}>Logged · Hollow hold</span>
+        <span style={{
+          font: `500 12px/1 ${SANS}`, color: t.accent,
+          letterSpacing: 1.2, textTransform: 'uppercase',
+        }}>{tone.undo}</span>
+      </div>
+    </div>
+  );
+}
+
+function PinnedTodayHost() {
+  const [groups, setGroups] = React.useState(SAMPLE_GROUPS);
+  return (
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flex: 1, overflow: 'auto' }}>
+        <TodayScreen groups={groups} setGroups={setGroups} go={() => {}} ringId="orbit" />
+      </div>
+      <TabBar active="home" onTab={() => {}} />
+    </div>
+  );
+}
+
+function GroupImgHost({ initialOverlay = null }) {
+  const [groups, setGroups] = React.useState(SAMPLE_GROUPS);
+  const g = groups.find((x) => x.id === 'core');
+  return (
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flex: 1, overflow: 'auto' }}>
+        <GroupScreen group={g} setGroups={setGroups} go={() => {}} back={() => {}} ringId="orbit" initialOverlay={initialOverlay} />
+      </div>
+      <TabBar active="groups" onTab={() => {}} />
+    </div>
+  );
+}
+
+function EditImgHost({ initialOverlay = null }) {
+  const g = SAMPLE_GROUPS.find((x) => x.id === 'core');
+  return (
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flex: 1, overflow: 'auto' }}>
+        <CreateScreen back={() => {}} setGroups={() => {}} ringId="orbit" initial={g} initialOverlay={initialOverlay} />
+      </div>
+      <TabBar active="groups" onTab={() => {}} />
+    </div>
+  );
+}
+
+function DescGroupHost({ groupId = 'core', initialNoteSheet = null }) {
+  const [groups, setGroups] = React.useState(() => {
+    // Unpause for demo purposes — the "long note" artboard targets Calls,
+    // which is paused in shared-data.
+    return SAMPLE_GROUPS.map((g) => g.id === groupId ? { ...g, paused: false } : g);
+  });
+  const [noteSheet, setNoteSheet] = React.useState(initialNoteSheet);
+  const g = groups.find((x) => x.id === groupId);
+
+  const openNote = (habitId) => setNoteSheet({ habitId, mode: 'read' });
+
+  const habitForSheet = noteSheet && noteSheet.mode !== 'add'
+    ? g.habits.find((h) => h.id === noteSheet.habitId)
+    : null;
+
+  return (
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', position: 'relative' }}>
+      <div style={{ flex: 1, overflow: 'auto' }}>
+        <GroupScreen group={g} setGroups={setGroups} go={() => {}} back={() => {}} ringId="orbit"
+                     onOpenNote={openNote} />
+      </div>
+      <TabBar active="groups" onTab={() => {}} />
+
+      {noteSheet && noteSheet.mode === 'read' && habitForSheet && (
+        <HabitReaderSheet
+          habit={habitForSheet}
+          onClose={() => setNoteSheet(null)}
+          onEdit={() => setNoteSheet({ habitId: noteSheet.habitId, mode: 'edit' })} />
+      )}
+
+      {noteSheet && (noteSheet.mode === 'edit' || noteSheet.mode === 'add') && (
+        <HabitFormSheet
+          habit={noteSheet.mode === 'edit' ? habitForSheet : null}
+          mode={noteSheet.mode}
+          onCancel={() => setNoteSheet(
+            noteSheet.mode === 'edit' ? { habitId: noteSheet.habitId, mode: 'read' } : null
+          )}
+          onSave={(updated) => {
+            setGroups((all) => all.map((x) => x.id !== groupId ? x : ({
+              ...x,
+              habits: noteSheet.mode === 'edit'
+                ? x.habits.map((hb) => hb.id === updated.id ? { ...hb, ...updated } : hb)
+                : [...x.habits, updated],
+            })));
+            setNoteSheet(noteSheet.mode === 'edit'
+              ? { habitId: updated.id, mode: 'read' }
+              : null);
+          }}
+          onRemove={() => {
+            setGroups((all) => all.map((x) => x.id !== groupId ? x : ({
+              ...x,
+              habits: x.habits.filter((hb) => hb.id !== noteSheet.habitId),
+              cursor: Math.min(x.cursor, Math.max(0, x.habits.length - 2)),
+            })));
+            setNoteSheet(null);
+          }} />
+      )}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<Lab />);
+</script>
+
+</body>
+</html>

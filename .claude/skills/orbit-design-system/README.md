@@ -38,12 +38,11 @@ What that means in practice:
 
 | Source | Path | Notes |
 |---|---|---|
-| Original handoff | `ORIGINAL_HANDOFF.md` | First-pass spec. **Superseded** — kept for the orbit-ring math + motion only. See the banner at the top of that file. |
-| Initial exploration | `variation-d.jsx` | First-pass React components. Superseded by `screens.jsx` / `rings.jsx` + the per-feature files. Loaded by `Original prototype.html` only. |
-| Working lab | `index.html` | Pan/zoom canvas with the live prototype + every screen, edge state, feature, and a Tweaks panel. |
+| Feature index | `index.html` | Hub page linking to every feature and screen set. Start here to navigate. |
+| Working lab | `Lab.html` | Pan/zoom canvas with the live prototype + every screen, edge state, feature, and a Tweaks panel. |
 | Token source | `tokens.jsx`, `design-tokens.json`, `colors_and_type.css` | Three views of the same tokens: runtime, machine-readable, CSS. |
 | Feature reference | `whisper.jsx`, `images.jsx`, `description.jsx`, `edit-time.jsx` | Per-feature components — see "Feature files" below. |
-| Wireframes | `*  - wireframes.html`, `Section alternatives*.html` | Exploration sketches that led to the current designs. Reference only. |
+| Wireframes | `* - wireframes.html` | Lower-fidelity layouts for the current features. Reference only. |
 
 ---
 
@@ -232,7 +231,6 @@ See `components.md` (Hero card, Queue list item) for the full spec.
 ```
 .
 ├── README.md                ← you are here
-├── ORIGINAL_HANDOFF.md      ← first-pass spec (superseded; see banner)
 ├── microcopy.md             ← voice + Literary / Functional tone dictionaries
 ├── components.md            ← component reference (props, states, interaction spec)
 ├── design-tokens.json       ← machine-readable tokens
@@ -257,15 +255,15 @@ See `components.md` (Hero card, Queue list item) for the full spec.
 ├── hi-screens.jsx           ← Lab-only hi-fi compositions for the images feature
 
 │   ── Lab + assets ──
-├── index.html               ← Lab canvas (live prototype + all states + features + Tweaks)
-├── Original prototype.html  ← Original handoff's prototype, preserved
+├── index.html               ← Feature index — hub linking to every feature and screen set
+├── Lab.html                 ← Lab canvas (live prototype + all states + features + Tweaks)
 ├── Habit images - wireframes.html
 ├── Habit images - hi-fi.html
 ├── Habit description - wireframes.html
+├── Habit detail - groups wireframes.html
+├── Habit detail - groups hi-fi.html
 ├── Note for next time - wireframes.html
 ├── Note for next time - hi-fi.html
-├── Section alternatives.html
-├── Section alternatives v2.html
 ├── assets/img/              ← Reference images used by the images feature
 ├── app-icons/               ← App-icon explorations
 

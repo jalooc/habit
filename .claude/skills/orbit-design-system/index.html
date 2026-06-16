@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Orbit + Ink — Index</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+
+<style>
+  :root {
+    --bone: #f5f1ec;
+    --bone-2: #efe9e1;
+    --card: #fffdfa;
+    --ink: #29261b;
+    --ink-2: rgba(41,38,27,0.62);
+    --ink-3: rgba(41,38,27,0.42);
+    --line: rgba(41,38,27,0.10);
+    --line-2: rgba(41,38,27,0.16);
+    --accent: #c96442;
+    --serif: 'Fraunces', Georgia, serif;
+    --sans: 'Inter', system-ui, -apple-system, sans-serif;
+
+    --done: #5b7d5b;
+    --done-bg: rgba(91,125,91,0.12);
+    --prog: #b5803a;
+    --prog-bg: rgba(181,128,58,0.14);
+    --explore: #6b6f99;
+    --explore-bg: rgba(107,111,153,0.14);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bone);
+    color: var(--ink);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Faint grid texture echoing the canvas */
+  body::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-image:
+      linear-gradient(rgba(41,38,27,0.018) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(41,38,27,0.018) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+
+  .wrap {
+    position: relative; z-index: 1;
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 72px 40px 120px;
+  }
+
+  /* ── Masthead ─────────────────────────────────── */
+  header.mast {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 32px;
+    padding-bottom: 32px;
+    margin-bottom: 48px;
+    border-bottom: 1px solid var(--line-2);
+  }
+  .mark {
+    display: flex; align-items: center; gap: 14px;
+    margin: 0 0 14px;
+  }
+  .mark .ring {
+    width: 30px; height: 30px; border-radius: 50%;
+    border: 2.5px solid var(--ink);
+    position: relative;
+  }
+  .mark .ring::after {
+    content: ''; position: absolute; top: -2.5px; left: 50%;
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--accent);
+    transform: translateX(-50%);
+  }
+  .mark .wordmark {
+    font-family: var(--sans);
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+  }
+  h1.title {
+    font-family: var(--serif);
+    font-optical-sizing: auto;
+    font-weight: 300;
+    font-size: 58px;
+    line-height: 0.98;
+    letter-spacing: -0.015em;
+    margin: 0;
+    white-space: nowrap;
+  }
+  h1.title em { font-style: italic; color: var(--accent); }
+  .lede {
+    margin: 18px 0 0;
+    max-width: 30ch;
+    font-size: 16px;
+    line-height: 1.55;
+    color: var(--ink-2);
+    text-wrap: pretty;
+  }
+  .mast-aside {
+    flex-shrink: 0;
+    text-align: right;
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--ink-3);
+  }
+  .mast-aside b { color: var(--ink-2); font-weight: 500; }
+
+  /* ── Section ──────────────────────────────────── */
+  .section { margin-top: 64px; }
+  .section-head {
+    display: flex; align-items: baseline; gap: 14px;
+    margin-bottom: 22px;
+  }
+  .section-head h2 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: 23px;
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+  .section-head .count {
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .section-head .rule {
+    flex: 1; height: 1px; background: var(--line);
+    align-self: center;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 26px;
+  }
+
+  /* ── Card ─────────────────────────────────────── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.22s cubic-bezier(.2,.7,.3,1), box-shadow 0.22s, border-color 0.22s;
+    box-shadow: 0 1px 2px rgba(41,38,27,0.04);
+  }
+  .card:hover {
+    transform: translateY(-3px);
+    border-color: var(--line-2);
+    box-shadow: 0 14px 40px rgba(41,38,27,0.10), 0 3px 10px rgba(41,38,27,0.05);
+  }
+
+  /* Thumbnail */
+  .thumb {
+    position: relative;
+    display: block;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    background: var(--bone-2);
+    border-bottom: 1px solid var(--line);
+    text-decoration: none;
+  }
+  .thumb img {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    object-position: top left;
+    display: block;
+  }
+  .thumb img.fit-center { object-position: center; }
+  /* Placeholder: the orbit mark on the bone field */
+  .thumb .ph {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    background:
+      radial-gradient(circle at 50% 46%, rgba(201,100,66,0.05), transparent 60%),
+      var(--bone-2);
+  }
+  .thumb .ph .ring {
+    width: 64px; height: 64px; border-radius: 50%;
+    border: 1.5px solid var(--ink-3);
+    position: relative;
+  }
+  .thumb .ph .ring::before {
+    content: ''; position: absolute; top: -4px; left: 50%;
+    width: 9px; height: 9px; border-radius: 50%;
+    background: var(--accent);
+    transform: translateX(-50%);
+  }
+  .thumb .ph .ring i {
+    position: absolute; width: 5px; height: 5px; border-radius: 50%;
+    background: var(--ink-3); opacity: 0.5;
+  }
+  /* hairline veil so thumbs read as static previews, not interactive */
+  .thumb::after {
+    content: ''; position: absolute; inset: 0;
+    box-shadow: inset 0 0 0 1px rgba(41,38,27,0.04);
+    pointer-events: none;
+  }
+  .thumb .open-hint {
+    position: absolute; right: 12px; bottom: 12px; z-index: 2;
+    display: flex; align-items: center; gap: 6px;
+    padding: 6px 11px;
+    background: rgba(255,253,250,0.92);
+    border: 1px solid var(--line-2);
+    border-radius: 100px;
+    font-size: 11px; font-weight: 500;
+    letter-spacing: 0.04em;
+    color: var(--ink);
+    opacity: 0;
+    transform: translateY(4px);
+    transition: opacity 0.2s, transform 0.2s;
+    backdrop-filter: blur(4px);
+  }
+  .card:hover .open-hint { opacity: 1; transform: translateY(0); }
+
+  /* Body */
+  .body {
+    padding: 18px 20px 20px;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    gap: 9px;
+  }
+  .card-title {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: 20px;
+    letter-spacing: -0.01em;
+    line-height: 1.1;
+    margin: 0;
+  }
+  .card-title a { color: inherit; text-decoration: none; }
+  .card-title a:hover { color: var(--accent); }
+  .blurb {
+    margin: 0;
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--ink-2);
+    text-wrap: pretty;
+    flex: 1;
+  }
+
+  .toprow {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 10px;
+  }
+  .status {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 4px 9px 4px 7px;
+    border-radius: 100px;
+  }
+  .status .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .status.done { color: var(--done); background: var(--done-bg); }
+  .status.done .dot { background: var(--done); }
+  .status.progress { color: var(--prog); background: var(--prog-bg); }
+  .status.progress .dot { background: var(--prog); }
+  .status.explore { color: var(--explore); background: var(--explore-bg); }
+  .status.explore .dot { background: var(--explore); }
+
+  /* Footer links */
+  .links {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    margin-top: 4px;
+    padding-top: 14px;
+    border-top: 1px solid var(--line);
+  }
+  .links a {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12.5px;
+    font-weight: 500;
+    text-decoration: none;
+    white-space: nowrap;
+    padding: 7px 13px;
+    border-radius: 100px;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+  }
+  .links a.primary {
+    background: var(--ink);
+    color: var(--bone);
+  }
+  .links a.primary:hover { background: var(--accent); }
+  .links a.ghost {
+    color: var(--ink-2);
+    border: 1px solid var(--line-2);
+  }
+  .links a.ghost:hover { color: var(--ink); border-color: var(--ink-3); background: rgba(41,38,27,0.03); }
+  .links a svg { width: 12px; height: 12px; }
+
+  /* Feature (hero) card spanning wider — used for the Lab */
+  .card.wide { grid-column: 1 / -1; }
+  .card.wide .layout { display: grid; grid-template-columns: 1.15fr 1fr; }
+  .card.wide .thumb { aspect-ratio: auto; height: 100%; border-bottom: none; border-right: 1px solid var(--line); }
+  .card.wide .body { padding: 32px 34px; justify-content: center; gap: 12px; }
+  .card.wide .card-title { font-size: 30px; font-weight: 300; }
+  .card.wide .blurb { flex: none; font-size: 15px; max-width: 42ch; }
+
+  footer.foot {
+    margin-top: 80px;
+    padding-top: 28px;
+    border-top: 1px solid var(--line-2);
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 20px;
+    font-size: 12.5px;
+    color: var(--ink-3);
+  }
+  footer.foot a { color: var(--ink-2); text-decoration: none; border-bottom: 1px solid var(--line-2); }
+  footer.foot a:hover { color: var(--accent); border-color: var(--accent); }
+
+  @media (max-width: 720px) {
+    .wrap { padding: 48px 22px 90px; }
+    header.mast { flex-direction: column; align-items: flex-start; gap: 20px; }
+    .mast-aside { text-align: left; }
+    h1.title { font-size: 44px; }
+    .card.wide .layout { grid-template-columns: 1fr; }
+    .card.wide .thumb { aspect-ratio: 16/10; border-right: none; border-bottom: 1px solid var(--line); }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="mast">
+    <div>
+      <div class="mark">
+        <span class="ring"></span>
+        <span class="wordmark">Orbit + Ink</span>
+      </div>
+      <h1 class="title">Design <em>index</em></h1>
+      <p class="lede">Every feature, screen, and exploration in one place. Each card opens its own self-contained file.</p>
+    </div>
+    <div class="mast-aside">
+      <div><b>Habit</b> · rotating habits app</div>
+      <div>Fraunces · Inter · Bone &amp; Evening</div>
+      <div id="meta-count">&nbsp;</div>
+    </div>
+  </header>
+
+  <main id="board"></main>
+
+  <footer class="foot">
+    <span>Thumbnails are static snapshots in <b>screenshots/thumbs/</b> — ask me to refresh them when a design changes.</span>
+    <span>To add a feature, append one entry to the <b>SECTIONS</b> list in this file.</span>
+  </footer>
+
+</div>
+
+<script>
+/* ──────────────────────────────────────────────────────────────────
+   The index. To add a feature: drop a new object into the right
+   section's `items` array. `links[0]` is treated as the primary
+   (the card title + thumbnail point at it). `thumb` is a snapshot image
+   under screenshots/thumbs/ — set it to null for a lettered/ring
+   placeholder. `fit: 'center'` crops to the middle (phone screens);
+   omit for a top crop (documents). status: 'done' | 'progress' | 'explore'
+─────────────────────────────────────────────────────────────────── */
+const SECTIONS = [
+  {
+    title: 'Foundations',
+    items: [
+      {
+        title: 'The Lab',
+        wide: true,
+        blurb: 'The full working canvas — every screen and state mounted side by side on one zoomable board: the live prototype, all new screens, edge states, the edit-time picker, and the light/dark themes. The catch-all home for anything that doesn’t yet have its own file.',
+        status: 'progress',
+        thumb: null,
+        links: [{ label: 'Open canvas', href: 'Lab.html', primary: true }],
+      },
+      {
+        title: 'Orbit UI Kit',
+        blurb: 'The design system — tokens, type, color, components. The source of truth the features are built from.',
+        status: 'done',
+        thumb: 'screenshots/thumbs/orbit.jpg',
+        fit: 'top',
+        links: [{ label: 'Open kit', href: 'ui_kits/orbit/index.html', primary: true }],
+      },
+      {
+        title: 'App icons',
+        blurb: 'Launcher icon explorations — the orbit ring in its smallest, most compressed form.',
+        status: 'explore',
+        thumb: 'screenshots/thumbs/app-icons.jpg',
+        fit: 'top',
+        links: [{ label: 'Open', href: 'app-icons/icons.html', primary: true }],
+      },
+    ],
+  },
+  {
+    title: 'Features',
+    items: [
+      {
+        title: 'Habit images',
+        blurb: 'Reference photos on a habit — added in the form, surfaced as a quiet strip on the group hero and a mosaic in the queue. Tap a thumb to open the viewer.',
+        status: 'done',
+        thumb: 'screenshots/thumbs/habit-images.jpg',
+        fit: 'center',
+        links: [
+          { label: 'Hi-fi', href: 'Habit images - hi-fi.html', primary: true },
+          { label: 'Wireframe', href: 'Habit images - wireframes.html' },
+        ],
+      },
+      {
+        title: 'Habit description',
+        blurb: 'A markdown note on each habit. Surfaces under the up-next hero and inside the habit-reader sheet. Add &amp; edit share one form sheet.',
+        status: 'progress',
+        thumb: 'screenshots/thumbs/habit-desc.jpg',
+        fit: 'top',
+        links: [
+          { label: 'Hi-fi · in Lab', href: 'Lab.html', primary: true },
+          { label: 'Wireframe', href: 'Habit description - wireframes.html' },
+        ],
+      },
+      {
+        title: 'Note for next time',
+        blurb: 'A one-line whisper from past-you to future-you. Written at tick time, read on the next pickup, then cleared. A quill mark flags one waiting.',
+        status: 'done',
+        thumb: 'screenshots/thumbs/note.jpg',
+        fit: 'center',
+        links: [
+          { label: 'Hi-fi', href: 'Note for next time - hi-fi.html', primary: true },
+          { label: 'Wireframe', href: 'Note for next time - wireframes.html' },
+        ],
+      },
+      {
+        title: 'Habit detail sheet',
+        blurb: 'The sheet that opens on a habit — its rotation context, history, and controls. Designed as a formSheet that flips between reader and editor in place.',
+        status: 'done',
+        thumb: 'screenshots/thumbs/habit-detail.jpg',
+        fit: 'center',
+        links: [
+          { label: 'Hi-fi', href: 'Habit detail - groups hi-fi.html', primary: true },
+          { label: 'Wireframe', href: 'Habit detail - groups wireframes.html' },
+        ],
+      },
+    ],
+  },
+];
+
+/* ── Render ───────────────────────────────────────────────────────── */
+const STATUS_LABEL = { done: 'Done', progress: 'In progress', explore: 'Explore' };
+const ARROW = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7M9 7h8v8"/></svg>';
+
+function el(html) {
+  const t = document.createElement('template');
+  t.innerHTML = html.trim();
+  return t.content.firstElementChild;
+}
+
+function esc(s) { return String(s).replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c])); }
+
+function cardHTML(item) {
+  const primary = (item.links.find(l => l.primary) || item.links[0]);
+  const status = item.status
+    ? `<span class="status ${item.status}"><span class="dot"></span>${STATUS_LABEL[item.status] || item.status}</span>`
+    : '';
+  const letter = esc(item.title.trim()[0] || '·');
+  const ring = '<div class="ph"><span class="ring"></span></div>';
+  const thumbInner = item.thumb
+    ? `<img src="${esc(item.thumb)}" class="${item.fit === 'center' ? 'fit-center' : ''}" alt="${esc(item.title)} preview" loading="lazy" />`
+    : ring;
+
+  const links = item.links.map(l =>
+    `<a class="${l.primary || l === item.links[0] ? 'primary' : 'ghost'}" href="${esc(l.href)}">${esc(l.label)}${(l.primary || l === item.links[0]) ? ARROW : ''}</a>`
+  ).join('');
+
+  if (item.wide) {
+    return el(`
+      <article class="card wide">
+        <div class="layout">
+          <a class="thumb" href="${esc(primary.href)}">${thumbInner}<span class="open-hint">Open ${ARROW}</span></a>
+          <div class="body">
+            <div class="toprow">${status}</div>
+            <h3 class="card-title"><a href="${esc(primary.href)}">${esc(item.title)}</a></h3>
+            <p class="blurb">${item.blurb}</p>
+            <div class="links">${links}</div>
+          </div>
+        </div>
+      </article>`);
+  }
+
+  return el(`
+    <article class="card">
+      <a class="thumb" href="${esc(primary.href)}">${thumbInner}<span class="open-hint">Open ${ARROW}</span></a>
+      <div class="body">
+        <div class="toprow">
+          <h3 class="card-title"><a href="${esc(primary.href)}">${esc(item.title)}</a></h3>
+          ${status}
+        </div>
+        <p class="blurb">${item.blurb}</p>
+        <div class="links">${links}</div>
+      </div>
+    </article>`);
+}
+
+const board = document.getElementById('board');
+let total = 0;
+for (const sec of SECTIONS) {
+  total += sec.items.length;
+  const wideOnly = sec.items.every(i => i.wide);
+  const section = el(`
+    <section class="section">
+      <div class="section-head">
+        <h2>${esc(sec.title)}</h2>
+        <span class="rule"></span>
+        <span class="count">${sec.items.length} item${sec.items.length === 1 ? '' : 's'}</span>
+      </div>
+      <div class="grid"></div>
+    </section>`);
+  const grid = section.querySelector('.grid');
+  for (const item of sec.items) grid.appendChild(cardHTML(item));
+  board.appendChild(section);
+}
+document.getElementById('meta-count').textContent = total + ' files indexed';
+</script>
+
+</body>
+</html>

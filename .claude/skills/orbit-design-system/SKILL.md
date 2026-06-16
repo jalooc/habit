@@ -14,10 +14,11 @@ Then follow up with:
 - `components.md` for the component reference (props, states, motion, interaction spec).
 - `design-tokens.json` for the canonical machine-readable token map (colors, type roles, radii, flat spacing scale, ring sizing, motion) — named for RN/Unistyles conventions, with a `legacyNames` old→new map.
 - `colors_and_type.css` for canonical CSS variables + semantic typography classes you can drop straight into a static site.
-- `tokens.jsx`, `rings.jsx`, `screens.jsx`, `screens-extra.jsx`, `prototype.jsx`, `shared-data.js` for the working React UI kit (inline JSX, no build step).
+- `tokens.jsx`, `rings.jsx`, `swipeable.jsx`, `screens.jsx`, `today-list.jsx`, `screens-extra.jsx`, `prototype.jsx`, `shared-data.js` for the working React UI kit (inline JSX, no build step). `screens.jsx` references components defined in `swipeable.jsx` and `today-list.jsx` — load all of them or the kit throws `… is not defined`.
 - `images.jsx`, `description.jsx`, `whisper.jsx`, `edit-time.jsx` for the per-feature components (habit images, habit description, "a note for next time", editing the time of a tick).
 - `ui_kits/orbit/index.html` for a focused interactive demo of the full app.
-- `index.html` (project root) for the full lab — every screen + edge state + feature + Tweaks.
+- `index.html` (project root) is the **feature index** — a hub linking to every feature, screen set, and exploration (hi-fi + wireframe). Start here to navigate.
+- `Lab.html` for the full lab — every screen + edge state + feature + Tweaks on one pan/zoom canvas.
 
 ## When invoked
 

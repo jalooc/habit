@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Habit description — wireframes</title>
+<style>
+  :root{
+    --line:#1c1b18;
+    --soft:#dcdbd5;
+    --soft2:#ebeae4;
+    --dash:#aeaca3;
+    --anno:#8a8780;
+    --paper:#fffdf9;
+    --canvas:#e7e5df;
+    --coral:#c96442;
+    --mono:'SF Mono',ui-monospace,'Menlo',monospace;
+    --sans:system-ui,-apple-system,'Segoe UI',sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--canvas);color:var(--line);font-family:var(--sans);}
+  .page{max-width:1500px;margin:0 auto;padding:44px 40px 120px;}
+
+  header.mast{margin-bottom:8px;}
+  .mast .ey{font-family:var(--mono);font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--anno);}
+  .mast h1{font-size:30px;font-weight:600;letter-spacing:-0.6px;margin:8px 0 6px;}
+  .mast p{max-width:780px;font-size:14px;line-height:1.55;color:#56544e;margin:0;}
+  .legend{display:flex;flex-wrap:wrap;gap:18px;margin-top:18px;padding-top:16px;border-top:1px solid #cfcdc5;}
+  .legend span{display:inline-flex;align-items:center;gap:7px;font-family:var(--mono);font-size:10.5px;letter-spacing:.3px;color:var(--anno);text-transform:uppercase;}
+  .sw{width:22px;height:11px;border-radius:3px;display:inline-block;}
+
+  /* recommendation strip */
+  .rec{margin-top:28px;border:1.3px solid var(--line);border-radius:18px;padding:18px 22px;background:#fffdf9;display:grid;grid-template-columns:160px 1fr;gap:22px;align-items:start;}
+  .rec .stamp{font-family:var(--mono);font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--coral);padding-top:3px;}
+  .rec h3{font-size:16px;font-weight:600;margin:0 0 8px;letter-spacing:-.2px;}
+  .rec p{font-size:13px;line-height:1.55;color:#3c3a35;margin:0 0 6px;max-width:820px;}
+  .rec .split{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:14px;}
+  .rec .split h4{font-family:var(--mono);font-size:10.5px;letter-spacing:1px;text-transform:uppercase;color:var(--anno);margin:0 0 4px;}
+  .rec .split p{font-size:12.5px;color:#56544e;}
+
+  /* bands */
+  .band{margin-top:54px;}
+  .band-head{display:flex;align-items:baseline;gap:14px;margin-bottom:24px;}
+  .band-head .n{font-family:var(--mono);font-size:11px;color:var(--anno);letter-spacing:1px;}
+  .band-head h2{font-size:18px;font-weight:600;letter-spacing:-0.2px;margin:0;}
+  .band-head .sub{font-size:13px;color:#6c6a63;}
+
+  .row{display:flex;flex-wrap:wrap;gap:34px;align-items:flex-start;}
+
+  /* caption */
+  .opt{width:300px;}
+  .cap .tag{display:inline-block;font-family:var(--mono);font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#fff;background:var(--line);border-radius:4px;padding:3px 7px;}
+  .cap .tag.ghost{background:#fff;color:var(--line);border:1.3px solid var(--line);}
+  .cap h3{font-size:15.5px;font-weight:600;margin:11px 0 5px;letter-spacing:-0.2px;}
+  .cap p{font-size:12.5px;line-height:1.5;color:#605e57;margin:0 0 16px;}
+  .cap .mode{font-family:var(--mono);font-size:10.5px;color:var(--coral);letter-spacing:.3px;margin:0 0 14px;}
+
+  .phone{width:300px;height:600px;background:var(--paper);border:2px solid var(--line);border-radius:30px;overflow:hidden;position:relative;box-shadow:0 12px 30px rgba(28,27,24,.10);}
+  .scr{position:absolute;inset:0;display:flex;flex-direction:column;}
+  .statusbar{height:24px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;padding:0 16px;}
+  .statusbar .o{font-family:var(--mono);font-size:8px;letter-spacing:1.5px;color:var(--anno);text-transform:uppercase;}
+  .content{flex:1;overflow:hidden;padding:0 16px;display:flex;flex-direction:column;}
+
+  .ln{height:8px;border-radius:5px;background:var(--soft);}
+  .ln.dk{background:#cbcabf;}
+  .label{font-family:var(--mono);font-size:8.5px;letter-spacing:1.4px;text-transform:uppercase;color:var(--anno);}
+  .navbar{display:flex;align-items:center;justify-content:space-between;height:30px;flex-shrink:0;}
+  .navbar .t{font-family:var(--mono);font-size:9px;letter-spacing:.8px;color:#56544e;text-transform:uppercase;}
+  .navbar .a{font-family:var(--mono);font-size:9px;color:var(--anno);}
+  .navbar .a.act{color:var(--coral);}
+
+  .card{border:1.5px solid #d3d1c7;border-radius:14px;padding:10px;background:#fff;}
+
+  .edit{border:1.3px dashed var(--dash);border-radius:10px;padding:11px;background:#fdfcf8;}
+  .stack{display:flex;flex-direction:column;}
+  .row-c{display:flex;align-items:center;}
+
+  .lk{color:var(--coral);border-bottom:1.5px solid var(--coral);font-family:var(--sans);font-size:11px;padding-bottom:1px;}
+
+  /* keyboard */
+  .kbd{flex-shrink:0;background:#d9d8d1;padding:8px 6px 12px;}
+  .kbd .kr{display:flex;gap:4px;justify-content:center;margin-top:5px;}
+  .kbd .k{height:18px;border-radius:4px;background:#fff;flex:1;}
+  .kbd .k.sp{flex:5;}
+
+  /* grabber + sheet */
+  .grab{width:36px;height:4px;border-radius:3px;background:#cbcabf;margin:8px auto;}
+  .peek{background:#f0efe9;}
+
+  /* markdown rendered tokens */
+  .ghost{color:#bdbcb3;font-family:var(--mono);font-size:10.5px;}
+  .bold{font-weight:700;}
+  .ital{font-style:italic;}
+
+  /* caret */
+  .caret{display:inline-block;width:1.3px;height:11px;background:var(--coral);vertical-align:-1px;animation:blink 1s steps(2,end) infinite;}
+  @keyframes blink{50%{opacity:0;}}
+
+  /* image strip slot */
+  .ithumb{width:30px;height:30px;border-radius:7px;background:var(--soft2);flex-shrink:0;}
+  .ithumb.add{border:1.3px dashed var(--dash);background:#fff;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;color:var(--anno);}
+
+  /* annotation pins */
+  .pin{display:flex;gap:8px;margin-top:10px;}
+  .pin .b{font-family:var(--mono);font-size:10px;color:var(--coral);flex-shrink:0;}
+  .pin .x{font-family:var(--mono);font-size:10.5px;line-height:1.5;color:#605e57;}
+  .undernotes{margin-top:14px;}
+
+  /* connector between paired phones */
+  .pair{display:flex;align-items:flex-start;gap:20px;}
+  .pair .arrow{display:flex;flex-direction:column;align-items:center;font-family:var(--mono);font-size:10px;color:var(--anno);letter-spacing:.5px;text-transform:uppercase;gap:8px;padding-top:200px;}
+  .pair .arrow svg{width:34px;height:34px;}
+
+  .btn-pill{border:1.5px solid var(--line);border-radius:100px;height:30px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:9.5px;letter-spacing:1px;text-transform:uppercase;color:var(--line);}
+  .btn-pill.solid{background:var(--line);color:#fff;}
+  .btn-pill.ghost{border-style:dashed;color:var(--anno);}
+
+  /* WYSIWYG note canvas style */
+  .nbody{display:flex;flex-direction:column;gap:9px;}
+  .nbody h{display:block;font-family:Georgia,serif;font-weight:700;font-size:14px;color:var(--line);letter-spacing:-.2px;line-height:1.2;}
+
+  /* compare table */
+  .ctable{width:100%;font-size:12.5px;border-collapse:collapse;}
+  .ctable th,.ctable td{text-align:left;padding:9px 10px;border-bottom:1px solid #eceae1;vertical-align:top;}
+  .ctable th{font-family:var(--mono);font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--anno);font-weight:500;}
+  .ctable td:first-child{font-family:var(--mono);font-size:10.5px;color:var(--anno);text-transform:uppercase;letter-spacing:.5px;width:24%;}
+  .ctable .same{color:#3c3a35;}
+  .ctable .diff{color:var(--coral);}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="mast">
+    <div class="ey">Orbit + Ink · Wireframes</div>
+    <h1>Habit description</h1>
+    <p>Add + Edit collapse into one sheet (same fields, same Save/Cancel pair). Presentation is its own component — different job, different layout, no buttons. WYSIWYG markdown editor; no toolbar. Hero shows the up-next note in full, never clipped.</p>
+    <div class="legend">
+      <span><i class="sw" style="background:var(--soft)"></i>placeholder / body</span>
+      <span><i class="sw" style="background:#fff;border:1.3px dashed var(--dash)"></i>editable zone</span>
+      <span><i class="sw" style="background:#e9c9bb;border-bottom:1.5px solid var(--coral)"></i>link</span>
+      <span><i class="sw" style="background:var(--line)"></i>active / chrome</span>
+      <span style="color:var(--coral)">mono coral = annotation</span>
+    </div>
+  </header>
+
+  <!-- ════════════ RECOMMENDATION ════════════ -->
+  <section class="rec">
+    <div class="stamp">Decision · two sheets</div>
+    <div>
+      <h3>Sheet A — Form (Add + Edit). &nbsp;Sheet B — Reader (Presentation).</h3>
+      <p>You were right: detent-switching between read and write was a UX trick papering over the fact that they're <i>different components</i>. Read has no fields and no Save/Cancel — it's just rendered content. Add and Edit, on the other hand, are structurally identical: same three fields, same button pair. They become one form with two modes.</p>
+
+      <table class="ctable" style="margin-top:12px;">
+        <thead>
+          <tr><th>&nbsp;</th><th>Sheet A · Form</th><th>Sheet B · Reader</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Job</td>
+            <td class="same">Commit a habit — new or edited</td>
+            <td class="same">Look at an existing habit</td>
+          </tr>
+          <tr>
+            <td>Fields</td>
+            <td class="same">Name input · image strip · note editor</td>
+            <td class="same">Name · image strip · rendered note</td>
+          </tr>
+          <tr>
+            <td>Chrome</td>
+            <td class="diff">Cancel · Save&nbsp;/&nbsp;Add &nbsp;(+ Remove in edit mode)</td>
+            <td class="diff">Close · Edit ✎</td>
+          </tr>
+          <tr>
+            <td>Detent</td>
+            <td class="same">Large (keyboard owns the bottom)</td>
+            <td class="same">Medium</td>
+          </tr>
+          <tr>
+            <td>Modes</td>
+            <td class="diff">New &nbsp;|&nbsp; Edit&nbsp;— title and CTA flip</td>
+            <td class="same">Single mode</td>
+          </tr>
+          <tr>
+            <td>Tap Edit ✎ in B</td>
+            <td class="diff">opens here in Edit mode →</td>
+            <td class="diff">← closes (or pushes A on top)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ════════════ BAND 1 — SHEET A · FORM (Add + Edit, same sheet) ════════════ -->
+  <section class="band">
+    <div class="band-head">
+      <span class="n">01</span>
+      <h2>Sheet A · Form — Add and Edit are one component</h2>
+      <span class="sub">Same fields, same button pair. Title and primary CTA flip with mode. Edit mode adds Remove at the bottom.</span>
+    </div>
+
+    <div class="pair">
+
+      <!-- 2A · ADD -->
+      <figure class="opt" style="margin:0;">
+        <figcaption class="cap">
+          <span class="tag">2A</span>
+          <h3>Add mode</h3>
+          <div class="mode">formSheet · large · mode=new</div>
+          <p>Blank name, image strip with one "+" slot, empty note canvas. Cancel · Add at the bottom (primary right).</p>
+        </figcaption>
+        <div class="phone" data-screen-label="2A · sheet A · add">
+          <div class="scr">
+            <div class="peek" style="height:42px;flex-shrink:0;padding:0 16px;">
+              <div class="statusbar"><span class="o">◯ orbit</span><span class="o">9:41</span></div>
+            </div>
+            <div style="flex:1;background:#fff;border-radius:18px 18px 0 0;border-top:1.5px solid var(--line);display:flex;flex-direction:column;box-shadow:0 -8px 24px rgba(0,0,0,.14);">
+              <div class="grab"></div>
+              <div style="padding:0 16px;flex:1;display:flex;flex-direction:column;">
+                <div class="navbar"><span class="a">&nbsp;</span><span class="t">new habit</span><span class="a">&nbsp;</span></div>
+
+                <div class="label" style="margin:8px 0 5px;">Name</div>
+                <div class="edit" style="padding:10px 12px;">
+                  <span style="font-family:Georgia,serif;font-style:italic;color:#b6b3aa;font-size:13.5px;">e.g. Hollow hold<span class="caret"></span></span>
+                </div>
+
+                <div class="label" style="margin:12px 0 5px;">Images <span style="color:#cbcabf;">· optional</span></div>
+                <div class="row-c" style="gap:6px;">
+                  <div class="ithumb add">+</div>
+                </div>
+
+                <div class="label" style="margin:12px 0 5px;">Note <span style="color:#cbcabf;">· optional</span></div>
+                <div class="edit" style="min-height:96px;flex:1;">
+                  <span style="font-family:Georgia,serif;font-style:italic;color:#b6b3aa;font-size:13px;line-height:1.5;">A note for this habit. Form cues, why it matters, a link you keep returning to.</span>
+                </div>
+
+                <div class="row-c" style="gap:10px;margin:14px 0 10px;">
+                  <div class="btn-pill" style="flex:1;">cancel</div>
+                  <div class="btn-pill solid" style="flex:1.3;">add</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="undernotes">
+          <div class="pin"><span class="b">›</span><span class="x">Title: <b>new habit</b>. Primary CTA: <b>add</b>.</span></div>
+          <div class="pin"><span class="b">›</span><span class="x">No "Remove" — there's nothing to remove yet.</span></div>
+        </div>
+      </figure>
+
+      <!-- equals -->
+      <div class="arrow" style="padding-top:240px;">
+        <div style="font-family:var(--mono);font-size:24px;color:var(--anno);">=</div>
+        <span>same<br/>component</span>
+        <div style="font-family:var(--mono);font-size:14px;color:var(--coral);letter-spacing:1.5px;">{mode}</div>
+      </div>
+
+      <!-- 2B · EDIT -->
+      <figure class="opt" style="margin:0;">
+        <figcaption class="cap">
+          <span class="tag">2B</span>
+          <h3>Edit mode</h3>
+          <div class="mode">formSheet · large · mode=edit</div>
+          <p>Pre-filled, Save replaces Add, "Remove habit" appears beneath the form. Otherwise structurally identical.</p>
+        </figcaption>
+        <div class="phone" data-screen-label="2B · sheet A · edit">
+          <div class="scr">
+            <div class="peek" style="height:42px;flex-shrink:0;padding:0 16px;">
+              <div class="statusbar"><span class="o">◯ orbit</span><span class="o">9:41</span></div>
+            </div>
+            <div style="flex:1;background:#fff;border-radius:18px 18px 0 0;border-top:1.5px solid var(--line);display:flex;flex-direction:column;box-shadow:0 -8px 24px rgba(0,0,0,.14);">
+              <div class="grab"></div>
+              <div style="padding:0 16px;flex:1;display:flex;flex-direction:column;">
+                <div class="navbar"><span class="a">&nbsp;</span><span class="t">edit habit</span><span class="a">&nbsp;</span></div>
+
+                <div class="label" style="margin:8px 0 5px;">Name</div>
+                <div class="edit" style="padding:9px 11px;">
+                  <span style="font-family:Georgia,serif;font-size:14px;">Hollow hold<span class="caret"></span></span>
+                </div>
+
+                <div class="label" style="margin:12px 0 5px;">Images</div>
+                <div class="row-c" style="gap:6px;">
+                  <div class="ithumb"></div>
+                  <div class="ithumb"></div>
+                  <div class="ithumb add">+</div>
+                </div>
+
+                <div class="label" style="margin:12px 0 5px;">Note</div>
+                <div class="edit nbody" style="font-family:Georgia,serif;font-size:13px;line-height:1.45;gap:7px;flex:1;">
+                  <div>Ribs <span class="bold">down</span>, lower back pressed.</div>
+                  <div class="row-c" style="gap:6px;"><span style="color:var(--anno);font-family:var(--mono);font-size:10px;">·&nbsp;</span><span>30s on, 30s off</span></div>
+                  <div class="row-c" style="gap:6px;"><span style="color:var(--anno);font-family:var(--mono);font-size:10px;">·&nbsp;</span><span>4 rounds</span></div>
+                </div>
+
+                <div class="row-c" style="gap:10px;margin:12px 0 6px;">
+                  <div class="btn-pill" style="flex:1;">cancel</div>
+                  <div class="btn-pill solid" style="flex:1.3;">save</div>
+                </div>
+                <div class="row-c" style="justify-content:center;margin-bottom:10px;">
+                  <span style="font-family:var(--mono);font-size:9.5px;letter-spacing:.5px;color:var(--coral);text-transform:uppercase;">remove habit ▸</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="undernotes">
+          <div class="pin"><span class="b">›</span><span class="x">Title: <b>edit habit</b>. Primary CTA: <b>save</b>. Remove sits below — quiet, destructive, opens a confirm.</span></div>
+          <div class="pin"><span class="b">›</span><span class="x">If this habit lives in other groups too, the confirm dialog says: <i>"Remove from this group?"</i> Otherwise: <i>"Delete habit — used only here."</i></span></div>
+        </div>
+      </figure>
+
+    </div>
+  </section>
+
+  <!-- ════════════ BAND 2 — SHEET B · READER ════════════ -->
+  <section class="band">
+    <div class="band-head">
+      <span class="n">02</span>
+      <h2>Sheet B · Reader — its own component</h2>
+      <span class="sub">Tap any habit in the group queue → this rises to medium detent. No fields. Close · Edit ✎. Tapping Edit opens Sheet A in edit mode.</span>
+    </div>
+
+    <div class="pair">
+
+      <!-- 3A · READER -->
+      <figure class="opt" style="margin:0;">
+        <figcaption class="cap">
+          <span class="tag">3A</span>
+          <h3>Reader</h3>
+          <div class="mode">formSheet · medium · read-only</div>
+          <p>Name as a Fraunces header, image strip, rendered note. Close on the left, Edit ✎ on the right.</p>
+        </figcaption>
+        <div class="phone" data-screen-label="3A · sheet B · reader">
+          <div class="scr">
+            <!-- peeking group screen -->
+            <div class="peek" style="flex:0 0 232px;padding:0 16px;">
+              <div class="statusbar"><span class="o">◯ orbit</span><span class="o">9:41</span></div>
+              <div class="row-c" style="justify-content:center;margin:14px 0 12px;opacity:.5;">
+                <div style="width:74px;height:74px;border-radius:50%;border:1.5px dashed var(--dash);display:flex;align-items:center;justify-content:center;">
+                  <span class="label">ring</span>
+                </div>
+              </div>
+              <div class="ln dk" style="width:56%;margin:0 auto 10px;opacity:.55;"></div>
+              <div class="ln" style="width:40%;margin:0 auto;opacity:.4;"></div>
+            </div>
+            <div style="flex:1;background:#fff;border-radius:18px 18px 0 0;border-top:1.5px solid var(--line);display:flex;flex-direction:column;box-shadow:0 -8px 24px rgba(0,0,0,.14);padding-bottom:16px;">
+              <div class="grab"></div>
+              <div style="padding:0 16px;flex:1;display:flex;flex-direction:column;">
+                <div class="navbar"><span class="a">close</span><span class="t">habit</span><span class="a act">edit ✎</span></div>
+                <div style="font-family:Georgia,serif;font-size:20px;font-weight:600;letter-spacing:-.4px;margin-top:6px;">Hollow hold</div>
+                <div class="row-c" style="gap:6px;margin-top:10px;">
+                  <div class="ithumb"></div>
+                  <div class="ithumb"></div>
+                </div>
+                <div class="nbody" style="margin-top:14px;font-family:Georgia,serif;font-size:13px;line-height:1.5;color:var(--line);">
+                  <div>Ribs <span class="bold">down</span>, lower back pressed to the floor.</div>
+                  <div class="row-c" style="gap:6px;"><span style="color:var(--anno);font-family:var(--mono);font-size:10px;">·&nbsp;</span><span>30s on, 30s off</span></div>
+                  <div class="row-c" style="gap:6px;"><span style="color:var(--anno);font-family:var(--mono);font-size:10px;">·&nbsp;</span><span>4 rounds</span></div>
+                  <div class="row-c" style="gap:6px;"><span style="color:var(--anno);font-family:var(--mono);font-size:10px;">·&nbsp;</span><span>see <span class="lk">form cues ↗</span></span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="undernotes">
+          <div class="pin"><span class="b">›</span><span class="x">No keyboard, no Save. The render uses the same markdown lib as the editor (read-only).</span></div>
+          <div class="pin"><span class="b">›</span><span class="x">Tap a link → opens externally. Tap anywhere else → nothing happens (Edit is the only way in).</span></div>
+        </div>
+      </figure>
+
+      <!-- arrow connector -->
+      <div class="arrow" style="padding-top:200px;">
+        <span style="color:var(--coral);">tap edit ✎</span>
+        <svg viewBox="0 0 34 34" fill="none" stroke="#8a8780" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 17h24"></path><path d="M22 9l8 8-8 8"></path>
+        </svg>
+        <span>swap to<br/>sheet A · edit</span>
+        <svg viewBox="0 0 34 34" fill="none" stroke="#8a8780" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="transform:rotate(180deg);">
+          <path d="M5 17h24"></path><path d="M22 9l8 8-8 8"></path>
+        </svg>
+        <span style="color:var(--coral);">save&nbsp;/&nbsp;cancel<br/>returns&nbsp;here</span>
+      </div>
+
+      <!-- 3B · EDIT (Sheet A reused) -->
+      <figure class="opt" style="margin:0;">
+        <figcaption class="cap">
+          <span class="tag ghost">= 2B</span>
+          <h3>… opens Sheet A · Edit</h3>
+          <div class="mode">formSheet · large · mode=edit</div>
+          <p>Edit ✎ replaces the reader with the form (large detent). Save / cancel returns to the reader, refreshed.</p>
+        </figcaption>
+        <div class="phone" data-screen-label="3B · returns to sheet A edit">
+          <div class="scr">
+            <div class="peek" style="height:42px;flex-shrink:0;padding:0 16px;">
+              <div class="statusbar"><span class="o">◯ orbit</span><span class="o">9:41</span></div>
+            </div>
+            <div style="flex:1;background:#fff;border-radius:18px 18px 0 0;border-top:1.5px solid var(--line);display:flex;flex-direction:column;box-shadow:0 -8px 24px rgba(0,0,0,.14);">
+              <div class="grab"></div>
+              <div style="padding:0 16px;flex:1;display:flex;flex-direction:column;">
+                <div class="navbar"><span class="a">&nbsp;</span><span class="t">edit habit</span><span class="a">&nbsp;</span></div>
+
+                <div class="label" style="margin:8px 0 5px;">Name</div>
+                <div class="edit" style="padding:9px 11px;">
+                  <span style="font-family:Georgia,serif;font-size:14px;">Hollow hold</span>
+                </div>
+
+                <div class="label" style="margin:12px 0 5px;">Images</div>
+                <div class="row-c" style="gap:6px;">
+                  <div class="ithumb"></div>
+                  <div class="ithumb"></div>
+                  <div class="ithumb add">+</div>
+                </div>
+
+                <div class="label" style="margin:12px 0 5px;">Note</div>
+                <div class="edit nbody" style="font-family:Georgia,serif;font-size:13px;line-height:1.45;gap:7px;flex:1;">
+                  <div>Ribs <span class="bold">down</span>, lower back pressed.</div>
+                  <div class="row-c" style="gap:6px;"><span style="color:var(--anno);font-family:var(--mono);font-size:10px;">·&nbsp;</span><span>30s on, 30s off</span></div>
+                  <div class="row-c" style="gap:6px;"><span style="color:var(--anno);font-family:var(--mono);font-size:10px;">·&nbsp;</span><span>4 rounds</span></div>
+                </div>
+
+                <div class="row-c" style="gap:10px;margin:12px 0 6px;">
+                  <div class="btn-pill" style="flex:1;">cancel</div>
+                  <div class="btn-pill solid" style="flex:1.3;">save</div>
+                </div>
+                <div class="row-c" style="justify-content:center;margin-bottom:10px;">
+                  <span style="font-family:var(--mono);font-size:9.5px;letter-spacing:.5px;color:var(--coral);text-transform:uppercase;">remove habit ▸</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="undernotes">
+          <div class="pin"><span class="b">›</span><span class="x">Implementation: stacked sheets, or swap content + animate detent. UX-wise it reads as "stepping into" the habit.</span></div>
+        </div>
+      </figure>
+
+    </div>
+  </section>
+
+  <!-- ════════════ BAND 3 — HERO ════════════ -->
+  <section class="band">
+    <div class="band-head">
+      <span class="n">03</span>
+      <h2>How the note shows in the group hero</h2>
+      <span class="sub">Only the up-next habit. Rendered in full — no clipping. If it's long, the hero scrolls.</span>
+    </div>
+
+    <div class="row">
+
+      <!-- 4A · short -->
+      <figure class="opt" style="margin:0;">
+        <figcaption class="cap">
+          <span class="tag">4A</span>
+          <h3>Hero · short note</h3>
+          <div class="mode">group detail · up-next card</div>
+          <p>Note sits below the name as a quiet sub-card. Standard hero rhythm: ring → name → note → CTA.</p>
+        </figcaption>
+        <div class="phone" data-screen-label="4A · hero · short note">
+          <div class="scr">
+            <div class="statusbar"><span class="o">◯ orbit</span><span class="o">9:41 · tue 4 jun</span></div>
+            <div class="content">
+              <div class="navbar"><span class="t">← core</span><span class="a">edit</span></div>
+              <div class="row-c" style="justify-content:center;margin:8px 0 10px;">
+                <div style="width:120px;height:120px;border-radius:50%;border:1.5px dashed var(--dash);display:flex;align-items:center;justify-content:center;">
+                  <span class="label">ring · 5</span>
+                </div>
+              </div>
+              <div class="label" style="text-align:center;color:var(--coral);">up next</div>
+              <div style="font-family:Georgia,serif;font-size:22px;font-weight:600;letter-spacing:-.4px;text-align:center;margin:5px 0 12px;">Hollow hold</div>
+
+              <div class="card stack" style="gap:9px;">
+                <div class="row-c" style="gap:6px;">
+                  <div class="ithumb" style="width:26px;height:26px;"></div>
+                  <div class="ithumb" style="width:26px;height:26px;"></div>
+                </div>
+                <div style="font-family:Georgia,serif;font-size:13px;line-height:1.45;color:var(--line);">
+                  Ribs <span class="bold">down</span>, lower back pressed. 30s on, 30s off. See <span class="lk">form cues ↗</span>
+                </div>
+              </div>
+
+              <div style="flex:1;"></div>
+              <div class="btn-pill solid" style="margin-bottom:14px;">mark done</div>
+            </div>
+          </div>
+        </div>
+      </figure>
+
+      <!-- 4B · long note, full -->
+      <figure class="opt" style="margin:0;">
+        <figcaption class="cap">
+          <span class="tag">4B</span>
+          <h3>Hero · long note · full</h3>
+          <div class="mode">group detail · scroll within page</div>
+          <p>Whole note rendered, including a heading, bullets and a link. The ring stays sticky-ish at the top; the page itself scrolls.</p>
+        </figcaption>
+        <div class="phone" data-screen-label="4B · hero · long note full">
+          <div class="scr">
+            <div class="statusbar"><span class="o">◯ orbit</span><span class="o">9:41 · tue 4 jun</span></div>
+            <div class="content" style="overflow:hidden;">
+              <div class="navbar"><span class="t">← family</span><span class="a">edit</span></div>
+              <div class="row-c" style="justify-content:center;margin:4px 0 6px;">
+                <div style="width:74px;height:74px;border-radius:50%;border:1.5px dashed var(--dash);display:flex;align-items:center;justify-content:center;">
+                  <span class="label">ring · 4</span>
+                </div>
+              </div>
+              <div class="label" style="text-align:center;color:var(--coral);">up next</div>
+              <div style="font-family:Georgia,serif;font-size:19px;font-weight:600;letter-spacing:-.4px;text-align:center;margin:3px 0 10px;">Calling Maciek</div>
+
+              <div class="card nbody" style="gap:8px;font-family:Georgia,serif;font-size:12.5px;line-height:1.5;color:var(--line);">
+                <h>Last call: 12 May</h>
+                <div>He mentioned the new flat in Wrocław. Ask how the <span class="bold">move</span> went and whether the cat settled.</div>
+                <div class="row-c" style="gap:6px;"><span style="color:var(--anno);font-family:var(--mono);font-size:10px;">·&nbsp;</span><span>Anniversary of dad's passing approaching — be gentle.</span></div>
+                <div class="row-c" style="gap:6px;"><span style="color:var(--anno);font-family:var(--mono);font-size:10px;">·&nbsp;</span><span>Send him the <span class="lk">photo ↗</span> from the lake.</span></div>
+              </div>
+
+              <div class="btn-pill solid" style="margin-top:10px;">mark done</div>
+              <div class="label" style="text-align:center;margin-top:8px;color:#cbcabf;">scroll · 2 more in queue</div>
+            </div>
+          </div>
+        </div>
+        <div class="undernotes">
+          <div class="pin"><span class="b">›</span><span class="x">No clip, no fade. If it's long, you scroll. Ring + CTA stay anchored as the user expects.</span></div>
+        </div>
+      </figure>
+
+      <!-- 4C · no note -->
+      <figure class="opt" style="margin:0;">
+        <figcaption class="cap">
+          <span class="tag">4C</span>
+          <h3>Hero · no note</h3>
+          <div class="mode">group detail · empty</div>
+          <p>The note card simply doesn't render — note is optional. The hero stays calm without prompting the user to fill it in.</p>
+        </figcaption>
+        <div class="phone" data-screen-label="4C · hero · no note">
+          <div class="scr">
+            <div class="statusbar"><span class="o">◯ orbit</span><span class="o">9:41 · tue 4 jun</span></div>
+            <div class="content">
+              <div class="navbar"><span class="t">← languages</span><span class="a">edit</span></div>
+              <div class="row-c" style="justify-content:center;margin:14px 0 12px;">
+                <div style="width:120px;height:120px;border-radius:50%;border:1.5px dashed var(--dash);display:flex;align-items:center;justify-content:center;">
+                  <span class="label">ring · 3</span>
+                </div>
+              </div>
+              <div class="label" style="text-align:center;color:var(--coral);">up next</div>
+              <div style="font-family:Georgia,serif;font-size:24px;font-weight:600;letter-spacing:-.4px;text-align:center;margin:5px 0 20px;font-style:italic;">Polish</div>
+              <div class="label" style="text-align:center;">last touched · 3d ago</div>
+
+              <div style="flex:1;"></div>
+              <div class="btn-pill solid" style="margin-bottom:14px;">mark done</div>
+            </div>
+          </div>
+        </div>
+      </figure>
+
+    </div>
+  </section>
+
+</div>
+</body>
+</html>

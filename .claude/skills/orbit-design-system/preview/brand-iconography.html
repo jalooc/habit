@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Iconography · Unicode set</title>
+<style>
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Inter:wght@400;500;600&display=swap");
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:#f5f1ec;color:#1a1814;font-family:"Inter",system-ui,sans-serif;height:100%;overflow:hidden}
+.card{width:700px;padding:22px 26px;display:flex;flex-direction:column;gap:14px}
+.row{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.kicker{font-family:"Inter",sans-serif;font-weight:500;font-size:10px;line-height:1;letter-spacing:1.8px;text-transform:uppercase;color:#7a766e}
+.kicker--accent{color:#c96442}
+.swatch{display:flex;flex-direction:column;gap:6px;flex:1;min-width:0}
+.chip{width:100%;height:64px;border-radius:14px}
+.chip--ring{box-shadow:inset 0 0 0 1px rgba(26,24,20,0.08)}
+.chip-meta{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:11px;line-height:1.3}
+.chip-name{font-weight:500;color:#1a1814}
+.chip-hex{color:#7a766e;font-variant-numeric:tabular-nums}
+.divider{height:1px;background:rgba(26,24,20,0.10);margin:4px 0}
+.note{font-family:"Fraunces",serif;font-size:12px;line-height:1.4;color:#7a766e;font-style:italic}
+.code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:#7a766e}
+</style>
+</head>
+<body>
+<div class="card">
+
+<div class="kicker">Iconography</div>
+<div class="row" style="gap:28px;padding:8px 0">
+  
+    <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+      <div style="font:400 28px 'Fraunces',serif;color:#1a1814">◯</div>
+      <div class="code" style="text-align:center;max-width:120px">U+25EF · wordmark + Rotations tab</div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+      <div style="font:400 28px 'Fraunces',serif;color:#1a1814">◐</div>
+      <div class="code" style="text-align:center;max-width:120px">U+25D0 · Today tab</div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+      <div style="font:400 28px 'Fraunces',serif;color:#1a1814">◔</div>
+      <div class="code" style="text-align:center;max-width:120px">U+25D4 · Insights tab</div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+      <div style="font:400 28px 'Fraunces',serif;color:#1a1814">◌</div>
+      <div class="code" style="text-align:center;max-width:120px">U+25CC · Settings tab</div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+      <div style="font:400 28px 'Fraunces',serif;color:#1a1814">✓</div>
+      <div class="code" style="text-align:center;max-width:120px">U+2713 · active-dot mark</div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+      <div style="font:400 28px 'Fraunces',serif;color:#1a1814">·</div>
+      <div class="code" style="text-align:center;max-width:120px">U+00B7 · separator</div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
+      <div style="font:400 28px 'Fraunces',serif;color:#1a1814">—</div>
+      <div class="code" style="text-align:center;max-width:120px">U+2014 · em-dash</div>
+    </div>
+</div>
+<div class="note">No icon library. Unicode + inline SVG primitives. If a richer set is needed, Lucide (1.5px stroke) is the closest match — but resist; restraint is the identity.</div>
+</div>
+</body>
+</html>

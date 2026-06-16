@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Habit detail sheet · groups list — wireframes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #efeae3;
+    --card: #ffffff;
+    --ink: #1a1814;
+    --ink-soft: #7a766e;
+    --ink-faint: #b5b0a6;
+    --accent: #c96442;
+    --accent-dim: #e7dccf;
+    --accent-soft: #f4dccf;
+    --accent-softer: #faece2;
+    --rule: rgba(26,24,20,0.08);
+    --shadow: 0 1px 2px rgba(26,24,20,0.04), 0 8px 32px rgba(26,24,20,0.06);
+    --serif: 'Fraunces', Georgia, serif;
+    --sans: 'Inter', system-ui, -apple-system, sans-serif;
+    --skel: rgba(26,24,20,0.07);
+  }
+  html, body { margin: 0; padding: 0; background: var(--bg); font-family: var(--sans); color: var(--ink); }
+  * { box-sizing: border-box; }
+  .page { max-width: 1340px; margin: 0 auto; padding: 56px 40px 90px; }
+  .page-head { margin-bottom: 14px; }
+  .page-head .kicker {
+    font: 500 11px/1 var(--sans); letter-spacing: 1.8px;
+    color: var(--ink-soft); text-transform: uppercase; margin-bottom: 12px;
+  }
+  .page-head h1 {
+    font: 400 36px/1.1 var(--serif); letter-spacing: -0.4px;
+    color: var(--ink); margin: 0 0 10px; text-wrap: pretty; max-width: 760px;
+  }
+  .page-head h1 em { font-style: italic; }
+  .page-head p {
+    font: 400 15px/1.55 var(--serif); color: var(--ink-soft); margin: 0; max-width: 660px;
+  }
+  .legend {
+    display: flex; gap: 22px; flex-wrap: wrap; margin: 22px 0 40px;
+    padding: 14px 18px; background: rgba(255,255,255,0.5);
+    border: 1px solid var(--rule); border-radius: 14px; max-width: 760px;
+  }
+  .legend .item { display: flex; align-items: center; gap: 8px;
+    font: 400 12.5px/1.4 var(--serif); color: var(--ink-soft); }
+  .legend .sw { width: 26px; height: 14px; border-radius: 4px; flex-shrink: 0; }
+  .legend .sw.skel { background: var(--skel); }
+  .legend .sw.focus { background: var(--accent-softer); border: 1.5px dashed var(--accent); }
+
+  .grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+    gap: 30px; align-items: start;
+  }
+  .artboard {
+    display: flex; flex-direction: column;
+    border-radius: 24px; padding: 22px 22px 26px;
+    background: rgba(255,255,255,0.42); border: 1px solid var(--rule);
+  }
+  .artboard-head { margin-bottom: 18px; }
+  .artboard-head .name {
+    font: 500 11px/1 var(--sans); letter-spacing: 1.8px;
+    color: var(--ink); text-transform: uppercase; margin-bottom: 8px;
+  }
+  .artboard-head .note {
+    font: 400 12.5px/1.5 var(--serif); color: var(--ink-soft); text-wrap: pretty;
+  }
+  .artboard-head .note b { color: var(--ink); font-weight: 600; }
+
+  .sheet {
+    background: var(--card);
+    border-radius: 26px 26px 14px 14px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    border: 1px solid var(--rule);
+  }
+  .grabber { width: 36px; height: 4px; border-radius: 100px; background: var(--accent-dim);
+    margin: 10px auto 0; }
+  .sheet-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 18px 6px;
+  }
+  .sheet-head .lbl {
+    font: 500 10px/1 var(--sans); letter-spacing: 1.8px; color: var(--ink-faint);
+    text-transform: uppercase;
+  }
+  .sheet-head .btn {
+    font: 500 11px/1 var(--sans); letter-spacing: 1px; text-transform: uppercase;
+    color: var(--ink-soft); background: none; border: none; padding: 6px 4px; cursor: pointer;
+  }
+  .sheet-head .btn.edit { color: var(--accent); display: inline-flex; align-items: center; gap: 5px; }
+  .sheet-body { padding: 8px 20px 22px; display: flex; flex-direction: column; gap: 16px; }
+  .habit-name { font: 500 23px/1.18 var(--serif); color: var(--ink); letter-spacing: -0.3px; }
+
+  .skel-strip { display: flex; gap: 8px; opacity: 0.9; }
+  .skel-thumb { width: 46px; height: 46px; border-radius: 10px;
+    background: var(--skel); border: 1px dashed var(--accent-dim); }
+  .skel-lines { display: flex; flex-direction: column; gap: 7px; }
+  .skel-lines .ln { height: 9px; border-radius: 4px; background: var(--skel); }
+  .skel-lines .ln.s1 { width: 96%; } .skel-lines .ln.s2 { width: 88%; }
+  .skel-lines .ln.s3 { width: 64%; }
+  .dim { opacity: 0.5; }
+
+  .focus { position: relative;
+    border: 1.5px dashed var(--accent); border-radius: 16px;
+    padding: 14px 14px 16px; margin: 2px -2px;
+    background: var(--accent-softer); }
+  .focus::before {
+    content: 'GROUPS'; position: absolute; top: -8px; left: 14px;
+    background: var(--accent); color: #fff; font: 600 8.5px/1 var(--sans);
+    letter-spacing: 1.4px; padding: 4px 7px; border-radius: 100px;
+  }
+
+  .mr { width: 26px; height: 26px; flex-shrink: 0; border-radius: 50%;
+    border: 1.5px solid var(--accent-dim); position: relative; }
+  .mr i { position: absolute; width: 5px; height: 5px; border-radius: 50%;
+    background: var(--ink-faint); }
+  .mr .on { background: var(--accent); width: 6px; height: 6px;
+    box-shadow: 0 0 0 3px rgba(201,100,66,0.14); }
+  .mr.lg { width: 32px; height: 32px; }
+
+  .grp-label { font: 500 10px/1 var(--sans); letter-spacing: 1.8px;
+    color: var(--ink-soft); text-transform: uppercase;
+    display: flex; align-items: center; gap: 8px; }
+  .grp-label .ct { background: var(--accent-soft); color: var(--accent);
+    padding: 3px 7px; border-radius: 100px; font-size: 10px; letter-spacing: 0.3px; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .gchip { display: inline-flex; align-items: center; gap: 8px;
+    border: 1px solid var(--accent-dim); background: var(--card);
+    padding: 7px 12px 7px 8px; border-radius: 100px; cursor: pointer; }
+  .gchip .gn { font: 400 14px/1 var(--serif); font-style: italic; color: var(--ink); }
+  .gchip.add { border-style: dashed; color: var(--ink-soft);
+    font: 500 11px/1 var(--sans); letter-spacing: 0.6px; padding: 9px 13px; }
+
+  .grow { display: flex; align-items: center; gap: 13px; padding: 11px 2px; cursor: pointer; }
+  .grow + .grow { border-top: 1px solid var(--rule); }
+  .grow .body { flex: 1; min-width: 0; }
+  .grow .gn { font: 400 16px/1.2 var(--serif); font-style: italic; color: var(--ink); }
+  .grow .meta { font: 400 11px/1.3 var(--sans); color: var(--ink-soft);
+    margin-top: 3px; letter-spacing: 0.2px; }
+  .grow .meta .now { color: var(--accent); font-weight: 500; }
+  .grow .chev { color: var(--ink-faint); font-size: 15px; }
+  .addrow { display: flex; align-items: center; gap: 10px; padding: 12px 2px 2px;
+    border-top: 1px dashed var(--accent-dim); margin-top: 4px;
+    font: 500 11px/1 var(--sans); letter-spacing: 0.8px; color: var(--accent);
+    text-transform: uppercase; cursor: pointer; }
+  .addrow .plus { width: 24px; height: 24px; border-radius: 50%;
+    border: 1.5px dashed var(--accent-dim); color: var(--accent);
+    display: inline-flex; align-items: center; justify-content: center; font-size: 15px; }
+
+  .grp-line { font: 400 15px/1.6 var(--serif); color: var(--ink-soft); }
+  .grp-line a { font-style: italic; color: var(--ink); text-decoration: none;
+    border-bottom: 1.5px solid var(--accent-dim); padding-bottom: 1px; cursor: pointer; }
+  .grp-line .manage { display: inline-block; margin-top: 10px;
+    font: 500 10.5px/1 var(--sans); letter-spacing: 1.2px; text-transform: uppercase;
+    color: var(--accent); cursor: pointer; }
+
+  .gcards { display: flex; flex-direction: column; gap: 10px; }
+  .gcard { display: flex; align-items: center; gap: 14px;
+    background: var(--card); border: 1px solid var(--rule); border-radius: 14px;
+    padding: 12px 14px; cursor: pointer; }
+  .gcard .body { flex: 1; min-width: 0; }
+  .gcard .gn { font: 400 16px/1.2 var(--serif); font-style: italic; color: var(--ink); }
+  .gcard .meta { font: 400 11px/1.3 var(--sans); color: var(--ink-soft); margin-top: 3px; }
+  .gcard .meta .now { color: var(--accent); font-weight: 500; }
+  .manage-btn { display: flex; align-items: center; justify-content: center; gap: 8px;
+    border: 1px solid var(--accent-dim); background: var(--card);
+    border-radius: 100px; padding: 11px; cursor: pointer; margin-top: 2px;
+    font: 500 11px/1 var(--sans); letter-spacing: 0.8px; text-transform: uppercase;
+    color: var(--ink-soft); }
+  .manage-btn .plus { color: var(--accent); font-size: 15px; }
+
+  svg.i { width: 15px; height: 15px; stroke: currentColor; fill: none;
+    stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="page-head">
+    <div class="kicker">Habit detail sheet · the "groups this habit belongs to" block</div>
+    <h1>Four ways to show the <em>rotations a habit lives in</em></h1>
+    <p>Tapping a habit in any list opens this read-only detail sheet — name, images, note — with an <b>Edit&nbsp;✎</b> that flips the same sheet into the editor. A habit can rotate in more than one group, so the sheet needs to name them. Each card below shows the full sheet; the coral-dashed block is the only part that differs.</p>
+  </div>
+
+  <div class="legend">
+    <div class="item"><span class="sw skel"></span> Skeleton = existing sheet content (name, images, note), dimmed for context</div>
+    <div class="item"><span class="sw focus"></span> Coral-dashed = the groups treatment under exploration</div>
+  </div>
+
+  <div class="grid">
+
+    <!-- A -->
+    <div class="artboard">
+      <div class="artboard-head">
+        <div class="name">A · Quiet chip cluster</div>
+        <div class="note">Group names as small pills, each with a mini orbit badge. Wraps to a second line, ends with a dashed <b>+ Add</b>. Lowest vertical cost — best when a habit usually sits in one or two groups. Tap a chip to jump to that rotation. Doesn't show where the habit sits in each queue.</div>
+      </div>
+      <div class="sheet">
+        <div class="grabber"></div>
+        <div class="sheet-head">
+          <button class="btn">Close</button>
+          <span class="lbl">Habit</span>
+          <button class="btn edit">Edit <svg class="i" viewBox="0 0 24 24"><path d="M14 5l5 5M4 20l1-4L16 5l3 3L8 19l-4 1z"/></svg></button>
+        </div>
+        <div class="sheet-body">
+          <div class="habit-name">Hollow hold, 45s</div>
+          <div class="skel-strip dim">
+            <div class="skel-thumb"></div><div class="skel-thumb"></div><div class="skel-thumb"></div>
+          </div>
+          <div class="skel-lines dim"><div class="ln s1"></div><div class="ln s2"></div><div class="ln s3"></div></div>
+          <div class="focus">
+            <div class="grp-label" style="margin-bottom:11px"><span>In rotation</span><span class="ct">2</span></div>
+            <div class="chips">
+              <span class="gchip"><span class="mr"><i class="on" style="top:1px;left:50%;transform:translateX(-50%)"></i><i style="bottom:5px;left:5px"></i><i style="bottom:5px;right:5px"></i></span><span class="gn">Core</span></span>
+              <span class="gchip"><span class="mr"><i style="top:2px;left:50%;transform:translateX(-50%)"></i><i class="on" style="bottom:5px;left:5px"></i><i style="bottom:5px;right:5px"></i></span><span class="gn">Mobility</span></span>
+              <span class="gchip add">+ Add to group</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- B -->
+    <div class="artboard">
+      <div class="artboard-head">
+        <div class="name">B · Rotation-standing list</div>
+        <div class="note">One row per group: orbit badge, italic group name, and a meta line that tells you the cadence <i>and where the habit sits</i> — "up next", "3rd in line". Richest; leans into the orbit model. A dashed <b>Add to a group</b> row closes the list.</div>
+      </div>
+      <div class="sheet">
+        <div class="grabber"></div>
+        <div class="sheet-head">
+          <button class="btn">Close</button>
+          <span class="lbl">Habit</span>
+          <button class="btn edit">Edit <svg class="i" viewBox="0 0 24 24"><path d="M14 5l5 5M4 20l1-4L16 5l3 3L8 19l-4 1z"/></svg></button>
+        </div>
+        <div class="sheet-body">
+          <div class="habit-name">Hollow hold, 45s</div>
+          <div class="skel-strip dim">
+            <div class="skel-thumb"></div><div class="skel-thumb"></div><div class="skel-thumb"></div>
+          </div>
+          <div class="skel-lines dim"><div class="ln s1"></div><div class="ln s2"></div><div class="ln s3"></div></div>
+          <div class="focus">
+            <div class="grp-label" style="margin-bottom:6px"><span>In rotation</span><span class="ct">2</span></div>
+            <div class="grow">
+              <span class="mr"><i class="on" style="top:1px;left:50%;transform:translateX(-50%)"></i><i style="bottom:5px;left:5px"></i><i style="bottom:5px;right:5px"></i></span>
+              <div class="body"><div class="gn">Core</div><div class="meta">Once a day · <span class="now">up next</span></div></div>
+              <span class="chev">›</span>
+            </div>
+            <div class="grow">
+              <span class="mr"><i style="top:2px;left:50%;transform:translateX(-50%)"></i><i class="on" style="bottom:5px;left:5px"></i><i style="bottom:5px;right:5px"></i></span>
+              <div class="body"><div class="gn">Mobility</div><div class="meta">Once a day · 3rd in line</div></div>
+              <span class="chev">›</span>
+            </div>
+            <div class="addrow"><span class="plus">+</span> Add to a group</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- C -->
+    <div class="artboard">
+      <div class="artboard-head">
+        <div class="name">C · Literary one-liner</div>
+        <div class="note">The lightest touch: a single sentence in the house voice — "Rotates in <i>Core</i> and <i>Mobility</i>." Names are tappable. A small <b>Manage rotations</b> link handles membership. Most in-keeping with the calm tone, but carries no cadence or standing.</div>
+      </div>
+      <div class="sheet">
+        <div class="grabber"></div>
+        <div class="sheet-head">
+          <button class="btn">Close</button>
+          <span class="lbl">Habit</span>
+          <button class="btn edit">Edit <svg class="i" viewBox="0 0 24 24"><path d="M14 5l5 5M4 20l1-4L16 5l3 3L8 19l-4 1z"/></svg></button>
+        </div>
+        <div class="sheet-body">
+          <div class="habit-name">Hollow hold, 45s</div>
+          <div class="skel-strip dim">
+            <div class="skel-thumb"></div><div class="skel-thumb"></div><div class="skel-thumb"></div>
+          </div>
+          <div class="skel-lines dim"><div class="ln s1"></div><div class="ln s2"></div><div class="ln s3"></div></div>
+          <div class="focus">
+            <div class="grp-line">Rotates in <a>Core</a> and <a>Mobility</a>.
+              <br /><span class="manage">Manage rotations ↗</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- D -->
+    <div class="artboard">
+      <div class="artboard-head">
+        <div class="name">D · Orbit cards + manage button</div>
+        <div class="note">Each group is its own small card with a larger orbit badge showing the habit's slot lit on the ring, name and cadence. A full-width <b>Add to a group</b> button anchors membership management. Most management-forward and the most visual.</div>
+      </div>
+      <div class="sheet">
+        <div class="grabber"></div>
+        <div class="sheet-head">
+          <button class="btn">Close</button>
+          <span class="lbl">Habit</span>
+          <button class="btn edit">Edit <svg class="i" viewBox="0 0 24 24"><path d="M14 5l5 5M4 20l1-4L16 5l3 3L8 19l-4 1z"/></svg></button>
+        </div>
+        <div class="sheet-body">
+          <div class="habit-name">Hollow hold, 45s</div>
+          <div class="skel-strip dim">
+            <div class="skel-thumb"></div><div class="skel-thumb"></div><div class="skel-thumb"></div>
+          </div>
+          <div class="skel-lines dim"><div class="ln s1"></div><div class="ln s2"></div><div class="ln s3"></div></div>
+          <div class="focus">
+            <div class="grp-label" style="margin-bottom:11px"><span>In rotation</span><span class="ct">2</span></div>
+            <div class="gcards">
+              <div class="gcard">
+                <span class="mr lg"><i class="on" style="top:2px;left:50%;transform:translateX(-50%)"></i><i style="bottom:7px;left:6px"></i><i style="bottom:7px;right:6px"></i></span>
+                <div class="body"><div class="gn">Core</div><div class="meta">Once a day · <span class="now">up next</span></div></div>
+              </div>
+              <div class="gcard">
+                <span class="mr lg"><i style="top:2px;left:50%;transform:translateX(-50%)"></i><i class="on" style="bottom:7px;left:6px"></i><i style="bottom:7px;right:6px"></i></span>
+                <div class="body"><div class="gn">Mobility</div><div class="meta">Once a day · 3rd in line</div></div>
+              </div>
+              <div class="manage-btn"><span class="plus">+</span> Add to a group</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div style="margin-top:48px;padding:22px 26px;background:#fff;border-radius:18px;border:1px solid var(--rule)">
+    <div style="font:500 11px/1 var(--sans); letter-spacing:1.8px; color:var(--ink-soft); text-transform:uppercase; margin-bottom:10px">Notes &amp; open questions</div>
+    <ul style="margin:0; padding-left:18px; font:400 14px/1.55 var(--serif); color:var(--ink); max-width:820px">
+      <li>I drew <b>Hollow hold</b> as living in two groups (Core + Mobility) to show the multi-group case. In today's data each habit sits in one group — confirming habits can belong to many is the real model change here.</li>
+      <li><b>A</b> and <b>C</b> are quiet and cheap on space; <b>B</b> and <b>D</b> add the "where does it sit in each ring" standing, which feels true to the orbit metaphor. They cost more height.</li>
+      <li>Whichever we pick, I'll also finish the detail sheet itself — right now there's only the description-feature reader; this becomes the canonical tap-to-open habit sheet with Edit flipping it in place (no stacked sheets).</li>
+      <li>Open: should tapping a group <i>navigate</i> to it (closing the sheet) or just be informational? And does "Add to a group" open a picker, or grow this sheet into an editor section?</li>
+    </ul>
+  </div>
+</div>
+</body>
+</html>

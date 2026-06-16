@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Habit detail sheet · in rotation — hi-fi</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; }
+  body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background: #ece8e1; }
+  * { box-sizing: border-box; }
+
+  .stage { min-height: 100%; display: flex; flex-direction: column; align-items: center; padding: 34px 20px 64px; }
+  .stage .head { text-align: center; max-width: 640px; margin-bottom: 18px; }
+  .stage .head .k {
+    font: 500 11px/1 'Inter', sans-serif; letter-spacing: 1.8px; text-transform: uppercase;
+    color: #9a948a; margin-bottom: 8px;
+  }
+  .stage .head h1 { font: 400 27px/1.15 'Fraunces', Georgia, serif; color: #1a1814; margin: 0; letter-spacing: -0.4px; }
+  .stage .head h1 em { font-style: italic; }
+  .stage .head p { font: 400 13.5px/1.55 'Inter', sans-serif; color: #6f6a61; margin: 10px 0 0; }
+
+  .seg {
+    display: inline-flex; gap: 4px; padding: 4px; border-radius: 100px; flex-wrap: wrap;
+    background: #fff; box-shadow: 0 1px 2px rgba(26,24,20,0.05), 0 6px 22px rgba(26,24,20,0.07);
+    margin-bottom: 10px; justify-content: center;
+  }
+  .seg button {
+    border: none; cursor: pointer; background: transparent; color: #7a766e;
+    padding: 9px 16px; border-radius: 100px; font: 500 12px/1 'Inter', sans-serif;
+    letter-spacing: 0.3px; transition: background .2s, color .2s;
+  }
+  .seg button.on { background: #1a1814; color: #fff; }
+
+  .caption {
+    font: 400 11.5px/1.55 'Inter', sans-serif; color: #9a948a; margin: 16px auto 0;
+    text-align: center; letter-spacing: 0.2px; max-width: 560px;
+  }
+  .caption b { color: #6f6a61; font-weight: 500; }
+  .caption code {
+    font: 500 10.5px/1 'SF Mono', ui-monospace, Menlo, monospace;
+    color: #c96442; background: rgba(201,100,66,0.08); padding: 2px 6px; border-radius: 4px;
+  }
+</style>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script src="shared-data.js"></script>
+<script type="text/babel" src="tokens.jsx"></script>
+<script type="text/babel" src="rings.jsx"></script>
+<script type="text/babel" src="swipeable.jsx"></script>
+<script type="text/babel" src="whisper.jsx"></script>
+<script type="text/babel" src="images.jsx"></script>
+<script type="text/babel" src="description.jsx"></script>
+<script type="text/babel" src="edit-time.jsx"></script>
+<script type="text/babel" src="android-frame.jsx"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react">
+
+const { useState } = React;
+
+// ─────────────────────────────────────────────────────────────────────
+// Demo data — Hollow hold lives in two rotations: Core (up next) and
+// Mobility (3rd in line). The single-rotation case strips that to Core only.
+// ─────────────────────────────────────────────────────────────────────
+const HOLLOW = {
+  id: 'h3', name: 'Hollow hold, 45s',
+  images: [
+  { id: 'h3a', src: 'assets/img/ref-1.png' },
+  { id: 'h3b', src: 'assets/img/ref-4.png' },
+  { id: 'h3c', src: 'assets/img/ref-5.png' }],
+
+  note: "Ribs **down**, lower back pressed to the floor. Tension across the whole chain, not just the abs.\n- 30s on, 30s off\n- 4 rounds",
+  whisper: 'Slow the eccentric — felt the lower back last time.'
+};
+
+const CORE = {
+  id: 'core', name: 'Core', cadence: { label: 'Once a day' }, cursor: 2,
+  habits: [
+  { id: 'h1', name: 'Front plank, 60s' },
+  { id: 'h2', name: 'Dead bug, 12 reps' },
+  HOLLOW,
+  { id: 'h4', name: 'Bird dog, 10/side' },
+  { id: 'h5', name: 'Glute bridge, 15 reps' }]
+
+};
+const MOBILITY = {
+  id: 'mob', name: 'Mobility', cadence: { label: 'Once a day' }, cursor: 0,
+  habits: [
+  { id: 'm1', name: 'Hip flexor stretch' },
+  { id: 'm2', name: 'Thoracic rotation' },
+  HOLLOW,
+  { id: 'm4', name: 'Ankle dorsiflexion' },
+  { id: 'm5', name: '90/90 hip switch' }]
+
+};
+// Rotations the habit could be added to.
+const AVAILABLE = [
+{ id: 'study', name: 'Languages', cadence: { label: 'Weekdays' }, cursor: 1,
+  habits: [{ id: 's1' }, { id: 's2' }, { id: 's3' }] },
+{ id: 'guitar', name: 'Guitar', cadence: { label: 'Every 2 days' }, cursor: 2,
+  habits: [{ id: 'g1' }, { id: 'g2' }, { id: 'g3' }, { id: 'g4' }] },
+{ id: 'clean', name: 'House', cadence: { label: '2× per week' }, cursor: 3,
+  habits: [{ id: 'c1' }, { id: 'c2' }, { id: 'c3' }, { id: 'c4' }] }];
+
+
+// Where does this habit sit in a given rotation?
+const ORD = ['up next', '2nd in line', '3rd in line', '4th in line', '5th in line', '6th in line'];
+function standing(group, habitId) {
+  const n = group.habits.length;
+  const idx = group.habits.findIndex((h) => h.id === habitId);
+  const order = ((idx - group.cursor) % n + n) % n;
+  return ORD[order] || `${order + 1}th in line`;
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// OrbitSlotBadge — the mini ring with THIS habit's slot lit (not the
+// cursor). Reuses the system's ring geometry; the lit dot carries a soft
+// coral halo so the eye lands on where the habit sits.
+// ─────────────────────────────────────────────────────────────────────
+function OrbitSlotBadge({ group, habitId, size = 30 }) {
+  const { t } = useTokens();
+  const n = group.habits.length;
+  const idx = group.habits.findIndex((h) => h.id === habitId);
+  const radius = (size - 11) / 2;
+  const cx = size / 2,cy = size / 2;
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ flexShrink: 0, overflow: 'visible' }}>
+      <circle cx={cx} cy={cy} r={radius} fill="none" stroke={t.accentDim} strokeWidth="1" />
+      {group.habits.map((h, i) => {
+        const a = i / n * 360 - 90;
+        const rad = a * Math.PI / 180;
+        const x = cx + radius * Math.cos(rad);
+        const y = cy + radius * Math.sin(rad);
+        const lit = i === idx;
+        return (
+          <g key={i}>
+            {lit && <circle cx={x} cy={y} r={5.5} fill={t.accent} opacity={0.16} />}
+            <circle cx={x} cy={y} r={lit ? 3 : 1.8} fill={lit ? t.accent : t.accentDim} />
+          </g>);
+
+      })}
+    </svg>);
+
+}
+
+const ipress = (e) => {e.currentTarget.style.opacity = 0.6;};
+const irelease = (e) => {e.currentTarget.style.opacity = 1;};
+
+// ─────────────────────────────────────────────────────────────────────
+// Rotation rows
+// ─────────────────────────────────────────────────────────────────────
+function MemberRow({ group, habitId, onOpen, divider, dashed }) {
+  const { t } = useTokens();
+  const here = standing(group, habitId);
+  return (
+    <button onClick={onOpen} onPointerDown={ipress} onPointerUp={irelease} onPointerLeave={irelease}
+    style={{
+      width: '100%', textAlign: 'left', border: 'none', background: 'transparent',
+      cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 13,
+      padding: '12px 2px',
+      borderTop: divider ? `1px ${dashed ? 'dashed' : 'solid'} ${dashed ? t.accentDim : t.rule}` : 'none', transition: 'opacity .15s'
+    }}>
+      <OrbitSlotBadge group={group} habitId={habitId} />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ font: `400 17px/1.2 ${SERIF}`, fontStyle: 'italic', color: t.ink }}>{group.name}</div>
+        <div style={{ font: `400 11px/1.3 ${SANS}`, color: t.inkSoft, marginTop: 3, letterSpacing: 0.2 }}>
+          {group.cadence.label} · <span style={{ color: here === 'up next' ? t.accent : t.inkSoft, fontWeight: here === 'up next' ? 500 : 400 }}>{here}</span>
+        </div>
+      </div>
+      <span style={{ color: t.inkFaint, font: `400 18px/1 ${SERIF}` }}>›</span>
+    </button>);
+
+}
+
+// A round +/− control used in the manage list
+function RoundToggle({ kind, onClick }) {
+  const { t } = useTokens();
+  const isAdd = kind === 'add';
+  return (
+    <button onClick={onClick} onPointerDown={ipress} onPointerUp={irelease} onPointerLeave={irelease}
+    aria-label={isAdd ? 'Add to rotation' : 'Remove from rotation'}
+    style={{
+      width: 30, height: 30, borderRadius: '50%', flexShrink: 0, cursor: 'pointer',
+      transition: 'opacity .15s',
+      border: isAdd ? `1.5px dashed ${t.accentDim}` : `1px solid ${t.rule}`,
+      background: isAdd ? 'transparent' : t.bg,
+      color: isAdd ? t.accent : t.inkSoft,
+      display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+      font: `400 17px/1 ${SANS}`
+    }}>{isAdd ? '+' : '−'}</button>);
+
+}
+
+function ManageRow({ group, habitId, kind, onToggle, divider }) {
+  const { t } = useTokens();
+  const here = kind === 'remove' ? standing(group, habitId) : `${group.habits.length} habits`;
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 13, padding: '11px 2px',
+      borderTop: divider ? `1px solid ${t.rule}` : 'none'
+    }}>
+      <OrbitSlotBadge group={group} habitId={kind === 'remove' ? habitId : null} />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ font: `400 17px/1.2 ${SERIF}`, fontStyle: 'italic', color: t.ink }}>{group.name}</div>
+        <div style={{ font: `400 11px/1.3 ${SANS}`, color: t.inkSoft, marginTop: 3, letterSpacing: 0.2 }}>
+          {group.cadence.label} · {here}
+        </div>
+      </div>
+      <RoundToggle kind={kind === 'remove' ? 'remove' : 'add'} onClick={onToggle} />
+    </div>);
+
+}
+
+function Kicker({ children, style }) {
+  const { t } = useTokens();
+  return (
+    <div style={{
+      font: `500 10px/1 ${SANS}`, letterSpacing: 1.8, color: t.inkSoft,
+      textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 8, ...style
+    }}>{children}</div>);
+
+}
+
+function CountPill({ children }) {
+  const { t } = useTokens();
+  return (
+    <span style={{
+      background: t.accentSoft, color: t.accent, padding: '3px 7px',
+      borderRadius: 100, fontSize: 10, letterSpacing: 0.3
+    }}>{children}</span>);
+
+}
+
+// Disclosure chevron for the collapsible "In rotation" header.
+function Chevron({ open }) {
+  const { t } = useTokens();
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+    stroke={t.inkSoft} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"
+    style={{ transform: open ? 'rotate(0deg)' : 'rotate(-90deg)', transition: 'transform .2s', flexShrink: 0 }}>
+      <path d="M6 9l6 6 6-6" />
+    </svg>);
+
+}
+
+// Quiet "add to another rotation" link, shared by the single-rotation styles.
+function AddAnotherLink({ onClick }) {
+  const { t } = useTokens();
+  return (
+    <button onClick={onClick} onPointerDown={ipress} onPointerUp={irelease} onPointerLeave={irelease}
+    style={{
+      marginTop: 8, border: 'none', background: 'transparent', cursor: 'pointer',
+      display: 'inline-flex', alignItems: 'center', gap: 7, padding: '6px 2px',
+      font: `500 11px/1 ${SANS}`, letterSpacing: 1, textTransform: 'uppercase',
+      color: t.accent, transition: 'opacity .15s'
+    }}>
+      <span style={{
+        width: 20, height: 20, borderRadius: '50%', border: `1.5px dashed ${t.accentDim}`,
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+        font: `400 14px/1 ${SANS}`
+      }}>+</span>
+      Add to another rotation
+    </button>);
+
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// RotationBlock — the new "In rotation" section. Three shapes:
+//   single  · one member, no count, quiet "add another" link
+//   multi   · 2+ members, count pill, divided rows, dashed add row
+//   manage  · grown editor — members with −, available with +
+// ─────────────────────────────────────────────────────────────────────
+function RotationBlock({ members, habitId, manage, single, expanded, onToggleExpand, onOpenGroup, onStartAdd, onDoneAdd }) {
+  const { t } = useTokens();
+
+  if (manage) {
+    return (
+      <div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+          <Kicker>Manage rotations</Kicker>
+          <button onClick={onDoneAdd} onPointerDown={ipress} onPointerUp={irelease} onPointerLeave={irelease}
+          style={{ border: 'none', background: 'transparent', cursor: 'pointer',
+            font: `500 11px/1 ${SANS}`, letterSpacing: 1.2, textTransform: 'uppercase',
+            color: t.accent, padding: '4px 4px', transition: 'opacity .15s' }}>Done</button>
+        </div>
+        {/* current members — removable */}
+        {members.map((g, i) =>
+        <ManageRow key={g.id} group={g} habitId={habitId} kind="remove" divider={i > 0} />
+        )}
+        {/* available to add */}
+        <div style={{
+          font: `500 9px/1 ${SANS}`, letterSpacing: 1.6, color: t.inkFaint,
+          textTransform: 'uppercase', padding: '16px 2px 4px',
+          borderTop: `1px solid ${t.rule}`, marginTop: 6
+        }}>Add to</div>
+        {AVAILABLE.map((g, i) =>
+        <ManageRow key={g.id} group={g} habitId={null} kind="add" divider={false} />
+        )}
+      </div>);
+
+  }
+
+  if (members.length === 1) {
+    const g = members[0];
+    return (
+      <div>
+        <button onClick={onToggleExpand} onPointerDown={ipress} onPointerUp={irelease} onPointerLeave={irelease}
+        aria-expanded={expanded}
+        style={{
+          width: '100%', border: 'none', background: 'transparent', cursor: 'pointer',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '4px 2px', transition: 'opacity .15s'
+        }}>
+          <Kicker>In <span style={{ color: t.accent }}>{g.name}</span> rotation</Kicker>
+          <Chevron open={expanded} />
+        </button>
+
+        {expanded &&
+        <div style={{ marginTop: 4 }}>
+          <MemberRow group={g} habitId={habitId} onOpen={() => onOpenGroup(g)} />
+          <AddAnotherLink onClick={onStartAdd} />
+        </div>
+        }
+      </div>);
+
+  }
+
+  return (
+    <div>
+      <button onClick={onToggleExpand} onPointerDown={ipress} onPointerUp={irelease} onPointerLeave={irelease}
+      aria-expanded={expanded}
+      style={{
+        width: '100%', border: 'none', background: 'transparent', cursor: 'pointer',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        padding: '4px 2px', transition: 'opacity .15s'
+      }}>
+        <Kicker>In <span style={{ color: t.accent }}>{members.length}</span> rotations</Kicker>
+        <Chevron open={expanded} />
+      </button>
+
+      {expanded &&
+      <div style={{ marginTop: 4 }}>
+        {members.map((g, i) =>
+        <MemberRow key={g.id} group={g} habitId={habitId} divider={i > 0} dashed onOpen={() => onOpenGroup(g)} />
+        )}
+        <div style={{ height: 1, background: t.rule, margin: '6px 0 0' }} />
+        <button onClick={onStartAdd} onPointerDown={ipress} onPointerUp={irelease} onPointerLeave={irelease}
+        style={{
+          width: '100%', cursor: 'pointer', background: 'transparent', border: 'none',
+          display: 'flex', alignItems: 'center', gap: 11, padding: '13px 2px 2px',
+          font: `500 11px/1 ${SANS}`, letterSpacing: 0.9, textTransform: 'uppercase',
+          color: t.accent, transition: 'opacity .15s'
+        }}>
+          <span style={{
+            width: 24, height: 24, borderRadius: '50%', border: `1.5px dashed ${t.accentDim}`,
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center', font: `400 15px/1 ${SANS}`
+          }}>+</span>
+          Add to a rotation
+        </button>
+      </div>
+      }
+    </div>);
+
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// HabitDetailSheet — canonical read sheet. Tap a habit → this opens.
+// Edit ✎ flips the SAME sheet into the editor (handled by the parent).
+// ─────────────────────────────────────────────────────────────────────
+function HabitDetailSheet({ habit, members, manage, single, onClose, onEdit, onOpenGroup, onStartAdd, onDoneAdd }) {
+  const { t } = useTokens();
+  const [expanded, setExpanded] = useState(false);
+  const height = manage ? 720 : members.length > 1 ? expanded ? 648 : 496 : expanded ? 560 : 472;
+  return (
+    <>
+      <SheetBackdrop onDismiss={manage ? onDoneAdd : onClose} />
+      <BottomSheet height={height}>
+        {/* Header — Close · Habit · Edit ✎ */}
+        <div style={{
+          padding: '0 18px 4px', display: 'flex', alignItems: 'center',
+          justifyContent: 'space-between', flexShrink: 0
+        }}>
+          <button onClick={onClose} onPointerDown={ipress} onPointerUp={irelease} onPointerLeave={irelease}
+          style={{ border: 'none', background: 'transparent', cursor: 'pointer',
+            font: `500 11px/1 ${SANS}`, letterSpacing: 1, textTransform: 'uppercase',
+            color: t.inkSoft, padding: '8px 6px', transition: 'opacity .15s' }}>Close</button>
+          <span style={{ font: `500 10px/1 ${SANS}`, letterSpacing: 1.8, color: t.inkFaint, textTransform: 'uppercase' }}>Habit</span>
+          <button onClick={onEdit} onPointerDown={ipress} onPointerUp={irelease} onPointerLeave={irelease}
+          style={{ border: 'none', background: 'transparent', cursor: 'pointer',
+            font: `500 11px/1 ${SANS}`, letterSpacing: 1, textTransform: 'uppercase',
+            color: t.accent, padding: '8px 6px', display: 'inline-flex', alignItems: 'center', gap: 5,
+            transition: 'opacity .15s' }}>Edit <span aria-hidden="true" style={{ font: `400 13px/1 ${SERIF}` }}>✎</span></button>
+        </div>
+
+        {/* Body */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '10px 22px 24px',
+          display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={{ font: `500 23px/1.18 ${SERIF}`, color: t.ink, letterSpacing: -0.3 }}>{habit.name}</div>
+
+          {habit.images?.length > 0 && <ImageStripRead images={habit.images} />}
+
+          {habit.note && <MarkdownView source={habit.note} />}
+
+          {/* divider */}
+          <div style={{ height: 1, background: t.rule, margin: '2px 0' }} />
+
+          <RotationBlock
+            members={members}
+            habitId={habit.id}
+            manage={manage}
+            single={single}
+            expanded={expanded}
+            onToggleExpand={() => setExpanded((v) => !v)}
+            onOpenGroup={onOpenGroup}
+            onStartAdd={onStartAdd}
+            onDoneAdd={onDoneAdd} />
+        </div>
+      </BottomSheet>
+    </>);
+
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// Backdrop — the queue list you'd tap a habit from, so the sheet reads
+// in context (dimmed by the sheet backdrop).
+// ─────────────────────────────────────────────────────────────────────
+function BackdropList({ openId }) {
+  const { t } = useTokens();
+  return (
+    <div style={{ background: t.bg, color: t.ink, minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px 6px' }}>
+        <span style={{ color: t.inkSoft, font: `500 11px/1 ${SANS}`, letterSpacing: 1.4, textTransform: 'uppercase' }}>‹ Back</span>
+        <span style={{ color: t.inkFaint, font: `500 10px/1 ${SANS}`, letterSpacing: 1.8, textTransform: 'uppercase' }}>Core</span>
+        <span style={{ color: t.accent, font: `500 11px/1 ${SANS}`, letterSpacing: 1.4, textTransform: 'uppercase' }}>Edit ✎</span>
+      </div>
+      <div style={{ padding: '18px 18px 0', display: 'flex', justifyContent: 'center' }}>
+        <OrbitRing group={CORE} size={216} />
+      </div>
+      <div style={{ padding: '22px 18px 0' }}>
+        <Kicker style={{ marginBottom: 12 }}>The queue</Kicker>
+        <div style={{ background: t.card, borderRadius: 18, overflow: 'hidden', boxShadow: t.shadow }}>
+          {CORE.habits.map((h, i) => {
+            const active = i === CORE.cursor;
+            return (
+              <div key={h.id} style={{
+                padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 14,
+                borderTop: i ? `1px solid ${t.rule}` : 'none',
+                background: h.id === openId ? t.accentSoft : 'transparent'
+              }}>
+                <div style={{ width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <div style={{ width: 7, height: 7, borderRadius: '50%',
+                    background: active ? t.accent : 'transparent',
+                    border: `1.5px solid ${active ? t.accent : t.accentDim}` }} />
+                </div>
+                <div style={{ flex: 1, font: `400 15.5px/1.3 ${SERIF}`, color: active ? t.ink : t.inkSoft }}>{h.name}</div>
+                {active && <span style={{ font: `500 9px/1 ${SANS}`, color: t.accent, letterSpacing: 1, textTransform: 'uppercase' }}>NOW</span>}
+              </div>);
+
+          })}
+        </div>
+      </div>
+      <div style={{ flex: 1 }} />
+    </div>);
+
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// App
+// ─────────────────────────────────────────────────────────────────────
+const HINTS = {
+  one: 'The common case — a habit in one rotation. The label names it directly — "In Core rotation", the rotation name picked out in the coral accent — and is collapsed by default; tap (chevron) to reveal the row and the add link. Tapping the row opens that rotation.',
+  two: 'A habit shared across rotations. The header reads "In 2 rotations" and is collapsed by default — tap it (chevron) to reveal the list. Each rotation shows its orbit slot lit, cadence, and standing; tapping a row opens it. Dashed lines separate the rotations; a solid hairline sets off the Add action.',
+  manage: 'Add → the sheet grows in place (no second sheet): current rotations gain a − to leave, and the rotations you could join appear below with a +. Done collapses it back. Reads as one continuous "manage rotations" surface.',
+  edit: 'Edit ✎ flips the same sheet into the editor — name, images, note. Because this habit is in more than one rotation, the destructive action reads "Remove from this group", not "Delete habit".'
+};
+
+function App() {
+  const [tw, setTw] = useTweaks({ dark: false, showTweaks: true });
+  const [tab, setTab] = useState('two');
+  const [closed, setClosed] = useState(false);
+
+  const members = tab === 'one' ? [CORE] : [CORE, MOBILITY];
+  const manage = tab === 'manage';
+  const editing = tab === 'edit';
+
+  const reopen = () => setClosed(false);
+
+  return (
+    <TokenProvider tweaks={{ dark: tw.dark, density: 'cozy', tone: 'literary', ringSize: 'default' }}>
+      <div className="stage">
+        <div className="head">
+          <div className="k">Habit detail sheet · hi-fi</div>
+          <h1>The rotations a habit <em>lives in</em></h1>
+          <p>Tap a habit anywhere → this read sheet opens over the screen. It names the rotations the habit belongs to and where it sits in each ring. Edit ✎ flips the same sheet into the editor; Add grows it in place.</p>
+        </div>
+
+        <div className="seg">
+          <button className={tab === 'one' ? 'on' : ''} onClick={() => {setTab('one');reopen();}}>One rotation</button>
+          <button className={tab === 'two' ? 'on' : ''} onClick={() => {setTab('two');reopen();}}>Two rotations</button>
+          <button className={tab === 'manage' ? 'on' : ''} onClick={() => {setTab('manage');reopen();}}>Add · grown</button>
+          <button className={tab === 'edit' ? 'on' : ''} onClick={() => {setTab('edit');reopen();}}>Edit · flip</button>
+        </div>
+
+        <AndroidDevice width={412} height={892} dark={tw.dark}>
+          <div style={{ width: '100%', height: '100%', position: 'relative', overflow: 'hidden',
+            background: tw.dark ? '#1c1d20' : '#f5f1ec' }}>
+            <div style={{ height: '100%', overflow: 'hidden' }}>
+              <BackdropList openId={HOLLOW.id} />
+            </div>
+
+            {!closed && !editing &&
+            <HabitDetailSheet
+              habit={HOLLOW}
+              members={members}
+              manage={manage}
+              onClose={() => setClosed(true)}
+              onEdit={() => setTab('edit')}
+              onOpenGroup={() => setClosed(true)}
+              onStartAdd={() => setTab('manage')}
+              onDoneAdd={() => setTab(members.length > 1 ? 'two' : 'one')} />
+            }
+
+            {!closed && editing &&
+            <HabitFormSheet
+              habit={HOLLOW}
+              mode="edit"
+              usedInOtherGroups={true}
+              onCancel={() => setTab('two')}
+              onSave={() => setTab('two')}
+              onRemove={() => setTab('two')} />
+            }
+
+            {closed &&
+            <button onClick={reopen} style={{
+              position: 'absolute', left: '50%', bottom: 28, transform: 'translateX(-50%)',
+              border: 'none', borderRadius: 100, padding: '12px 20px', cursor: 'pointer',
+              background: '#1a1814', color: '#fff',
+              font: `500 11px/1 'Inter'`, letterSpacing: 1.2, textTransform: 'uppercase',
+              boxShadow: '0 8px 24px rgba(26,24,20,0.3)', zIndex: 60
+            }}>Reopen sheet</button>
+            }
+          </div>
+        </AndroidDevice>
+
+        <div className="caption">
+          {HINTS[tab]}
+          <div style={{ marginTop: 10 }}>
+            Presentation: <code>formSheet</code> · medium detent · grows to <code>large</code> while managing · Edit flips in place — never a stacked sheet
+          </div>
+        </div>
+      </div>
+
+      <TweaksPanel title="Tweaks">
+        <TweakSection label="Theme" />
+        <TweakToggle label="Dark mode" value={tw.dark} onChange={(v) => setTw('dark', v)} />
+      </TweaksPanel>
+    </TokenProvider>);
+
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+
+</body>
+</html>

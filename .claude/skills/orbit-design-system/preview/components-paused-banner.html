@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Paused banner</title>
+<style>
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..700;1,9..144,300..700&family=Inter:wght@400;500;600&display=swap");
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:#f5f1ec;color:#1a1814;font-family:"Inter",system-ui,sans-serif;height:100%;overflow:hidden}
+.card{width:700px;padding:22px 26px;display:flex;flex-direction:column;gap:14px}
+.row{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.kicker{font-family:"Inter",sans-serif;font-weight:500;font-size:10px;line-height:1;letter-spacing:1.8px;text-transform:uppercase;color:#7a766e}
+.kicker--accent{color:#c96442}
+.swatch{display:flex;flex-direction:column;gap:6px;flex:1;min-width:0}
+.chip{width:100%;height:64px;border-radius:14px}
+.chip--ring{box-shadow:inset 0 0 0 1px rgba(26,24,20,0.08)}
+.chip-meta{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:11px;line-height:1.3}
+.chip-name{font-weight:500;color:#1a1814}
+.chip-hex{color:#7a766e;font-variant-numeric:tabular-nums}
+.divider{height:1px;background:rgba(26,24,20,0.10);margin:4px 0}
+.note{font-family:"Fraunces",serif;font-size:12px;line-height:1.4;color:#7a766e;font-style:italic}
+.code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;color:#7a766e}
+</style>
+</head>
+<body>
+<div class="card">
+
+<div class="kicker">Paused banner</div>
+<div style="background:#c96442;color:#fff;border-radius:18px;padding:14px 16px 14px 18px;display:flex;align-items:center;gap:12px;box-shadow:0 6px 22px rgba(201,100,66,0.28)">
+  <div style="width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,0.18);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+    <div style="display:flex;gap:3px">
+      <div style="width:3px;height:12px;border-radius:1px;background:#fff"></div>
+      <div style="width:3px;height:12px;border-radius:1px;background:#fff"></div>
+    </div>
+  </div>
+  <div style="flex:1;min-width:0">
+    <div style="font:600 12px/1 'Inter';letter-spacing:1.6px;text-transform:uppercase">Rotation paused</div>
+    <div style="font:400 13px/1.35 'Fraunces',serif;opacity:0.9;margin-top:4px">No reminders will arrive. The queue holds its place.</div>
+  </div>
+  <button style="border:none;background:#fff;color:#c96442;padding:9px 16px;border-radius:100px;cursor:pointer;font:600 11px/1 'Inter';letter-spacing:1.2px;text-transform:uppercase;flex-shrink:0">Resume</button>
+</div>
+<div class="note">Coral fill. The hero card behind it also desaturates and dims to 0.55 — three signals together make paused impossible to miss.</div>
+</div>
+</body>
+</html>
