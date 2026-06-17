@@ -16,10 +16,22 @@ Update this file whenever a DS feature lands or a new gap is identified.
   out of order, no skip on rows; `QueueMosaic` image strips; ¶ note-presence hint;
   long-press charges with a dim and opens the reader on hold-elapsed), undo toast.
 - **Habit reader sheet** — formSheet with markdown note, image strip + viewer; Edit flips the same sheet
-  into the editor (`habits/components/HabitEditor`) — no stacked sheets. The group-name kicker links to the
-  rotation's Group screen (a `card` push from within the sheet — sanctioned, not a stacked sheet — using
-  `navigate`, which pops to the Group if it's already below in the stack). This is the only path to the
-  Group detail for rotations surfaced in Home's Carried over / Up next sections (their list card is gone).
+  into the editor (`habits/components/HabitEditor`) — no stacked sheets. A collapsible **rotations section**
+  (`screens/Habit/RotationsSection`) lists every rotation the habit lives in: "In _Core_ rotation" (single)
+  or "In _2_ rotations" (multi, count in coral), each row an `OrbitMini` slot badge (the habit's standing
+  lit) + `cadence · standing` ("up next" coral / "3rd in line"). Tapping a row opens that Group (a `card`
+  push from within the sheet — sanctioned, not a stacked sheet): if the Group is already below in the stack
+  it pops the sheet down onto it, otherwise it dismisses the sheet then pushes the Group on the next frame
+  (forward nav straight out of a formSheet doesn't animate on Android, and inserting the Group beneath the
+  live sheet to dismiss-and-reveal crashes Fabric). This is the path to the Group detail for rotations
+  surfaced in Home's Carried over / Up next sections (their list card is gone). The entry below the list — "Add to another rotation"
+  (plus) while in a single rotation, "Manage rotations" (pencil) once in several — grows the sheet in place
+  into a Manage view (− to leave a rotation; + to join available ones), hidden only when in a single
+  rotation with nowhere else to add (its last membership can't be removed here — deletion lives in the Edit
+  sheet). Never a stacked sheet; the − removes immediately (no confirm — re-adding is one tap), while the
+  Edit sheet's remove/delete still confirms via the shared `utils/removeHabit`.
+  Reanimated layout + fade animations smooth the expand/manage switches and the `fitToContents` sheet grows
+  to follow.
 - **Rotations index (Home)** — `◯ ORBIT` status strip + date, list cards with OrbitMini, cadence·count meta,
   due-aware "Up next" line, Literary empty state.
 - **Home triage — Carried over / Up next / Other rotations** — Home aggregates rotations into two

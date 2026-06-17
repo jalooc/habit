@@ -1,4 +1,4 @@
-import { createNativeStackNavigator } from '@react-navigation/native-stack'
+import { createNativeStackNavigator, type NativeStackNavigationProp } from '@react-navigation/native-stack'
 import Home from 'src/domains/misc/screens/Home'
 import NewGroup from 'src/domains/habits/screens/NewGroup'
 import Group from 'src/domains/habits/screens/Group'
@@ -12,7 +12,7 @@ import DevTools from 'src/domains/devTools/screens/DevTools'
 import DevLog from 'src/domains/devTools/screens/DevLog'
 import DevLogEntry from 'src/domains/devTools/screens/DevLogEntry'
 import Backup from 'src/domains/devTools/screens/Backup'
-import { createStaticNavigation, StaticParamList } from '@react-navigation/native'
+import { createStaticNavigation, StaticParamList, useNavigation } from '@react-navigation/native'
 
 const RootStack = createNativeStackNavigator({
   screenOptions: {
@@ -103,3 +103,6 @@ declare global {
 }
 
 export const Navigation = createStaticNavigation(RootStack)
+
+export const useNativeStackNavigation =
+  () => useNavigation<NativeStackNavigationProp<ReactNavigation.RootParamList>>()

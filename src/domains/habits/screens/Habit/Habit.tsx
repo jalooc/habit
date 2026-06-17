@@ -9,6 +9,7 @@ import Description from 'src/domains/habits/components/Description'
 import HabitEditor from 'src/domains/habits/components/HabitEditor'
 import useImageViewer from 'src/domains/habits/utils/useImageViewer'
 import ImageThumbnailRow from './ImageThumbnailRow'
+import RotationsSection from './RotationsSection'
 
 type Props = StaticScreenProps<{
   habitId: string,
@@ -62,7 +63,7 @@ const Habit = ({ route }: Props) => {
       - swipe down to close the sheet when content doesn't overflow the container (i.e. the content is not scrollable)
      */
     <ScrollView
-      style={{ maxHeight: height * 0.6 }}
+      style={{ maxHeight: height * 0.85 }}
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
@@ -85,6 +86,7 @@ const Habit = ({ route }: Props) => {
       ) : (
         <Text style={styles.emptyNote}>No note yet.</Text>
       )}
+      <RotationsSection habitId={habitId} />
     </ScrollView>
   )
 }

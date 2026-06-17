@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useState } from 'react'
 import { Text, View, Pressable } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useValue } from '@legendapp/state/react'
@@ -25,7 +25,6 @@ const Home = () => {
   const { top } = useSafeAreaInsets()
 
   const groups = useValue(groups$)
-  const habits = useValue(habits$)
   const dayBoundaries = useValue(dayBoundaries$)
 
   // `now` drives the carried/up-next buckets; refresh on focus and on a slow tick
@@ -37,9 +36,13 @@ const Home = () => {
     return () => void clearInterval(interval)
   }, []))
 
-  const sections = useMemo(
-    () => buildHomeSections({ groups, habits, dayBoundaries, now }),
-    [groups, habits, dayBoundaries, now],
+  const sections = useValue(
+    () => buildHomeSections({
+      groups: groups$.get(),
+      habits: habits$.get(),
+      dayBoundaries: dayBoundaries$.get(),
+      now,
+    }),
   )
 
   const hasNoGroups = Object.keys(groups).length === 0
