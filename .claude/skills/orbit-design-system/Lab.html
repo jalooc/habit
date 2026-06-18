@@ -299,7 +299,6 @@ function EmptyScreenWithNav() {
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <div style={{ flex: 1, overflow: 'auto' }}><EmptyScreen go={() => {}} /></div>
-      <TabBar active="home" onTab={() => {}} />
     </div>
   );
 }
@@ -316,7 +315,6 @@ function SettingsHost() {
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <div style={{ flex: 1, overflow: 'auto' }}><SettingsScreen /></div>
-      <TabBar active="settings" onTab={() => {}} />
     </div>
   );
 }
@@ -325,7 +323,6 @@ function StatsHost() {
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       <div style={{ flex: 1, overflow: 'auto' }}><StatsScreen groups={SAMPLE_GROUPS} /></div>
-      <TabBar active="stats" onTab={() => {}} />
     </div>
   );
 }
@@ -338,7 +335,6 @@ function AllCaughtUp() {
       <div style={{ flex: 1, overflow: 'auto' }}>
         <TodayScreen groups={groups} setGroups={() => {}} go={() => {}} ringId="orbit" />
       </div>
-      <TabBar active="home" onTab={() => {}} />
     </div>
   );
 }
@@ -352,7 +348,6 @@ function PausedGroupHost() {
       <div style={{ flex: 1, overflow: 'auto' }}>
         <GroupScreen group={g} setGroups={setGroups} go={() => {}} back={() => {}} ringId="orbit" />
       </div>
-      <TabBar active="groups" onTab={() => {}} />
     </div>
   );
 }
@@ -366,7 +361,6 @@ function JustTickedHost() {
       <div style={{ flex: 1, overflow: 'auto' }}>
         <TodayScreen groups={groups} setGroups={() => {}} go={() => {}} ringId="orbit" />
       </div>
-      <TabBar active="home" onTab={() => {}} />
       {/* Always-visible undo toast for the artboard */}
       <div style={{
         position: 'absolute', bottom: 80, left: '50%', transform: 'translateX(-50%)',
@@ -391,7 +385,6 @@ function PinnedTodayHost() {
       <div style={{ flex: 1, overflow: 'auto' }}>
         <TodayScreen groups={groups} setGroups={setGroups} go={() => {}} ringId="orbit" />
       </div>
-      <TabBar active="home" onTab={() => {}} />
     </div>
   );
 }
@@ -404,7 +397,6 @@ function GroupImgHost({ initialOverlay = null }) {
       <div style={{ flex: 1, overflow: 'auto' }}>
         <GroupScreen group={g} setGroups={setGroups} go={() => {}} back={() => {}} ringId="orbit" initialOverlay={initialOverlay} />
       </div>
-      <TabBar active="groups" onTab={() => {}} />
     </div>
   );
 }
@@ -416,7 +408,6 @@ function EditImgHost({ initialOverlay = null }) {
       <div style={{ flex: 1, overflow: 'auto' }}>
         <CreateScreen back={() => {}} setGroups={() => {}} ringId="orbit" initial={g} initialOverlay={initialOverlay} />
       </div>
-      <TabBar active="groups" onTab={() => {}} />
     </div>
   );
 }
@@ -442,7 +433,6 @@ function DescGroupHost({ groupId = 'core', initialNoteSheet = null }) {
         <GroupScreen group={g} setGroups={setGroups} go={() => {}} back={() => {}} ringId="orbit"
                      onOpenNote={openNote} />
       </div>
-      <TabBar active="groups" onTab={() => {}} />
 
       {noteSheet && noteSheet.mode === 'read' && habitForSheet && (
         <HabitReaderSheet

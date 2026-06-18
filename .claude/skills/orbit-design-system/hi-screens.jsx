@@ -1,7 +1,7 @@
 // hi-screens.jsx — Hi-fi screens for the "habit images" feature.
 //   HiCreateScreen · Option A — per-habit thumb strip + add affordances
 //   HiGroupScreen  · Option A hero strip below the ring + Option D queue mosaic
-// Reuses OIHead, SlideToConfirm, Swipeable, OrbitRing, OrbitStrip, TabBar, useTokens.
+// Reuses OIHead, SlideToConfirm, Swipeable, OrbitRing, OrbitStrip, useTokens.
 
 const { useState: useHS } = React;
 

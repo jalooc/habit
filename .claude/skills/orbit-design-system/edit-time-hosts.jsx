@@ -14,7 +14,6 @@ function PinnedToday() {
       <div style={{ flex: 1, overflow: 'auto' }}>
         <TodayScreen groups={groups} setGroups={setGroups} go={() => {}} ringId="orbit" />
       </div>
-      <TabBar active="home" onTab={() => {}} />
     </div>
   );
 }
@@ -29,7 +28,6 @@ function ToastDemoHost() {
       <div style={{ flex: 1, overflow: 'auto' }}>
         <PinnedTodayInner />
       </div>
-      <TabBar active="home" onTab={() => {}} />
       <div style={{ position: 'absolute', left: 0, right: 0, bottom: 80, pointerEvents: 'none' }}>
         <EditableUndoToast
           visible
@@ -181,7 +179,6 @@ function GroupHeroWithEditLabel({ stagedTime, onLabelClick }) {
           </div>
         </div>
       </div>
-      <TabBar active="groups" onTab={() => {}} />
     </div>
   );
 }
@@ -205,7 +202,6 @@ function PickerHost({ initialStage }) {
       <div style={{ flex: 1, overflow: 'hidden' }}>
         <PinnedTodayInner />
       </div>
-      <TabBar active="home" onTab={() => {}} />
       <SheetBackdrop onDismiss={() => {}} />
       {stage === 1 && (
         <BottomSheet height={460}>
@@ -252,7 +248,6 @@ function LogSheetHost({ startIdx }) {
       <div style={{ flex: 1, overflow: 'hidden' }}>
         <PinnedTodayInner />
       </div>
-      <TabBar active="home" onTab={() => {}} />
       <SheetBackdrop onDismiss={() => {}} />
       <LogSheet startIdx={startIdx} onRow={() => {}} />
     </div>
@@ -269,7 +264,6 @@ function InsightsEntryHost() {
       <div style={{ flex: 1, overflow: 'auto' }}>
         <StatsScreen groups={SAMPLE_GROUPS} />
       </div>
-      <TabBar active="stats" onTab={() => {}} />
       {/* Floating annotation pointing at the heatmap */}
       <InsightsHeatmapAnnotation />
     </div>

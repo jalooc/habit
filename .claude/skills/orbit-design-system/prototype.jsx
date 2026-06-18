@@ -19,11 +19,11 @@ function OrbitInkApp({ ringId, initialRoute = 'home', initialGroups }) {
       ? <EmptyScreen go={go} />
       : <TodayScreen groups={groups} setGroups={setGroups} go={go} ringId={ringId} />;
   }
-  else if (route.name === 'groups') screen = <RotationsScreen groups={groups} go={go} ringId={ringId} />;
+  else if (route.name === 'groups') screen = <RotationsScreen groups={groups} go={go} back={back} ringId={ringId} />;
   else if (route.name === 'group') screen = <GroupScreen group={groups.find((g) => g.id === route.id)} setGroups={setGroups} go={go} back={back} ringId={ringId} />;
   else if (route.name === 'create') screen = <CreateScreen back={back} setGroups={setGroups} ringId={ringId} />;
   else if (route.name === 'edit') screen = <CreateScreen back={back} setGroups={setGroups} ringId={ringId} initial={groups.find((g) => g.id === route.id)} />;
-  else if (route.name === 'settings') screen = <SettingsScreen />;
+  else if (route.name === 'settings') screen = <SettingsScreen onBack={back} />;
   else if (route.name === 'stats') screen = <StatsScreen groups={groups} />;
   else if (route.name === 'empty') screen = <EmptyScreen go={go} />;
   else if (route.name === 'onboarding') screen = <OnboardingScreen onFinish={() => setTab('home')} />;
@@ -36,7 +36,6 @@ function OrbitInkApp({ ringId, initialRoute = 'home', initialGroups }) {
       background: t.bg, color: t.ink,
     }}>
       <div style={{ flex: 1, overflow: 'auto' }}>{screen}</div>
-      <TabBar active={['home','groups','stats','settings'].includes(route.name) ? route.name : 'home'} onTab={setTab} />
     </div>
   );
 }

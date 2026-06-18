@@ -81,40 +81,6 @@ function UndoToast({ visible, onUndo, label }) {
   );
 }
 
-// Tab bar — bottom nav
-function TabBar({ active, onTab }) {
-  const { t, tone } = useTokens();
-  return (
-    <div style={{
-      display: 'flex', padding: '8px 14px', gap: 6, background: t.bg, flexShrink: 0,
-      borderTop: `1px solid ${t.rule}`,
-    }}>
-      {[
-        { id: 'home', label: tone.todayLabel, icon: '◐' },
-        { id: 'groups', label: tone.rotationsTitle, icon: '◯' },
-        { id: 'stats', label: 'Insights', icon: '◔' },
-        { id: 'settings', label: 'Settings', icon: '◌' },
-      ].map((tab) => {
-        const on = active === tab.id;
-        return (
-          <button key={tab.id} onClick={() => onTab(tab.id)} style={{
-            flex: 1, border: 'none', cursor: 'pointer',
-            background: on ? t.card : 'transparent',
-            color: on ? t.ink : t.inkSoft,
-            padding: '10px 0', borderRadius: 100,
-            font: `500 11px/1 ${SANS}`, letterSpacing: 0.3,
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
-            boxShadow: on ? t.shadow : 'none', transition: 'background .2s',
-          }}>
-            <span style={{ font: `400 14px/1 ${SERIF}` }}>{tab.icon}</span>
-            <span>{tab.label}</span>
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
 // Status strip — local, ignores the Android frame's own bar
 function OrbitStrip() {
   const { t, tone, activeHours } = useTokens();
@@ -171,6 +137,22 @@ function TodayScreen({ groups, setGroups, go, ringId = 'orbit' }) {
   const Mini = Variant.Mini;
   const active = due[0];
 
+  const settingsAction = (
+    <button onClick={() => go({ name: 'settings' })} aria-label="Settings" style={{
+      width: 38, height: 38, borderRadius: '50%', border: `1px solid ${t.rule}`,
+      background: 'transparent', cursor: 'pointer', color: t.inkSoft,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      transition: 'background .2s, color .2s, border-color .2s', flexShrink: 0,
+    }}
+      onMouseEnter={(e) => { e.currentTarget.style.color = t.ink; e.currentTarget.style.borderColor = t.accentDim; }}
+      onMouseLeave={(e) => { e.currentTarget.style.color = t.inkSoft; e.currentTarget.style.borderColor = t.rule; }}>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="3" />
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+      </svg>
+    </button>
+  );
+
   const handleAction = ({ kind, group }) => {
     if (kind === 'tick') {
       setUndoStack((s) => [...s, { groupId: group.id, prevCursor: group.cursor }]);
@@ -196,7 +178,7 @@ function TodayScreen({ groups, setGroups, go, ringId = 'orbit' }) {
     return (
       <div style={{ background: t.bg, color: t.ink, minHeight: '100%', position: 'relative' }}>
         <OrbitStrip />
-        <OIHead kicker="Thursday, May 15" title={tone.nothingDue} />
+        <OIHead kicker="Thursday, May 15" title={tone.nothingDue} action={settingsAction} />
         <div style={{ padding: `0 ${d.screenPad}px 6px` }}>
           <ActiveHoursChip onEdit={() => go({ name: 'settings' })} />
         </div>
@@ -212,6 +194,7 @@ function TodayScreen({ groups, setGroups, go, ringId = 'orbit' }) {
           }}>{tone.nothingDueSub}</div>
         </div>
         {others.length > 0 && <OtherRotations groups={others} go={go} Mini={Mini} />}
+        <RotationsLink go={go} count={groups.length} />
       </div>
     );
   }
@@ -219,7 +202,7 @@ function TodayScreen({ groups, setGroups, go, ringId = 'orbit' }) {
   return (
     <div style={{ background: t.bg, color: t.ink, minHeight: '100%', position: 'relative' }}>
       <OrbitStrip />
-      <OIHead kicker="Thursday, May 15" title={`${tone.todayLabel} · ${due.length} ${due.length === 1 ? 'rotation' : 'rotations'}`} />
+      <OIHead kicker="Thursday, May 15" title={`${tone.todayLabel} · ${due.length} ${due.length === 1 ? 'rotation' : 'rotations'}`} action={settingsAction} />
       <div style={{ padding: `0 ${d.screenPad}px 6px` }}>
         <ActiveHoursChip onEdit={() => go({ name: 'settings' })} />
       </div>
@@ -227,6 +210,7 @@ function TodayScreen({ groups, setGroups, go, ringId = 'orbit' }) {
       <TodayList groups={groups} setGroups={setGroups} onAction={handleAction} />
 
       {others.length > 0 && <OtherRotations groups={others} go={go} Mini={Mini} />}
+      <RotationsLink go={go} count={groups.length} />
 
       <UndoToast
         visible={undoStack.length > 0}
@@ -239,7 +223,7 @@ function TodayScreen({ groups, setGroups, go, ringId = 'orbit' }) {
 function OtherRotations({ groups, go, Mini }) {
   const { t, d, tone } = useTokens();
   return (
-    <div style={{ padding: `4px ${d.screenPad}px 32px` }}>
+    <div style={{ padding: `4px ${d.screenPad}px 12px` }}>
       <div style={{
         font: `500 11px/1 ${SANS}`, letterSpacing: 1.8,
         color: t.inkSoft, textTransform: 'uppercase', marginBottom: 14,
@@ -269,7 +253,34 @@ function OtherRotations({ groups, go, Mini }) {
 // ──────────────────────────────────────────────────────────────
 // Rotations list
 // ──────────────────────────────────────────────────────────────
-function RotationsScreen({ groups, go, ringId = 'orbit' }) {
+// A quiet, full-width link from Today down into the full Rotations index.
+// Replaces the bottom-tab entry for Rotations.
+function RotationsLink({ go, count }) {
+  const { t, d, tone } = useTokens();
+  return (
+    <div style={{ padding: `8px ${d.screenPad}px 32px` }}>
+      <button onClick={() => go({ name: 'groups' })} style={{
+        width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+        gap: 12, padding: '15px 18px', borderRadius: 16, cursor: 'pointer',
+        border: `1px solid ${t.rule}`, background: 'transparent', color: t.ink,
+        transition: 'background .2s, border-color .2s',
+      }}
+        onMouseEnter={(e) => { e.currentTarget.style.borderColor = t.accentDim; e.currentTarget.style.background = t.card; }}
+        onMouseLeave={(e) => { e.currentTarget.style.borderColor = t.rule; e.currentTarget.style.background = 'transparent'; }}>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 13, minWidth: 0 }}>
+          <span style={{ font: `400 17px/1 ${SERIF}`, color: t.accent }}>◯</span>
+          <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 3 }}>
+            <span style={{ font: `400 16px/1 ${SERIF}`, color: t.ink }}>All {tone.rotationsTitle.toLowerCase()}</span>
+            <span style={{ font: `400 12px/1 ${SANS}`, color: t.inkSoft }}>{count} {count === 1 ? 'group' : 'groups'}</span>
+          </span>
+        </span>
+        <span style={{ font: `400 18px/1 ${SANS}`, color: t.inkFaint }}>→</span>
+      </button>
+    </div>
+  );
+}
+
+function RotationsScreen({ groups, go, back, ringId = 'orbit' }) {
   const { t, d, tone } = useTokens();
   const Variant = RING_VARIANTS[ringId] || RING_VARIANTS.orbit;
   const Mini = Variant.Mini;
@@ -277,7 +288,7 @@ function RotationsScreen({ groups, go, ringId = 'orbit' }) {
   return (
     <div style={{ background: t.bg, color: t.ink, minHeight: '100%' }}>
       <OrbitStrip />
-      <OIHead title={tone.rotationsTitle} kicker={`${groups.length} ${groups.length === 1 ? 'group' : 'groups'}`} action={
+      <OIHead title={tone.rotationsTitle} onBack={back} kicker={`${groups.length} ${groups.length === 1 ? 'group' : 'groups'}`} action={
         <button onClick={() => go({ name: 'create' })} style={{
           border: 'none', background: t.ink, color: t.card,
           padding: '8px 16px', borderRadius: 100, cursor: 'pointer',
@@ -914,5 +925,5 @@ function FieldLabel({ children, right }) {
 
 Object.assign(window, {
   TodayScreen, RotationsScreen, GroupScreen, CreateScreen,
-  OIHead, PillButton, UndoToast, TabBar, OrbitStrip, FieldLabel,
+  OIHead, PillButton, UndoToast, OrbitStrip, FieldLabel,
 });

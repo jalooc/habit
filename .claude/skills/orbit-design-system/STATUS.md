@@ -33,7 +33,12 @@ Update this file whenever a DS feature lands or a new gap is identified.
   Reanimated layout + fade animations smooth the expand/manage switches and the `fitToContents` sheet grows
   to follow.
 - **Rotations index (Home)** — `◯ ORBIT` status strip + date, list cards with OrbitMini, cadence·count meta,
-  due-aware "Up next" line, Literary empty state.
+  due-aware "Up next" line, Literary empty state. The card list is the shared `habits/components/RotationsList`.
+- **All-rotations index screen + link** — the DS `RotationsLink` ("All rotations →", coral ring + count,
+  arrow) sits below Home's "New rotation" card (`misc/screens/Home/RotationsLink`, hidden when there are no
+  rotations) and `card`-pushes a dedicated **All rotations** index (`habits/screens/Groups`, route `Groups`,
+  native back) — a flat list of *every* rotation (reusing `RotationsList` + the shared
+  `habits/components/AddRotationCard`), distinct from Home's today-triage buckets.
 - **Home triage — Carried over / Up next / Other rotations** — Home aggregates rotations into two
   sections above the list (`misc/screens/Home/TodaySections`): **Carried over** (coral-soft card —
   rotations whose last *completed* tick predates the last occurrence by >15 min, oldest-first, tag =

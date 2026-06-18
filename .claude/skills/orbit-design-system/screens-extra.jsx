@@ -338,13 +338,13 @@ function OnbQueueIllo() {
 // ──────────────────────────────────────────────────────────────
 // Settings
 // ──────────────────────────────────────────────────────────────
-function SettingsScreen() {
+function SettingsScreen({ onBack }) {
   const { t, d } = useTokens();
   const [active, setActive] = useSx({ start: '08:00', end: '22:00' });
   return (
     <div style={{ background: t.bg, color: t.ink, minHeight: '100%' }}>
       <OrbitStrip />
-      <OIHead kicker="Preferences" title="Settings" />
+      <OIHead kicker="Preferences" title="Settings" onBack={onBack} />
 
       <SettingsSection title="Reminders">
         <SettingRow label="Active hours"

@@ -38,7 +38,7 @@ What that means in practice:
 
 | Source | Path | Notes |
 |---|---|---|
-| Feature index | `index.html` | Hub page linking to every feature and screen set. Start here to navigate. |
+| Feature index | `index.html` | Hub page linking to every feature, screen set, and exploration (hi-fi + wireframe). Start here to navigate. |
 | Working lab | `Lab.html` | Pan/zoom canvas with the live prototype + every screen, edge state, feature, and a Tweaks panel. |
 | Token source | `tokens.jsx`, `design-tokens.json`, `colors_and_type.css` | Three views of the same tokens: runtime, machine-readable, CSS. |
 | Feature reference | `whisper.jsx`, `images.jsx`, `description.jsx`, `edit-time.jsx` | Per-feature components — see "Feature files" below. |
@@ -255,7 +255,7 @@ See `components.md` (Hero card, Queue list item) for the full spec.
 ├── hi-screens.jsx           ← Lab-only hi-fi compositions for the images feature
 
 │   ── Lab + assets ──
-├── index.html               ← Feature index — hub linking to every feature and screen set
+├── index.html               ← Feature index — hub linking to every feature, screen set, and exploration
 ├── Lab.html                 ← Lab canvas (live prototype + all states + features + Tweaks)
 ├── Habit images - wireframes.html
 ├── Habit images - hi-fi.html
