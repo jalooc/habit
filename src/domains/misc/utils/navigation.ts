@@ -2,6 +2,7 @@ import { createNativeStackNavigator, type NativeStackNavigationProp } from '@rea
 import Home from 'src/domains/misc/screens/Home'
 import NewGroup from 'src/domains/habits/screens/NewGroup'
 import Group from 'src/domains/habits/screens/Group'
+import Groups from 'src/domains/habits/screens/Groups'
 import EditGroup from 'src/domains/habits/screens/EditGroup'
 import NewHabit from 'src/domains/habits/screens/NewHabit'
 import EditSchedule from 'src/domains/habits/screens/EditSchedule'
@@ -29,6 +30,10 @@ const RootStack = createNativeStackNavigator({
       screen: Group,
       options: { headerTitle: '' },
       linking: groupScreenLinkingConfig,
+    },
+    Groups: {
+      screen: Groups,
+      options: { headerTitle: '' },
     },
     NewGroup: {
       screen: NewGroup,

@@ -18,7 +18,7 @@ type Props = {
   footer?: ReactElement,
 }
 
-const Groups = ({ groupIds, isAppEmpty, header, footer }: Props) => (
+const RotationsList = ({ groupIds, isAppEmpty, header, footer }: Props) => (
   <FlatList
     data={groupIds}
     renderItem={({ item: groupId }) => <GroupCard id={groupId} />}
@@ -35,7 +35,7 @@ const Groups = ({ groupIds, isAppEmpty, header, footer }: Props) => (
   />
 )
 
-export default Groups
+export default RotationsList
 
 const listStyles = StyleSheet.create(theme => ({
   // escape Box's horizontal padding so card shadows fade out before the scroll container clips them

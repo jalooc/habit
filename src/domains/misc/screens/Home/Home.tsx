@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react'
-import { Text, View, Pressable } from 'react-native'
+import { Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useValue } from '@legendapp/state/react'
 import { StyleSheet } from 'react-native-unistyles'
@@ -9,7 +9,9 @@ import Lucide from '@react-native-vector-icons/lucide'
 import Box from 'src/domains/misc/components/Box'
 import Chip from 'src/domains/misc/components/Chip'
 import UndoToast from 'src/domains/habits/components/UndoToast'
-import Groups from './Groups'
+import RotationsList from 'src/domains/habits/components/RotationsList'
+import AddRotationCard from 'src/domains/habits/components/AddRotationCard'
+import RotationsLink from './RotationsLink'
 import TodaySections from './TodaySections'
 import OtherRotationsHeader from './OtherRotationsHeader'
 import DevToolsLink from 'src/domains/devTools/components/DevToolsLink'
@@ -72,7 +74,7 @@ const Home = () => {
           onPress={() => void navigation.navigate('ActiveHours')}
         />
       </View>
-      <Groups
+      <RotationsList
         groupIds={sections.otherGroupIds}
         isAppEmpty={hasNoGroups}
         header={
@@ -84,10 +86,18 @@ const Home = () => {
           </View>
         }
         footer={
-          <AddRotationCard
-            onPress={() => void navigation.navigate('NewGroup')}
-            isEmpty={hasNoGroups}
-          />
+          <>
+            {!hasNoGroups && (
+              <RotationsLink
+                count={Object.keys(groups).length}
+                onPress={() => void navigation.navigate('Groups')}
+              />
+            )}
+            <AddRotationCard
+              onPress={() => void navigation.navigate('NewGroup')}
+              isEmpty={hasNoGroups}
+            />
+          </>
         }
       />
       <UndoToast />
@@ -139,43 +149,4 @@ const homeStyles = StyleSheet.create(theme => ({
   },
 }))
 
-type AddRotationCardProps = {
-  onPress: () => unknown,
-  isEmpty: boolean,
-}
-
-const AddRotationCard = ({ onPress, isEmpty }: AddRotationCardProps) => (
-  <Pressable
-    style={({ pressed }) => [addCardStyles.container, pressed && addCardStyles.pressed]}
-    onPress={onPress}
-  >
-    <Lucide name="plus" size={18} style={addCardStyles.plus} />
-    <Text style={addCardStyles.label}>{isEmpty ? 'Make your first rotation' : 'New rotation'}</Text>
-  </Pressable>
-)
-
 const formatTime = (h: number, m: number) => `${h}:${String(m).padStart(2, '0')}`
-
-const addCardStyles = StyleSheet.create(theme => ({
-  container: {
-    borderRadius: theme.radii.lg,
-    borderWidth: 1.5,
-    borderColor: theme.colors.border,
-    borderStyle: 'dashed',
-    padding: theme.spacing.lg,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: theme.spacing.sm,
-    marginTop: theme.spacing.sm,
-  },
-  pressed: {
-    opacity: 0.6,
-  },
-  plus: {
-    color: theme.colors.accent,
-  },
-  label: {
-    ...theme.typography.body,
-    color: theme.colors.accent,
-  },
-}))
