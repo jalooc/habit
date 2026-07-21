@@ -19,8 +19,17 @@ import dayBoundaries$ from 'src/domains/misc/stores/dayBoundaries'
 import groups$ from 'src/domains/habits/stores/groups'
 import habits$ from 'src/domains/habits/stores/habits'
 import buildHomeSections from './buildHomeSections'
+import { computed } from '@legendapp/state'
 
 const NOW_REFRESH_MS = 60_000
+
+const now$ = computed(() => Date.now())
+const homeSections$ = computed(() => buildHomeSections({
+  groups: groups$.get(),
+  habits: habits$.get(),
+  dayBoundaries: dayBoundaries$.get(),
+  now: now$.get(),
+}))
 
 const Home = () => {
   const navigation = useNavigation()
@@ -31,21 +40,13 @@ const Home = () => {
 
   // `now` drives the carried/up-next buckets; refresh on focus and on a slow tick
   // so a "now" row ages into "carried" and upcoming turns surface without a store change.
-  const [now, setNow] = useState(() => Date.now())
   useFocusEffect(useCallback(() => {
-    setNow(Date.now())
-    const interval = setInterval(() => void setNow(Date.now()), NOW_REFRESH_MS)
+    now$.set(Date.now())
+    const interval = setInterval(() => now$.set(Date.now()), NOW_REFRESH_MS)
     return () => void clearInterval(interval)
   }, []))
 
-  const sections = useValue(
-    () => buildHomeSections({
-      groups: groups$.get(),
-      habits: habits$.get(),
-      dayBoundaries: dayBoundaries$.get(),
-      now,
-    }),
-  )
+  const sections = useValue(homeSections$)
 
   const hasNoGroups = Object.keys(groups).length === 0
   const hasSurfaced = sections.carried.length > 0 || sections.upNext.length > 0
