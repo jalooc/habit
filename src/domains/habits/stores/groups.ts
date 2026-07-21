@@ -4,6 +4,8 @@ import { ObservablePersistMMKV } from '@legendapp/state/persist-plugins/mmkv'
 import { RRuleTemporal } from 'rrule-temporal'
 import { z } from 'zod'
 import { PartialDeep } from 'type-fest'
+import { serializeError } from 'serialize-error'
+import { devLog } from 'src/domains/devTools/utils/devLog'
 
 const groupIdSchema = z.uuid()
 
@@ -31,14 +33,20 @@ const groups$ = observable<
     plugin: ObservablePersistMMKV,
     transform: {
       load: (value: unknown) => {
-        return Object.fromEntries(
-          Object.entries(persistedGroupsSchema.parse(value)).map(([id, group]) => [id, {
-            ...group,
-            recurrence: group.recurrence ?
-              new RRuleTemporal({ rruleString: group.recurrence }) :
-              undefined,
-          }]),
-        )
+        try {
+          return Object.fromEntries(
+            Object.entries(persistedGroupsSchema.parse(value)).map(([id, group]) => [id, {
+              ...group,
+              recurrence: group.recurrence ?
+                new RRuleTemporal({ rruleString: group.recurrence }) :
+                undefined,
+            }]),
+          )
+        } catch (error) {
+          devLog('Failed to load groups from storage', { error: serializeError(error) })
+
+          throw error
+        }
       },
       save: (value: PartialDeep<z.infer<typeof groupsSchema>>) => {
         try {

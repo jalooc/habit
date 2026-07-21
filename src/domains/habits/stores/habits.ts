@@ -4,6 +4,8 @@ import { ObservablePersistMMKV } from '@legendapp/state/persist-plugins/mmkv'
 import { z } from 'zod'
 import { objectEntries } from 'tsafe'
 import { fromEntries } from 'remeda'
+import { devLog } from 'src/domains/devTools/utils/devLog'
+import { serializeError } from 'serialize-error'
 
 export const habitIdSchema = z.uuid()
 
@@ -34,18 +36,27 @@ const habits$ = observable<
       load: (value: unknown) => {
         try {
           return habitsSchema.parse(value)
-        } catch {
-          const vm1 = habitsSchemaVm1.parse(value)
+        } catch (v2VersionError) {
+          try {
+            const vm1 = habitsSchemaVm1.parse(value)
 
-          return fromEntries(objectEntries(vm1).map(([id, habit]) => [id, {
-            ...habit,
-            ...(habit.lastCompleted && {
-              lastActioned: {
-                timestamp: new Date(habit.lastCompleted).getTime(),
-                type: 'completed' as const,
-              },
-            }),
-          }])) satisfies z.infer<typeof habitsSchema>
+            return fromEntries(objectEntries(vm1).map(([id, habit]) => [id, {
+              ...habit,
+              ...(habit.lastCompleted && {
+                lastActioned: {
+                  timestamp: new Date(habit.lastCompleted).getTime(),
+                  type: 'completed' as const,
+                },
+              }),
+            }])) satisfies z.infer<typeof habitsSchema>
+          } catch (v1VersionError) {
+            devLog('Failed to load habits from storage', {
+              v1VersionError: serializeError(v1VersionError),
+              v2VersionError: serializeError(v2VersionError),
+            })
+
+            throw v1VersionError
+          }
         }
       },
     },
