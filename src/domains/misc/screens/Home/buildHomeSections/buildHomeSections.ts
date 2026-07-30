@@ -1,8 +1,12 @@
 import orderQueue from 'src/domains/habits/utils/orderQueue'
-import isGroupDue, { type RecurrenceLike } from 'src/domains/habits/utils/groupDueness'
+import isGroupDue from 'src/domains/habits/utils/isGroupDue'
 import lastCompletedInGroup from 'src/domains/habits/utils/lastCompletedInGroup'
 import type { HabitsStores } from 'src/domains/habits/stores/habits'
+import { Recurrence } from 'src/domains/recurrence/utils/recurrence'
+import getOccurrence from 'src/domains/recurrence/utils/getOccurrence'
+
 import isWithinTodayWindow from './isWithinTodayWindow'
+import { Dayjs } from 'dayjs'
 
 const NOW_WINDOW_MS = 15 * 60 * 1000
 
@@ -11,7 +15,7 @@ const NOW_WINDOW_MS = 15 * 60 * 1000
 type GroupInput = {
   name: string,
   habits: Record<string, true>,
-  recurrence?: RecurrenceLike,
+  recurrence?: Recurrence,
 }
 
 type RowBase = {
@@ -37,7 +41,7 @@ const buildHomeSections = (params: {
   groups: Record<string, GroupInput | undefined>,
   habits: HabitsStores,
   dayBoundaries: { start: { hour: number, minute: number }, end: { hour: number, minute: number }},
-  now: number,
+  now: Dayjs,
 }): HomeSections => {
   const { groups, habits, dayBoundaries, now } = params
 
@@ -65,12 +69,12 @@ const buildHomeSections = (params: {
       habitName: habits[upNextId].name,
     }
 
-    const previousOccurrence = recurrence.previous(new Date(now), true)
+    const previousOccurrence = getOccurrence.previous(recurrence, now, dayBoundaries)
     const lastCompletedMs = lastCompletedInGroup(habitIds, habits)
-    const behind = isGroupDue({ recurrence, lastCompletedMs, now: new Date(now) })
+    const behind = isGroupDue({ recurrence, lastCompletedMs, now, dayBoundaries })
 
     if (behind && previousOccurrence) {
-      const elapsed = now - previousOccurrence.epochMilliseconds
+      const elapsed = now.diff(previousOccurrence, 'milliseconds')
       const isNew = lastCompletedMs === undefined
       // A never-completed rotation is new, not "carried" — it has no history to fall behind on,
       // so surface it at the top of Up next. A rotation that fell behind only within the NOW
@@ -83,8 +87,8 @@ const buildHomeSections = (params: {
       continue
     }
 
-    const nextOccurrenceMs = recurrence.next(new Date(now))?.epochMilliseconds
-    if (nextOccurrenceMs !== undefined && isWithinTodayWindow(nextOccurrenceMs, now, dayBoundaries)) {
+    const nextOccurrenceMs = getOccurrence.next(recurrence, now, dayBoundaries)?.valueOf()
+    if (nextOccurrenceMs !== undefined && isWithinTodayWindow(nextOccurrenceMs, now.valueOf(), dayBoundaries)) {
       upcomingRows.push({ ...base, kind: 'upcoming', slotMs: nextOccurrenceMs })
     } else {
       otherGroupIds.push(groupId)

@@ -2,7 +2,7 @@ import { Directory, File, Paths } from 'expo-file-system'
 import { zip } from 'react-native-zip-archive'
 import { randomUUID } from 'expo-crypto'
 import habits$ from 'src/domains/habits/stores/habits'
-import groups$, { GroupsStore } from 'src/domains/habits/stores/groups'
+import groups$ from 'src/domains/habits/stores/groups'
 import dayBoundaries$ from 'src/domains/misc/stores/dayBoundaries'
 import { imagesDir } from 'src/domains/habits/utils/habitImages'
 import { devLog } from 'src/domains/devTools/utils/devLog'
@@ -14,7 +14,7 @@ export const exportData = async () => {
     version: 2,
     exportedAt: new Date().toISOString(),
     habits: habits$.get(),
-    groups: serializeGroups(groups$.get()),
+    groups: groups$.get(),
     dayBoundaries: dayBoundaries$.get(),
   }
 
@@ -63,13 +63,6 @@ const pickDirectory = async () => {
     return undefined
   }
 }
-
-const serializeGroups = (groups: GroupsStore) => Object.fromEntries(
-  Object.entries(groups).map(([id, group]) => [id, {
-    ...group,
-    recurrence: group.recurrence?.toString(),
-  }]),
-)
 
 const formatFilenameTimestamp = (date: Date) => date
   .toISOString()

@@ -1,8 +1,8 @@
 import { View, Text, Pressable } from 'react-native'
 import { StyleSheet } from 'react-native-unistyles'
 import { withAlpha } from 'src/domains/misc/utils/theme'
-import type { RecurrenceType } from './recurrence'
-import { RECURRENCE_TYPE_LABELS, RECURRENCE_TYPE_DESCRIPTIONS } from './recurrence'
+import type { RecurrenceType } from 'src/domains/recurrence/utils/recurrence'
+import { RECURRENCE_TYPE_LABELS, RECURRENCE_TYPE_DESCRIPTIONS } from 'src/domains/recurrence/utils/recurrence'
 
 type Props = {
   type: RecurrenceType,

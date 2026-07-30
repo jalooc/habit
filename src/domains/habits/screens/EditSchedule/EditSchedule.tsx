@@ -3,17 +3,16 @@ import { StyleSheet } from 'react-native-unistyles'
 import { useObservable, useSelector, useValue } from '@legendapp/state/react'
 import Button from 'src/domains/misc/components/Button'
 import groups$ from 'src/domains/habits/stores/groups'
-import dayBoundaries$ from 'src/domains/misc/stores/dayBoundaries'
 import RecurrenceTypeCard from './RecurrenceTypeCard'
 import NumberStepper from './NumberStepper'
 import DayChips from './DayChips'
 import {
-  RECURRENCE_TYPES,
-  buildRRule,
-  parseRRule,
-} from './recurrence'
-import type { RecurrenceType, Weekday } from './recurrence'
+  RECURRENCE_TYPES, WEEKDAYS,
+} from 'src/domains/recurrence/utils/recurrence'
+import type { RecurrenceType, Weekday } from 'src/domains/recurrence/utils/recurrence'
 import { StaticScreenProps, useNavigation } from '@react-navigation/native'
+import { objectFromEntries, objectKeys } from 'tsafe'
+import { isTruthy, pickBy } from 'remeda'
 
 type Props = StaticScreenProps<{
   groupId: string,
@@ -27,38 +26,33 @@ const VALUE_LABELS: Record<RecurrenceType, string> = {
   'times-per-month': 'Times per month',
 }
 
-const getInitialConfig = (groupId: string) => {
-  const recurrence = groups$[groupId].recurrence.get()
-  if (!recurrence) return undefined
-  return parseRRule(String(recurrence))
-}
-
 const EditSchedule = ({ route }: Props) => {
   const { groupId } = route.params
   const navigation = useNavigation()
 
-  const initialConfig = getInitialConfig(groupId)
+  const initialConfig = useValue(() => groups$[groupId].recurrence.get())
   const selectedType$ = useObservable<RecurrenceType | null>(initialConfig?.type ?? null)
   const value$ = useObservable(initialConfig?.value ?? 2)
-  const specificDays$ = useObservable<Weekday[]>(initialConfig?.specificDays ?? [])
-  const restrictDaysEnabled$ = useObservable(!!initialConfig?.restrictDays?.length)
-  const restrictDays$ = useObservable<Weekday[]>(initialConfig?.restrictDays ?? [])
+  const initialWeekdays = initialConfig?.specificDays ?
+    objectKeys(pickBy(initialConfig.specificDays, isTruthy)) :
+    []
+  const specificDays$ = useObservable<Weekday[]>(initialWeekdays)
+  const specificDaysEnabled$ = useObservable(!!initialWeekdays.length)
 
   const handleSave = () => {
     const type = selectedType$.get()
     if (!type) return
 
-    const dayBounds = dayBoundaries$.get()
-    const rule = buildRRule(
-      {
-        type,
-        value: value$.get(),
-        specificDays: specificDays$.get(),
-        restrictDays: restrictDaysEnabled$.get() ? restrictDays$.get() : undefined,
-      },
-      dayBounds
-    )
-    groups$[groupId].recurrence.set(rule)
+    groups$[groupId].recurrence.set({
+      type,
+      value: value$.get(),
+      specificDays: specificDays$.get().length ? objectFromEntries(
+        WEEKDAYS.map(weekday => [
+          weekday,
+          specificDays$.get().includes(weekday),
+        ])
+      ) : undefined,
+    })
     navigation.goBack()
   }
 
@@ -70,11 +64,9 @@ const EditSchedule = ({ route }: Props) => {
   const selectedType = useValue(selectedType$)
   const value = useValue(value$)
   const specificDays = useValue(specificDays$)
-  const restrictDaysEnabled = useValue(restrictDaysEnabled$)
-  const restrictDays = useValue(restrictDays$)
+  const specificDaysEnabled = useValue(specificDaysEnabled$)
   const hasExistingRecurrence = useSelector(() => !!groups$[groupId].recurrence.get())
 
-  const showSpecificDays = selectedType === 'times-per-week'
   const valueLabel = selectedType ? VALUE_LABELS[selectedType] : 'Value'
 
   return (
@@ -97,16 +89,6 @@ const EditSchedule = ({ route }: Props) => {
                 min={1}
                 max={selectedType === 'times-per-day' ? 12 : 30}
               />
-              {showSpecificDays && (
-                <View style={styles.daySection}>
-                  <Text style={styles.daySectionLabel}>On specific days</Text>
-                  <DayChips
-                    selected={specificDays}
-                    onChange={days => void specificDays$.set(days)}
-                    onDark
-                  />
-                </View>
-              )}
             </RecurrenceTypeCard>
           ))}
         </View>
@@ -115,14 +97,14 @@ const EditSchedule = ({ route }: Props) => {
           <View style={styles.restrictRow}>
             <Text style={styles.restrictLabel}>Restrict to specific days</Text>
             <Switch
-              value={restrictDaysEnabled}
-              onValueChange={v => void restrictDaysEnabled$.set(v)}
+              value={specificDaysEnabled}
+              onValueChange={v => void specificDaysEnabled$.set(v)}
             />
           </View>
-          {restrictDaysEnabled && (
+          {specificDaysEnabled && (
             <DayChips
-              selected={restrictDays}
-              onChange={days => void restrictDays$.set(days)}
+              selected={specificDays}
+              onChange={days => void specificDays$.set(days)}
             />
           )}
         </View>

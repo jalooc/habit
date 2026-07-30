@@ -28,7 +28,7 @@ const resetNotifications = async (notifications: ReturnType<typeof buildNotifica
 
 const reschedule = pDebounce.promise(async () => {
   try {
-    const notifications = buildNotifications(groups$.get(), habits$.get())
+    const notifications = buildNotifications(groups$.get(), habits$.get(), dayBoundaries$.get())
     devLog('rescheduling notifications', { notifications })
     await resetNotifications(notifications)
   } catch (rawError) {

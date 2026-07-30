@@ -25,7 +25,7 @@ This is an Expo dev-client project: `npm start` alone is not enough — `npm run
 - **React Navigation 7** static API (`createStaticNavigation`)
 - **Legend State 3** (`@legendapp/state`) for reactive state, persisted via MMKV
 - **Unistyles 3** for styling (babel plugin configured with `root: 'src'` — must stay in sync if `src/` is renamed)
-- **React Navigation `formSheet`** for bottom sheets (native iOS sheet) — use `presentation: 'formSheet'` + `sheetAllowedDetents` in screen options; **rrule-temporal** for recurrence, **zod** for schema validation, **dayjs** for dates
+- **React Navigation `formSheet`** for bottom sheets (native iOS sheet) — use `presentation: 'formSheet'` + `sheetAllowedDetents` in screen options; recurrence is a **custom engine** (`src/domains/recurrence/`, see below), **zod** for schema validation, **dayjs** for dates. `rrule-temporal` is still a dependency but only to parse legacy v1 rrule strings during store migration (`parseRRule`) — don't reach for it in new code
 - **`expo-image`** for image display (drop-in for RN `Image`); **`react-native-enriched-markdown`** for markdown rendering
 - **remeda** preferred over lodash; **tsafe** + **type-fest** for type-level helpers
 - **Icons**: `@react-native-vector-icons/lucide` — the only icon set; don't add others. Unicode stays fine for typographic marks (`·` `¶` `↗`), styled Views for custom shapes (ring dots)
@@ -39,6 +39,7 @@ src/domains/
   habits/        screens/ (Group, Habit, NewHabit, forms), stores/ (habits, groups, lastAction),
                  components/ (UndoToast, HabitEditor, ImageViewer, Description),
                  utils/ (habitActions, orderQueue, groupDueness, formatCadence, formatNextTurn, notifications scheduler, deep-link config)
+  recurrence/    utils/ (recurrence — types + legacy rrule parsing, getOccurrence — the occurrence engine)
   misc/          screens/ (Home, ActiveHours), stores/dayBoundaries, utils/ (navigation, theme), components/ (Box, Button, Chip)
   notifications/ utils/notifications.ts — the *only* file that imports `expo-notifications` directly
   devTools/      Dev-only screens (DevTools, DevLog, Backup) and devLog util
@@ -54,6 +55,12 @@ Legend State conventions (see global rules):
 - No `observer()` HOC
 - `useObservable()` for local state, `useValue(obs$)` for reactive reads, `useSelector(() => …)` for derived values
 - Bare `.get()` is fine in event handlers (no reactivity needed there)
+
+### Recurrence engine
+
+`src/domains/recurrence/utils/getOccurrence/` is the single source of occurrence times — `getOccurrence.next/previous(recurrence, referenceDate, dayBoundaries)`, both inclusive of an occurrence landing exactly on `referenceDate`. Everything downstream (dueness, Home bucketing, notifications, cadence labels) derives from it; never compute turn times ad hoc. Only `times-per-day` is implemented — the other `RecurrenceType`s throw, and `isRecurrenceTypeImplemented` is what gates the schedule picker, so keep the two in sync.
+
+**Slot placement:** the active-hours span is split into `value` equal slots and each turn sits at its slot's **midpoint** — on 08:00–20:00, `1×` fires at 14:00, `2×` at 11:00/17:00, `3×` at 10:00/14:00/18:00. Turns deliberately never land on the day boundaries themselves: a turn due at the minute active hours end leaves no time to act on it, and one at day start fires the moment you wake. Spans crossing midnight are supported and attributed to the weekday their *middle* falls on (matters for `specificDays`).
 
 ### Reactive notifications scheduler
 

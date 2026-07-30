@@ -1,0 +1,288 @@
+import { describe, expect, it } from 'vitest'
+import dayjs from 'dayjs'
+import { objectFromEntries } from 'tsafe'
+import { Weekday, WEEKDAYS } from 'src/domains/recurrence/utils/recurrence'
+
+import getOccurrence from './getOccurrence'
+
+const MONDAY_DATE = '2026-07-06'
+
+const time = (hour: number, minute: number) => ({ hour, minute })
+
+const timesPerDay = (value: number, specificDays?: Record<Weekday, boolean>) =>
+  ({ type: 'times-per-day', value, specificDays } as const)
+
+const days = (...selected: Weekday[]) =>
+  objectFromEntries(WEEKDAYS.map(day => [day, selected.includes(day)]))
+
+const { next, previous } = (() => {
+  const call = (getOccurrenceFunction: typeof getOccurrence['next'] | typeof getOccurrence['previous']) => (
+    recurrence: Parameters<typeof getOccurrenceFunction>[0],
+    referenceDate: string,
+    boundaries: Parameters<typeof getOccurrenceFunction>[2],
+  ) => {
+    const occurrence = getOccurrenceFunction(recurrence, dayjs(referenceDate), boundaries)
+    if (!occurrence) throw new Error('Expected an occurrence')
+    return occurrence.format('YYYY-MM-DD HH:mm')
+  }
+
+  return {
+    next: call(getOccurrence.next),
+    previous: call(getOccurrence.previous),
+  }
+})()
+
+const dayBoundaries = { start: time(8, 0), end: time(20, 0) }
+
+describe('recurrence value validation', () => {
+  it('throws a RangeError for a value lower than 1', () => {
+    expect(() => next(timesPerDay(0), `${MONDAY_DATE} 06:00`, dayBoundaries)).toThrow(RangeError)
+  })
+
+  it('throws a RangeError for a negative value', () => {
+    expect(() => next(timesPerDay(-2), `${MONDAY_DATE} 06:00`, dayBoundaries)).toThrow(RangeError)
+  })
+
+  it('throws a RangeError for a fractional value', () => {
+    expect(() => next(timesPerDay(1.5), `${MONDAY_DATE} 06:00`, dayBoundaries)).toThrow(RangeError)
+  })
+
+  it('throws a RangeError for NaN', () => {
+    expect(() => next(timesPerDay(NaN), `${MONDAY_DATE} 06:00`, dayBoundaries)).toThrow(RangeError)
+  })
+
+  it('throws a RangeError for Infinity', () => {
+    expect(() => next(timesPerDay(Infinity), `${MONDAY_DATE} 06:00`, dayBoundaries)).toThrow(RangeError)
+  })
+})
+
+describe('next occurrence', () => {
+  describe('once a day', () => {
+    it('places the occurrence in the middle of the day boundaries', () => {
+      expect(next(timesPerDay(1), `${MONDAY_DATE} 06:00`, dayBoundaries)).toBe(`${MONDAY_DATE} 14:00`)
+    })
+
+    it('returns an occurrence lying exactly at referenceDate', () => {
+      expect(next(timesPerDay(1), `${MONDAY_DATE} 14:00`, dayBoundaries)).toBe(`${MONDAY_DATE} 14:00`)
+    })
+
+    it('moves to the next day once the occurrence has passed', () => {
+      expect(next(timesPerDay(1), `${MONDAY_DATE} 14:01`, dayBoundaries)).toBe('2026-07-07 14:00')
+    })
+
+    it('accounts for minutes in the boundaries', () => {
+      const boundaries = { start: time(8, 30), end: time(21, 30) }
+      expect(next(timesPerDay(1), `${MONDAY_DATE} 06:00`, boundaries)).toBe(`${MONDAY_DATE} 15:00`)
+    })
+  })
+
+  describe('several times a day', () => {
+    it('returns the first slot when starting before the day time span', () => {
+      expect(next(timesPerDay(3), `${MONDAY_DATE} 06:00`, dayBoundaries)).toBe(`${MONDAY_DATE} 08:00`)
+    })
+
+    it('returns the next slot when starting between slots', () => {
+      expect(next(timesPerDay(3), `${MONDAY_DATE} 09:00`, dayBoundaries)).toBe(`${MONDAY_DATE} 14:00`)
+    })
+
+    it('returns a slot lying exactly at referenceDate', () => {
+      expect(next(timesPerDay(3), `${MONDAY_DATE} 14:00`, dayBoundaries)).toBe(`${MONDAY_DATE} 14:00`)
+    })
+
+    it('skips to the following slot right after one has passed', () => {
+      expect(next(timesPerDay(3), `${MONDAY_DATE} 14:01`, dayBoundaries)).toBe(`${MONDAY_DATE} 20:00`)
+    })
+
+    it('rolls over to the next day after the last slot', () => {
+      expect(next(timesPerDay(3), `${MONDAY_DATE} 20:01`, dayBoundaries)).toBe('2026-07-07 08:00')
+    })
+
+    it('puts two daily occurrences exactly on the boundaries', () => {
+      expect(next(timesPerDay(2), `${MONDAY_DATE} 06:00`, dayBoundaries)).toBe(`${MONDAY_DATE} 08:00`)
+      expect(next(timesPerDay(2), `${MONDAY_DATE} 08:01`, dayBoundaries)).toBe(`${MONDAY_DATE} 20:00`)
+    })
+
+    it('supports intervals not divisible into whole minutes', () => {
+      // 12h span / 7 intervals ≈ 102.86 min, so the second slot lands at 09:42:51
+      expect(next(timesPerDay(8), `${MONDAY_DATE} 08:01`, dayBoundaries)).toBe(`${MONDAY_DATE} 09:42`)
+    })
+  })
+
+  describe('day boundaries across midnight', () => {
+    const boundaries = { start: time(22, 0), end: time(6, 0) }
+
+    it('places a single occurrence past midnight when the middle of the span falls there', () => {
+      expect(next(timesPerDay(1), `${MONDAY_DATE} 20:00`, boundaries)).toBe('2026-07-07 02:00')
+    })
+
+    it('finds the morning slot when starting inside the span past midnight', () => {
+      expect(next(timesPerDay(3), '2026-07-07 03:00', boundaries)).toBe('2026-07-07 06:00')
+    })
+
+    it('finds the past-midnight slot when starting inside the span before midnight', () => {
+      expect(next(timesPerDay(3), `${MONDAY_DATE} 23:00`, boundaries)).toBe('2026-07-07 02:00')
+    })
+  })
+
+  describe('restricting to specific days', () => {
+    it('returns the same-day occurrence when the day is enabled', () => {
+      expect(next(timesPerDay(1, days('mo', 'we', 'fr')), `${MONDAY_DATE} 06:00`, dayBoundaries)).toBe(`${MONDAY_DATE} 14:00`)
+    })
+
+    it('skips disabled weekdays', () => {
+      expect(next(timesPerDay(1, days('mo', 'we', 'fr')), `${MONDAY_DATE} 15:00`, dayBoundaries)).toBe('2026-07-08 14:00')
+    })
+
+    it('waits a whole week when only one day is enabled', () => {
+      expect(next(timesPerDay(1, days('mo')), `${MONDAY_DATE} 15:00`, dayBoundaries)).toBe('2026-07-13 14:00')
+    })
+
+    it('starts on the next enabled day when referenceDate falls on a disabled day', () => {
+      expect(next(timesPerDay(1, days('su')), '2026-07-11 06:00', dayBoundaries)).toBe('2026-07-12 14:00')
+    })
+
+    it('keeps the intra-day spread on enabled days', () => {
+      expect(next(timesPerDay(3, days('tu')), '2026-07-07 08:01', dayBoundaries)).toBe('2026-07-07 14:00')
+    })
+
+    it('rolls over to the next enabled day after the last slot', () => {
+      expect(next(timesPerDay(2, days('mo', 'th')), `${MONDAY_DATE} 20:01`, dayBoundaries)).toBe('2026-07-09 08:00')
+    })
+
+    it('treats all days enabled the same as no restriction', () => {
+      expect(next(timesPerDay(3, days(...WEEKDAYS)), `${MONDAY_DATE} 06:00`, dayBoundaries))
+        .toBe(next(timesPerDay(3), `${MONDAY_DATE} 06:00`, dayBoundaries))
+    })
+
+    it('attributes a span crossing midnight to the day its middle falls on', () => {
+      const boundaries = { start: time(22, 0), end: time(6, 0) }
+      expect(next(timesPerDay(1, days('mo')), `${MONDAY_DATE} 12:00`, boundaries)).toBe('2026-07-13 02:00')
+    })
+
+    it('throws a RangeError when no days are enabled', () => {
+      expect(() => next(timesPerDay(1, days()), `${MONDAY_DATE} 06:00`, dayBoundaries)).toThrow(RangeError)
+    })
+  })
+})
+
+describe('previous occurrence', () => {
+  it('runs the same recurrence value validation', () => {
+    expect(() => previous(timesPerDay(0), `${MONDAY_DATE} 06:00`, dayBoundaries)).toThrow(RangeError)
+  })
+
+  describe('once a day', () => {
+    it('places the occurrence in the middle of the day boundaries', () => {
+      expect(previous(timesPerDay(1), `${MONDAY_DATE} 22:00`, dayBoundaries)).toBe(`${MONDAY_DATE} 14:00`)
+    })
+
+    it('returns an occurrence lying exactly at referenceDate', () => {
+      expect(previous(timesPerDay(1), `${MONDAY_DATE} 14:00`, dayBoundaries)).toBe(`${MONDAY_DATE} 14:00`)
+    })
+
+    it('moves to the previous day while the occurrence is still ahead', () => {
+      expect(previous(timesPerDay(1), `${MONDAY_DATE} 13:59`, dayBoundaries)).toBe('2026-07-05 14:00')
+    })
+
+    it('accounts for minutes in the boundaries', () => {
+      const boundaries = { start: time(8, 30), end: time(21, 30) }
+      expect(previous(timesPerDay(1), `${MONDAY_DATE} 23:00`, boundaries)).toBe(`${MONDAY_DATE} 15:00`)
+    })
+  })
+
+  describe('several times a day', () => {
+    it('returns the last slot when starting after the day time span', () => {
+      expect(previous(timesPerDay(3), `${MONDAY_DATE} 22:00`, dayBoundaries)).toBe(`${MONDAY_DATE} 20:00`)
+    })
+
+    it('returns the previous slot when starting between slots', () => {
+      expect(previous(timesPerDay(3), `${MONDAY_DATE} 13:00`, dayBoundaries)).toBe(`${MONDAY_DATE} 08:00`)
+    })
+
+    it('returns a slot lying exactly at referenceDate', () => {
+      expect(previous(timesPerDay(3), `${MONDAY_DATE} 14:00`, dayBoundaries)).toBe(`${MONDAY_DATE} 14:00`)
+    })
+
+    it('stays on the preceding slot right before the following one', () => {
+      expect(previous(timesPerDay(3), `${MONDAY_DATE} 13:59`, dayBoundaries)).toBe(`${MONDAY_DATE} 08:00`)
+    })
+
+    it('rolls back to the previous day before the first slot', () => {
+      expect(previous(timesPerDay(3), `${MONDAY_DATE} 07:59`, dayBoundaries)).toBe('2026-07-05 20:00')
+    })
+
+    it('puts two daily occurrences exactly on the boundaries', () => {
+      expect(previous(timesPerDay(2), `${MONDAY_DATE} 22:00`, dayBoundaries)).toBe(`${MONDAY_DATE} 20:00`)
+      expect(previous(timesPerDay(2), `${MONDAY_DATE} 19:59`, dayBoundaries)).toBe(`${MONDAY_DATE} 08:00`)
+    })
+
+    it('supports intervals not divisible into whole minutes', () => {
+      // 12h span / 7 intervals ≈ 102.86 min, so the second slot lands at 09:42:51
+      expect(previous(timesPerDay(8), `${MONDAY_DATE} 09:43`, dayBoundaries)).toBe(`${MONDAY_DATE} 09:42`)
+    })
+
+    it('does not lose the last slot to float rounding of a fractional interval', () => {
+      // 302 min span / 7 intervals: span / intervalLength floats to 6.99…, so
+      // clamping minutes instead of the intervals count floors away the last slot
+      const boundaries = { start: time(8, 0), end: time(13, 2) }
+      expect(previous(timesPerDay(8), `${MONDAY_DATE} 14:00`, boundaries)).toBe(`${MONDAY_DATE} 13:02`)
+    })
+  })
+
+  describe('day boundaries across midnight', () => {
+    const boundaries = { start: time(22, 0), end: time(6, 0) }
+
+    it('places a single occurrence past midnight when the middle of the span falls there', () => {
+      expect(previous(timesPerDay(1), '2026-07-07 12:00', boundaries)).toBe('2026-07-07 02:00')
+    })
+
+    it('finds the late-evening slot when starting inside the span before midnight', () => {
+      expect(previous(timesPerDay(3), `${MONDAY_DATE} 23:00`, boundaries)).toBe(`${MONDAY_DATE} 22:00`)
+    })
+
+    it('finds the past-midnight slot when starting inside the span past midnight', () => {
+      expect(previous(timesPerDay(3), '2026-07-07 03:00', boundaries)).toBe('2026-07-07 02:00')
+    })
+  })
+
+  describe('restricting to specific days', () => {
+    it('returns the same-day occurrence when the day is enabled', () => {
+      expect(previous(timesPerDay(1, days('mo', 'we', 'fr')), `${MONDAY_DATE} 15:00`, dayBoundaries))
+        .toBe(`${MONDAY_DATE} 14:00`)
+    })
+
+    it('skips disabled weekdays', () => {
+      expect(previous(timesPerDay(1, days('mo', 'we', 'fr')), '2026-07-08 13:00', dayBoundaries))
+        .toBe(`${MONDAY_DATE} 14:00`)
+    })
+
+    it('reaches back a whole week when only one day is enabled', () => {
+      expect(previous(timesPerDay(1, days('mo')), `${MONDAY_DATE} 13:00`, dayBoundaries)).toBe('2026-06-29 14:00')
+    })
+
+    it('falls back to the closest enabled day when referenceDate falls on a disabled day', () => {
+      expect(previous(timesPerDay(1, days('su')), '2026-07-11 06:00', dayBoundaries)).toBe('2026-07-05 14:00')
+    })
+
+    it('keeps the intra-day spread on enabled days', () => {
+      expect(previous(timesPerDay(3, days('tu')), '2026-07-07 19:59', dayBoundaries)).toBe('2026-07-07 14:00')
+    })
+
+    it('rolls back to the previous enabled day before the first slot', () => {
+      expect(previous(timesPerDay(2, days('mo', 'th')), '2026-07-09 07:59', dayBoundaries)).toBe(`${MONDAY_DATE} 20:00`)
+    })
+
+    it('treats all days enabled the same as no restriction', () => {
+      expect(previous(timesPerDay(3, days(...WEEKDAYS)), `${MONDAY_DATE} 22:00`, dayBoundaries))
+        .toBe(previous(timesPerDay(3), `${MONDAY_DATE} 22:00`, dayBoundaries))
+    })
+
+    it('attributes a span crossing midnight to the day its middle falls on', () => {
+      const boundaries = { start: time(22, 0), end: time(6, 0) }
+      expect(previous(timesPerDay(1, days('mo')), `${MONDAY_DATE} 12:00`, boundaries)).toBe(`${MONDAY_DATE} 02:00`)
+    })
+
+    it('throws a RangeError when no days are enabled', () => {
+      expect(() => previous(timesPerDay(1, days()), `${MONDAY_DATE} 06:00`, dayBoundaries)).toThrow(RangeError)
+    })
+  })
+})

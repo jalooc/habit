@@ -1,8 +1,8 @@
 import { View, Text, Pressable } from 'react-native'
 import { StyleSheet } from 'react-native-unistyles'
 import { withAlpha } from 'src/domains/misc/utils/theme'
-import { WEEKDAYS, WEEKDAY_LABELS } from './recurrence'
-import type { Weekday } from './recurrence'
+import { WEEKDAYS, WEEKDAY_LABELS } from 'src/domains/recurrence/utils/recurrence'
+import type { Weekday } from 'src/domains/recurrence/utils/recurrence'
 
 type Props = {
   selected: Weekday[],
