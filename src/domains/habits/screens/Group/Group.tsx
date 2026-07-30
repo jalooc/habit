@@ -3,6 +3,9 @@ import { StaticScreenProps, useNavigation } from '@react-navigation/native'
 import Animated, { LinearTransition } from 'react-native-reanimated'
 import { useSelector, useValue } from '@legendapp/state/react'
 import { StyleSheet } from 'react-native-unistyles'
+import dayjs from 'dayjs'
+
+import dayBoundaries$ from 'src/domains/misc/stores/dayBoundaries'
 import groups$ from 'src/domains/habits/stores/groups'
 import habits$ from 'src/domains/habits/stores/habits'
 import { GROUP_ID_PARAM } from 'src/domains/habits/utils/linking'
@@ -36,6 +39,7 @@ const Group = ({ route }: Props) => {
   const { width } = useWindowDimensions()
 
   const { name, recurrence } = useValue(groups$[groupId])
+  const dayBoundaries = useValue(dayBoundaries$)
 
   const orderedHabitIds = useSelector(() => {
     const habitsMap = habits$.get()
@@ -54,7 +58,12 @@ const Group = ({ route }: Props) => {
   const isDue = useSelector(() => {
     const habitsMap = habits$.get()
     const groupHabitIds = Object.keys(groups$[groupId].habits.get())
-    return isGroupDue({ recurrence, lastCompletedMs: lastCompletedInGroup(groupHabitIds, habitsMap), now: new Date() })
+    return isGroupDue({
+      recurrence,
+      lastCompletedMs: lastCompletedInGroup(groupHabitIds, habitsMap),
+      now: dayjs(),
+      dayBoundaries: dayBoundaries$.get(),
+    })
   })
 
   const ringSize = Math.max(220, Math.min(276, width - 2 * SCREEN_PADDING - 2 * CARD_PADDING))
@@ -68,7 +77,7 @@ const Group = ({ route }: Props) => {
   const habitCount = orderedHabits.length
   const habitCountLabel = habitCount === 1 ? '1 habit in rotation' : `${habitCount} habits in rotation`
 
-  const nextTurnLabel = !isDue && hasHabits && recurrence ? formatNextTurn(recurrence) : undefined
+  const nextTurnLabel = !isDue && hasHabits && recurrence ? formatNextTurn(recurrence, dayBoundaries) : undefined
 
   const handleMarkDone = () => {
     if (upNext) actionHabit(upNext.id, 'completed')

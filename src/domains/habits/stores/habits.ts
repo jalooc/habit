@@ -9,13 +9,12 @@ import { serializeError } from 'serialize-error'
 
 export const habitIdSchema = z.uuid()
 
-// habit schema version minus 1
-const habitsSchemaVm1 = z.record(habitIdSchema, z.object({
+const habitsSchemaV1 = z.record(habitIdSchema, z.object({
   name: z.string(),
   lastCompleted: z.iso.datetime().optional(),
 }))
 
-export const habitsSchema = z.record(habitIdSchema, z.object({
+const habitsSchemaV2 = z.record(habitIdSchema, z.object({
   name: z.string(),
   description: z.string().optional(),
   images: z.array(z.string()).optional(),
@@ -25,40 +24,44 @@ export const habitsSchema = z.record(habitIdSchema, z.object({
   }).optional(),
 }))
 
-const habits$ = observable<
-  z.infer<typeof habitsSchema>
->(synced({
+const habitsSchema = habitsSchemaV2
+
+type StoreType = z.infer<typeof habitsSchema>
+
+export const parsePersistedHabits = (value: unknown): StoreType => {
+  try {
+    return habitsSchemaV2.parse(value)
+  } catch (v2VersionError) {
+    try {
+      const vm1 = habitsSchemaV1.parse(value)
+
+      return fromEntries(objectEntries(vm1).map(([id, habit]) => [id, {
+        ...habit,
+        ...(habit.lastCompleted && {
+          lastActioned: {
+            timestamp: new Date(habit.lastCompleted).getTime(),
+            type: 'completed' as const,
+          },
+        }),
+      }]))
+    } catch (v1VersionError) {
+      devLog('Failed to load habits from storage', {
+        v1VersionError: serializeError(v1VersionError),
+        v2VersionError: serializeError(v2VersionError),
+      })
+
+      throw v1VersionError
+    }
+  }
+}
+
+const habits$ = observable<StoreType>(synced({
   initial: {},
   persist: {
     name: 'habits',
     plugin: ObservablePersistMMKV,
     transform: {
-      load: (value: unknown) => {
-        try {
-          return habitsSchema.parse(value)
-        } catch (v2VersionError) {
-          try {
-            const vm1 = habitsSchemaVm1.parse(value)
-
-            return fromEntries(objectEntries(vm1).map(([id, habit]) => [id, {
-              ...habit,
-              ...(habit.lastCompleted && {
-                lastActioned: {
-                  timestamp: new Date(habit.lastCompleted).getTime(),
-                  type: 'completed' as const,
-                },
-              }),
-            }])) satisfies z.infer<typeof habitsSchema>
-          } catch (v1VersionError) {
-            devLog('Failed to load habits from storage', {
-              v1VersionError: serializeError(v1VersionError),
-              v2VersionError: serializeError(v2VersionError),
-            })
-
-            throw v1VersionError
-          }
-        }
-      },
+      load: parsePersistedHabits,
     },
   },
 }))

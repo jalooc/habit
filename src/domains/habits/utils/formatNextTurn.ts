@@ -1,19 +1,23 @@
 import dayjs from 'dayjs'
-import { RRuleTemporal } from 'rrule-temporal'
 
-const formatNextTurn = (recurrence: RRuleTemporal): string | undefined => {
-  const now = new Date()
-  const nextInstant = recurrence.next(now)
-  if (!nextInstant) return undefined
+import { Recurrence } from 'src/domains/habits/screens/EditSchedule/recurrence'
+import getOccurrence from 'src/domains/habits/utils/habitsNotificationsScheduler/buildNotifications/getOccurrence'
 
-  const next = new Date(nextInstant.epochMilliseconds)
-  const time = dayjs(next).format('H:mm')
-  const dayDiff = dayjs(next).startOf('day').diff(dayjs(now).startOf('day'), 'day')
+const formatNextTurn = (
+  recurrence: Recurrence,
+  dayBoundaries: Parameters<typeof getOccurrence['next']>[2],
+): string | undefined => {
+  const now = dayjs()
+  const next = getOccurrence.next(recurrence, now, dayBoundaries)
+  if (!next) return undefined
+
+  const time = next.format('H:mm')
+  const dayDiff = next.startOf('day').diff(now.startOf('day'), 'day')
 
   if (dayDiff === 0) return `today · ${time}`
   if (dayDiff === 1) return `tomorrow · ${time}`
-  if (dayDiff < 7) return `${dayjs(next).format('ddd')} · ${time}`
-  return dayjs(next).format('MMM D')
+  if (dayDiff < 7) return `${next.format('ddd')} · ${time}`
+  return next.format('MMM D')
 }
 
 export default formatNextTurn

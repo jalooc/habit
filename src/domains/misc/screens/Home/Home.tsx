@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback } from 'react'
 import { Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useValue } from '@legendapp/state/react'
@@ -23,7 +23,7 @@ import { computed } from '@legendapp/state'
 
 const NOW_REFRESH_MS = 60_000
 
-const now$ = computed(() => Date.now())
+const now$ = computed(() => dayjs())
 const homeSections$ = computed(() => buildHomeSections({
   groups: groups$.get(),
   habits: habits$.get(),
@@ -41,8 +41,8 @@ const Home = () => {
   // `now` drives the carried/up-next buckets; refresh on focus and on a slow tick
   // so a "now" row ages into "carried" and upcoming turns surface without a store change.
   useFocusEffect(useCallback(() => {
-    now$.set(Date.now())
-    const interval = setInterval(() => now$.set(Date.now()), NOW_REFRESH_MS)
+    now$.set(dayjs())
+    const interval = setInterval(() => void now$.set(dayjs()), NOW_REFRESH_MS)
     return () => void clearInterval(interval)
   }, []))
 

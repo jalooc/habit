@@ -1,16 +1,18 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { RRuleTemporal } from 'rrule-temporal'
-import { Temporal } from '@js-temporal/polyfill'
 import formatNextTurn from './formatNextTurn'
 
-const tzid = Temporal.Now.timeZoneId()
+const MONDAY_DATE = '2026-07-06'
 
-const zdt = (iso: string) => Temporal.PlainDateTime.from(iso).toZonedDateTime(tzid)
+const time = (hour: number, minute: number) => ({ hour, minute })
+
+const dayBoundaries = { start: time(8, 0), end: time(20, 0) }
+
+const timesPerDay = (value: number, specificDays?: Parameters<typeof formatNextTurn>[0]['specificDays']) =>
+  ({ type: 'times-per-day', value, specificDays } as const)
 
 describe('formatNextTurn', () => {
   beforeEach(() => {
     vi.useFakeTimers()
-    vi.setSystemTime(new Date('2026-06-10T08:00:00'))
   })
 
   afterEach(() => {
@@ -18,27 +20,30 @@ describe('formatNextTurn', () => {
   })
 
   it('formats a same-day turn', () => {
-    const rule = new RRuleTemporal({ freq: 'DAILY', dtstart: zdt('2026-06-01T18:30:00'), tzid })
-    expect(formatNextTurn(rule)).toBe('today · 18:30')
+    vi.setSystemTime(new Date(`${MONDAY_DATE}T06:00:00`))
+    expect(formatNextTurn(timesPerDay(1), dayBoundaries)).toBe('today · 14:00')
+  })
+
+  it('formats hours without a leading zero', () => {
+    vi.setSystemTime(new Date(`${MONDAY_DATE}T06:00:00`))
+    const boundaries = { start: time(9, 0), end: time(20, 0) }
+    expect(formatNextTurn(timesPerDay(3), boundaries)).toBe('today · 9:00')
   })
 
   it('formats a next-day turn', () => {
-    const rule = new RRuleTemporal({ freq: 'DAILY', dtstart: zdt('2026-06-11T09:00:00'), tzid })
-    expect(formatNextTurn(rule)).toBe('tomorrow · 9:00')
+    vi.setSystemTime(new Date(`${MONDAY_DATE}T15:00:00`))
+    expect(formatNextTurn(timesPerDay(1), dayBoundaries)).toBe('tomorrow · 14:00')
   })
 
   it('formats a turn later this week with its weekday', () => {
-    const rule = new RRuleTemporal({ freq: 'WEEKLY', dtstart: zdt('2026-06-13T09:00:00'), tzid })
-    expect(formatNextTurn(rule)).toBe('Sat · 9:00')
+    vi.setSystemTime(new Date(`${MONDAY_DATE}T15:00:00`))
+    const thursdayOnly = timesPerDay(1, { mo: false, tu: false, we: false, th: true, fr: false, sa: false, su: false })
+    expect(formatNextTurn(thursdayOnly, dayBoundaries)).toBe('Thu · 14:00')
   })
 
-  it('formats a turn a week or more away as a date', () => {
-    const rule = new RRuleTemporal({ freq: 'MONTHLY', dtstart: zdt('2026-06-22T09:00:00'), tzid })
-    expect(formatNextTurn(rule)).toBe('Jun 22')
-  })
-
-  it('returns undefined past the last occurrence of a finite rule', () => {
-    const rule = new RRuleTemporal({ freq: 'DAILY', count: 2, dtstart: zdt('2026-01-01T09:00:00'), tzid })
-    expect(formatNextTurn(rule)).toBeUndefined()
+  it('formats a turn a week away as a date', () => {
+    vi.setSystemTime(new Date(`${MONDAY_DATE}T15:00:00`))
+    const mondayOnly = timesPerDay(1, { mo: true, tu: false, we: false, th: false, fr: false, sa: false, su: false })
+    expect(formatNextTurn(mondayOnly, dayBoundaries)).toBe('Jul 13')
   })
 })

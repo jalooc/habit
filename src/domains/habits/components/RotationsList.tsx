@@ -3,6 +3,9 @@ import { useSelector, useValue } from '@legendapp/state/react'
 import { FlatList, Text, Pressable, View } from 'react-native'
 import { StyleSheet } from 'react-native-unistyles'
 import { useLinkProps } from '@react-navigation/native'
+import dayjs from 'dayjs'
+
+import dayBoundaries$ from 'src/domains/misc/stores/dayBoundaries'
 import groups$ from 'src/domains/habits/stores/groups'
 import habits$ from 'src/domains/habits/stores/habits'
 import orderQueue from 'src/domains/habits/utils/orderQueue'
@@ -68,7 +71,8 @@ const GroupCard = ({ id }: GroupCardProps) => {
     const due = isGroupDue({
       recurrence,
       lastCompletedMs: lastCompletedInGroup(habitIds, habitsMap),
-      now: new Date(),
+      now: dayjs(),
+      dayBoundaries: dayBoundaries$.get()
     })
     const cadenceLabel = recurrence ? formatCadence(recurrence) : null
     const habitCount = habitIds.length

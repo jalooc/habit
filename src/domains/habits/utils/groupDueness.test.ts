@@ -1,126 +1,118 @@
 import { describe, expect, it } from 'vitest'
-import { RRuleTemporal } from 'rrule-temporal'
-import { Temporal } from '@js-temporal/polyfill'
+import dayjs from 'dayjs'
 import isGroupDue from './groupDueness'
 
-const tzid = 'UTC'
+const MONDAY_DATE = '2026-07-06'
 
-const makeZDT = (isoString: string) =>
-  Temporal.ZonedDateTime.from(`${isoString}[${tzid}]`)
+const time = (hour: number, minute: number) => ({ hour, minute })
 
-const dailyRule = new RRuleTemporal({
-  freq: 'DAILY',
-  interval: 1,
-  dtstart: makeZDT('2026-01-01T09:00:00'),
-  tzid,
-})
+const defaultBoundaries = { start: time(8, 0), end: time(20, 0) }
 
-const everyTwoDaysRule = new RRuleTemporal({
-  freq: 'DAILY',
-  interval: 2,
-  dtstart: makeZDT('2026-01-01T09:00:00'),
-  tzid,
-})
+type Params = Parameters<typeof isGroupDue>[0]
 
-const weekdayRule = new RRuleTemporal({
-  freq: 'WEEKLY',
-  byDay: ['MO', 'TU', 'WE', 'TH', 'FR'],
-  dtstart: makeZDT('2026-01-05T09:00:00'),
-  tzid,
+const timesPerDay = (value: number, specificDays?: NonNullable<Params['recurrence']>['specificDays']) =>
+  ({ type: 'times-per-day', value, specificDays } as const)
+
+const weekdaysOnly = timesPerDay(1, { mo: true, tu: true, we: true, th: true, fr: true, sa: false, su: false })
+
+const isDue = (params: {
+  recurrence: Params['recurrence'],
+  lastCompleted?: string,
+  now: string,
+  boundaries?: Params['dayBoundaries'],
+}) => isGroupDue({
+  recurrence: params.recurrence,
+  lastCompletedMs: params.lastCompleted === undefined ? undefined : dayjs(params.lastCompleted).valueOf(),
+  now: dayjs(params.now),
+  dayBoundaries: params.boundaries ?? defaultBoundaries,
 })
 
 describe('isGroupDue', () => {
   it('returns false when recurrence is undefined', () => {
-    expect(isGroupDue({
-      recurrence: undefined,
-      lastCompletedMs: undefined,
-      now: new Date('2026-06-10T10:00:00Z'),
-    })).toBe(false)
+    expect(isDue({ recurrence: undefined, now: `${MONDAY_DATE} 15:00` })).toBe(false)
   })
 
   it('returns true when nothing has ever been completed and a past occurrence exists', () => {
-    expect(isGroupDue({
-      recurrence: dailyRule,
-      lastCompletedMs: undefined,
-      now: new Date('2026-06-10T10:00:00Z'),
+    expect(isDue({ recurrence: timesPerDay(1), now: `${MONDAY_DATE} 15:00` })).toBe(true)
+  })
+
+  it('returns true when the last completed tick is before the most recent occurrence', () => {
+    // now 15:00 → most recent occurrence was today 14:00; completed yesterday
+    expect(isDue({
+      recurrence: timesPerDay(1),
+      lastCompleted: '2026-07-05 15:00',
+      now: `${MONDAY_DATE} 15:00`,
     })).toBe(true)
   })
 
-  it('returns false when now is before dtstart (no past occurrence)', () => {
-    const earlyRule = new RRuleTemporal({
-      freq: 'DAILY',
-      interval: 1,
-      dtstart: makeZDT('2030-01-01T09:00:00'),
-      tzid,
-    })
-    expect(isGroupDue({
-      recurrence: earlyRule,
-      lastCompletedMs: undefined,
-      now: new Date('2026-01-01T08:00:00Z'),
+  it('returns false when the last completed tick is after the most recent occurrence', () => {
+    expect(isDue({
+      recurrence: timesPerDay(1),
+      lastCompleted: `${MONDAY_DATE} 14:30`,
+      now: `${MONDAY_DATE} 15:00`,
     })).toBe(false)
   })
 
-  it('returns true when last completed tick is before the most recent occurrence', () => {
-    // Daily rule, dtstart 2026-01-01 09:00 UTC
-    // now = 2026-06-10 10:00 → last occurrence was 2026-06-10 09:00
-    // last completed at 2026-06-09 10:00, which is before 2026-06-10 09:00
-    const lastCompletedMs = new Date('2026-06-09T10:00:00Z').getTime()
-    expect(isGroupDue({
-      recurrence: dailyRule,
-      lastCompletedMs,
-      now: new Date('2026-06-10T10:00:00Z'),
+  it('tracks dueness between same-day occurrences', () => {
+    // completed after the 08:00 slot but before the most recent one at 14:00
+    expect(isDue({
+      recurrence: timesPerDay(3),
+      lastCompleted: `${MONDAY_DATE} 09:00`,
+      now: `${MONDAY_DATE} 15:00`,
     })).toBe(true)
   })
 
-  it('returns false when last completed tick is after the most recent occurrence', () => {
-    // now = 2026-06-10 10:00 → last occurrence was 2026-06-10 09:00
-    // last completed at 2026-06-10 09:30, which is after the occurrence
-    const lastCompletedMs = new Date('2026-06-10T09:30:00Z').getTime()
-    expect(isGroupDue({
-      recurrence: dailyRule,
-      lastCompletedMs,
-      now: new Date('2026-06-10T10:00:00Z'),
+  it('returns false when completed after the latest same-day occurrence', () => {
+    expect(isDue({
+      recurrence: timesPerDay(3),
+      lastCompleted: `${MONDAY_DATE} 14:30`,
+      now: `${MONDAY_DATE} 15:00`,
     })).toBe(false)
   })
 
-  it('handles every-2-days rule correctly', () => {
-    // dtstart 2026-01-01 → occurrences Jan 1, Jan 3, Jan 5 …
-    // now = 2026-01-04 10:00 → last occurrence was 2026-01-03 09:00
-    const lastCompletedMs = new Date('2026-01-02T10:00:00Z').getTime()
-    expect(isGroupDue({
-      recurrence: everyTwoDaysRule,
-      lastCompletedMs,
-      now: new Date('2026-01-04T10:00:00Z'),
+  it('counts an occurrence lying exactly at now as the most recent one', () => {
+    expect(isDue({
+      recurrence: timesPerDay(1),
+      lastCompleted: `${MONDAY_DATE} 13:00`,
+      now: `${MONDAY_DATE} 14:00`,
     })).toBe(true)
   })
 
-  it('returns false on every-2-days when completed after the last occurrence', () => {
-    // last occurrence was 2026-01-03 09:00, completed at 2026-01-03 10:00 (after)
-    const lastCompletedMs = new Date('2026-01-03T10:00:00Z').getTime()
-    expect(isGroupDue({
-      recurrence: everyTwoDaysRule,
-      lastCompletedMs,
-      now: new Date('2026-01-04T10:00:00Z'),
+  it('returns false when completed exactly at the occurrence instant', () => {
+    expect(isDue({
+      recurrence: timesPerDay(1),
+      lastCompleted: `${MONDAY_DATE} 14:00`,
+      now: `${MONDAY_DATE} 15:00`,
     })).toBe(false)
   })
 
-  it('handles weekday rule — due on a weekday with no completed tick', () => {
-    // 2026-06-10 is a Wednesday → weekday rule fires
-    expect(isGroupDue({
-      recurrence: weekdayRule,
-      lastCompletedMs: undefined,
-      now: new Date('2026-06-10T10:00:00Z'),
-    })).toBe(true)
+  it('handles specific days — due on a selected day with no completed tick', () => {
+    expect(isDue({ recurrence: weekdaysOnly, now: `${MONDAY_DATE} 10:00` })).toBe(true)
   })
 
-  it('handles weekday rule — not due on a weekend when completed on Friday after occurrence', () => {
-    // 2026-06-13 is Saturday → no weekday occurrence today, last was Friday 2026-06-12
-    // completed on Friday after occurrence
-    const lastCompletedMs = new Date('2026-06-12T10:00:00Z').getTime()
-    expect(isGroupDue({
-      recurrence: weekdayRule,
-      lastCompletedMs,
-      now: new Date('2026-06-13T10:00:00Z'),
+  it('handles specific days — not due on a weekend when completed after Friday\'s occurrence', () => {
+    // 2026-07-11 is a Saturday → the most recent occurrence was Friday 14:00
+    expect(isDue({
+      recurrence: weekdaysOnly,
+      lastCompleted: '2026-07-10 15:00',
+      now: '2026-07-11 10:00',
+    })).toBe(false)
+  })
+
+  it('handles cross-midnight day boundaries', () => {
+    // 22:00–06:00 boundaries → timesPerDay(1) fires at 02:00
+    const boundaries = { start: time(22, 0), end: time(6, 0) }
+    expect(isDue({
+      recurrence: timesPerDay(1),
+      lastCompleted: `${MONDAY_DATE} 23:00`,
+      now: '2026-07-07 03:00',
+      boundaries,
+    })).toBe(true)
+    expect(isDue({
+      recurrence: timesPerDay(1),
+      lastCompleted: '2026-07-07 02:30',
+      now: '2026-07-07 03:00',
+      boundaries,
     })).toBe(false)
   })
 })

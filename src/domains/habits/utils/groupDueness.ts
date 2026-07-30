@@ -2,6 +2,10 @@
 // logic actually needs. Both a real RRuleTemporal and the structurally typed
 // recurrence that Legend State's groups$.get() yields satisfy this, so callers
 // can pass either without nominal-type friction.
+import { Recurrence } from 'src/domains/habits/screens/EditSchedule/recurrence'
+import getOccurrence from 'src/domains/habits/utils/habitsNotificationsScheduler/buildNotifications/getOccurrence'
+import { Dayjs } from 'dayjs'
+
 export type RecurrenceLike = {
   previous: (date: Date, inclusive?: boolean) => { epochMilliseconds: number } | null,
   next: (date: Date, inclusive?: boolean) => { epochMilliseconds: number } | null,
@@ -13,18 +17,19 @@ const isBehind = (lastCompletedMs: number | undefined, occurrenceMs: number): bo
   lastCompletedMs === undefined || lastCompletedMs < occurrenceMs
 
 type Params = {
-  recurrence: RecurrenceLike | undefined,
+  recurrence: Recurrence | undefined,
   lastCompletedMs: number | undefined,
-  now: Date,
+  now: Dayjs,
+  dayBoundaries: { start: { hour: number, minute: number }, end: { hour: number, minute: number }},
 }
 
-const isGroupDue = ({ recurrence, lastCompletedMs, now }: Params): boolean => {
+const isGroupDue = ({ recurrence, lastCompletedMs, now, dayBoundaries }: Params): boolean => {
   if (!recurrence) return false
 
-  const mostRecentOccurrence = recurrence.previous(now, true)
+  const mostRecentOccurrence = getOccurrence.previous(recurrence, now, dayBoundaries)
   if (!mostRecentOccurrence) return false
 
-  return isBehind(lastCompletedMs, mostRecentOccurrence.epochMilliseconds)
+  return isBehind(lastCompletedMs, mostRecentOccurrence.valueOf())
 }
 
 export default isGroupDue

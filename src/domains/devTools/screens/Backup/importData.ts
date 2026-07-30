@@ -1,24 +1,15 @@
 import { Directory, File, Paths } from 'expo-file-system'
 import * as DocumentPicker from 'expo-document-picker'
 import { unzip } from 'react-native-zip-archive'
-import { RRuleTemporal } from 'rrule-temporal'
 import { z } from 'zod'
 import { randomUUID } from 'expo-crypto'
-import habits$, { habitsSchema } from 'src/domains/habits/stores/habits'
-import groups$, { persistedGroupsSchema } from 'src/domains/habits/stores/groups'
-import dayBoundaries$, { dayBoundariesSchema } from '../../../misc/stores/dayBoundaries'
+import habits$, { parsePersistedHabits } from 'src/domains/habits/stores/habits'
+import groups$, { parsePersistedGroups } from 'src/domains/habits/stores/groups'
+import dayBoundaries$, { dayBoundariesSchema } from 'src/domains/misc/stores/dayBoundaries'
 import { batch } from '@legendapp/state'
 import { cleanupOrphanedImages, imagesDir } from 'src/domains/habits/utils/habitImages'
 import { devLog } from 'src/domains/devTools/utils/devLog'
 import { toNativePath } from './backupUtils'
-
-const dataSchema = z.object({
-  version: z.union([z.literal(1), z.literal(2)]),
-  exportedAt: z.iso.datetime(),
-  habits: habitsSchema,
-  groups: persistedGroupsSchema,
-  dayBoundaries: dayBoundariesSchema,
-})
 
 export const importData = async () => {
   const result = await DocumentPicker.getDocumentAsync({
@@ -37,9 +28,7 @@ export const importData = async () => {
 }
 
 const importJson = async (uri: string) => {
-  const text = await new File(uri).text()
-  const parsed = dataSchema.parse(JSON.parse(text))
-  applyImport(parsed)
+  parseAndApplyImport(await new File(uri).text())
   cleanupOrphanedImages()
   return { imported: true as const }
 }
@@ -51,9 +40,6 @@ const importZip = async (uri: string) => {
   try {
     await unzip(toNativePath(uri), toNativePath(tempDir.uri))
 
-    const text = await new File(tempDir, 'data.json').text()
-    const parsed = dataSchema.parse(JSON.parse(text))
-
     const srcImagesDir = new Directory(tempDir, 'images')
     if (srcImagesDir.exists) {
       if (imagesDir.exists) {
@@ -63,7 +49,7 @@ const importZip = async (uri: string) => {
       await srcImagesDir.move(imagesDir)
     }
 
-    applyImport(parsed)
+    parseAndApplyImport(await new File(tempDir, 'data.json').text())
     cleanupOrphanedImages()
 
     return { imported: true as const }
@@ -72,25 +58,29 @@ const importZip = async (uri: string) => {
   }
 }
 
-const applyImport = (parsed: z.infer<typeof dataSchema>) => {
+const parseAndApplyImport = (serializedData: string) => {
+  const {
+    habits,
+    groups,
+    dayBoundaries: parsedDayBoundaries,
+  } = z.object({
+    version: z.union([z.literal(1), z.literal(2)]),
+    exportedAt: z.iso.datetime(),
+    habits: z.unknown(),
+    groups: z.unknown(),
+    dayBoundaries: dayBoundariesSchema,
+  }).parse(JSON.parse(serializedData))
+
+  const parsedHabits = parsePersistedHabits(habits)
+  const parsedGroups = parsePersistedGroups(groups)
+
   batch(() => {
     habits$.delete()
     groups$.delete()
     dayBoundaries$.delete()
 
-    habits$.set(parsed.habits)
-    groups$.set(deserializeGroups(parsed.groups))
-    dayBoundaries$.set(parsed.dayBoundaries)
+    habits$.set(parsedHabits)
+    groups$.set(parsedGroups)
+    dayBoundaries$.set(parsedDayBoundaries)
   })
 }
-
-type PersistedGroups = z.infer<typeof persistedGroupsSchema>
-
-const deserializeGroups = (groups: PersistedGroups) => Object.fromEntries(
-  Object.entries(groups).map(([id, group]) => [id, {
-    ...group,
-    recurrence: group.recurrence ?
-      new RRuleTemporal({ rruleString: group.recurrence }) :
-      undefined,
-  }]),
-)
