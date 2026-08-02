@@ -20,6 +20,7 @@ const persistedGroupsSchemaV1 = z.record(
     .extend({
       recurrence: z.string().optional(),
     })
+    .strict()
 )
 
 const groupSchemaV2 = z.record(groupIdSchema, z.object({
@@ -38,8 +39,8 @@ const groupSchemaV2 = z.record(groupIdSchema, z.object({
       z.enum(['mo', 'tu', 'we', 'th', 'fr', 'sa', 'su']),
       z.boolean(),
     ).optional(),
-  }).optional(),
-}))
+  }).strict().optional(),
+}).strict())
 
 const groupSchema = groupSchemaV2 // eslint-disable-line @typescript-eslint/no-unused-vars
 

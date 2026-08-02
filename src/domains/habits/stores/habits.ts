@@ -12,7 +12,7 @@ export const habitIdSchema = z.uuid()
 const habitsSchemaV1 = z.record(habitIdSchema, z.object({
   name: z.string(),
   lastCompleted: z.iso.datetime().optional(),
-}))
+}).strict())
 
 const habitsSchemaV2 = z.record(habitIdSchema, z.object({
   name: z.string(),
@@ -21,8 +21,8 @@ const habitsSchemaV2 = z.record(habitIdSchema, z.object({
   lastActioned: z.object({
     timestamp: z.number(),
     type: z.enum(['completed', 'skipped']),
-  }).optional(),
-}))
+  }).strict().optional(),
+}).strict())
 
 const habitsSchema = habitsSchemaV2 // eslint-disable-line @typescript-eslint/no-unused-vars
 
@@ -35,11 +35,11 @@ export const parsePersistedHabits = (value: unknown): StoreType => {
     try {
       const vm1 = habitsSchemaV1.parse(value)
 
-      return fromEntries(objectEntries(vm1).map(([id, habit]) => [id, {
+      return fromEntries(objectEntries(vm1).map(([id, { lastCompleted, ...habit }]) => [id, {
         ...habit,
-        ...(habit.lastCompleted && {
+        ...(lastCompleted && {
           lastActioned: {
-            timestamp: new Date(habit.lastCompleted).getTime(),
+            timestamp: new Date(lastCompleted).getTime(),
             type: 'completed' as const,
           },
         }),
