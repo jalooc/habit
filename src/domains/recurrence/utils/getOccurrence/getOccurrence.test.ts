@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import dayjs from 'dayjs'
 import { objectFromEntries } from 'tsafe'
-import { Weekday, WEEKDAYS } from 'src/domains/recurrence/utils/recurrence'
+import { RECURRENCE_TYPES, Weekday, WEEKDAYS } from 'src/domains/recurrence/utils/recurrence'
 
-import getOccurrence from './getOccurrence'
+import getOccurrence, { isRecurrenceTypeImplemented } from './getOccurrence'
 
 const MONDAY_DATE = '2026-07-06'
 
@@ -33,6 +33,18 @@ const { next, previous } = (() => {
 })()
 
 const dayBoundaries = { start: time(8, 0), end: time(20, 0) }
+
+describe('isRecurrenceTypeImplemented', () => {
+  it.each(RECURRENCE_TYPES)('agrees with what the engine does for %s', type => {
+    const askForOccurrence = () => getOccurrence.next({ type, value: 1 }, dayjs(`${MONDAY_DATE} 06:00`), dayBoundaries)
+
+    if (isRecurrenceTypeImplemented(type)) {
+      expect(askForOccurrence).not.toThrow()
+    } else {
+      expect(askForOccurrence).toThrow('not implemented')
+    }
+  })
+})
 
 describe('recurrence value validation', () => {
   it('throws a RangeError for a value lower than 1', () => {

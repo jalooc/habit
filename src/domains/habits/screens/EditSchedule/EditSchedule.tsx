@@ -10,6 +10,7 @@ import {
   RECURRENCE_TYPES, WEEKDAYS,
 } from 'src/domains/recurrence/utils/recurrence'
 import type { RecurrenceType, Weekday } from 'src/domains/recurrence/utils/recurrence'
+import { isRecurrenceTypeImplemented } from 'src/domains/recurrence/utils/getOccurrence'
 import { StaticScreenProps, useNavigation } from '@react-navigation/native'
 import { objectFromEntries, objectKeys } from 'tsafe'
 import { isTruthy, pickBy } from 'remeda'
@@ -80,6 +81,7 @@ const EditSchedule = ({ route }: Props) => {
               key={type}
               type={type}
               isSelected={selectedType === type}
+              disabled={!isRecurrenceTypeImplemented(type)}
               onPress={() => void selectedType$.set(type)}
             >
               <NumberStepper

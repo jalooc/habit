@@ -1,4 +1,4 @@
-import { Recurrence } from 'src/domains/recurrence/utils/recurrence'
+import { Recurrence, RecurrenceType } from 'src/domains/recurrence/utils/recurrence'
 import dayjs, { Dayjs } from 'dayjs'
 import { entries, filter, isTruthy, map, pipe } from 'remeda'
 import isBetween from 'dayjs/plugin/isBetween'
@@ -15,6 +15,11 @@ type DayBoundaries = {
   start: Time,
   end: Time,
 }
+
+// Keep in sync with the drivers below — every type missing here throws when asked for an occurrence.
+const IMPLEMENTED_RECURRENCE_TYPES = new Set<RecurrenceType>(['times-per-day'])
+
+export const isRecurrenceTypeImplemented = (type: RecurrenceType) => IMPLEMENTED_RECURRENCE_TYPES.has(type)
 
 const drivers = (
   recurrence: Recurrence,

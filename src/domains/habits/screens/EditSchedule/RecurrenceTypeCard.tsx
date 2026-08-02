@@ -8,17 +8,20 @@ type Props = {
   type: RecurrenceType,
   isSelected: boolean,
   onPress: () => unknown,
+  disabled?: boolean,
   children?: React.ReactNode,
 }
 
-const RecurrenceTypeCard = ({ type, isSelected, onPress, children }: Props) => (
+const RecurrenceTypeCard = ({ type, isSelected, onPress, disabled, children }: Props) => (
   <Pressable
     style={({ pressed }) => [
       styles.chip,
       isSelected && styles.chipSelected,
+      disabled && styles.chipDisabled,
       pressed && styles.chipPressed,
     ]}
     onPress={onPress}
+    disabled={disabled}
   >
     <View style={styles.header}>
       <Text style={[styles.label, isSelected && styles.labelSelected]}>
@@ -51,6 +54,9 @@ const styles = StyleSheet.create(theme => ({
     backgroundColor: theme.colors.text,
     borderColor: theme.colors.text,
     borderRadius: theme.radii.md,
+  },
+  chipDisabled: {
+    opacity: 0.5,
   },
   chipPressed: {
     opacity: 0.6,
