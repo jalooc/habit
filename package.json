@@ -6,7 +6,6 @@
     "start": "WITH_ROZENITE=true expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "web": "expo start --web",
     "type-check": "tsc --noEmit",
     "lint": "eslint . --report-unused-disable-directives --max-warnings 0",
     "test": "vitest"
