@@ -23,7 +23,7 @@ const TodaySections = ({ sections }: Props) => (
         />
         <View style={styles.carriedCard}>
           {sections.carried.map((row, index) => (
-            <Animated.View key={row.habitId} layout={listTransition}>
+            <Animated.View key={`${row.groupId}:${row.habitId}`} layout={listTransition}>
               <TodayRow
                 groupName={row.groupName}
                 habitName={row.habitName}
@@ -49,7 +49,7 @@ const TodaySections = ({ sections }: Props) => (
         />
         <View style={styles.upNextCard}>
           {sections.upNext.map((row, index) => (
-            <Animated.View key={row.habitId} layout={listTransition}>
+            <Animated.View key={`${row.groupId}:${row.habitId}`} layout={listTransition}>
               <TodayRow
                 groupName={row.groupName}
                 habitName={row.habitName}
