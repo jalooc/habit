@@ -1,6 +1,6 @@
 import { Recurrence, RecurrenceType } from 'src/domains/recurrence/utils/recurrence'
 import dayjs, { Dayjs } from 'dayjs'
-import { entries, filter, isTruthy, map, pipe } from 'remeda'
+import { entries, isTruthy } from 'remeda'
 import isBetween from 'dayjs/plugin/isBetween'
 
 import calcDayTimeSpan from './calcDayTimeSpan'
@@ -20,6 +20,16 @@ type DayBoundaries = {
 const IMPLEMENTED_RECURRENCE_TYPES = new Set<RecurrenceType>(['times-per-day'])
 
 export const isRecurrenceTypeImplemented = (type: RecurrenceType) => IMPLEMENTED_RECURRENCE_TYPES.has(type)
+
+// A day time span is attributed to the weekday its middle falls on, so a span crossing midnight
+// goes to whichever side holds the larger part of it: 22:00–06:00 belongs to the day it ends in,
+// 20:00–02:00 to the day it starts in.
+const matchesSpecificDays = (specificDays: Recurrence['specificDays'], dayTimeSpanMiddle: Dayjs) => {
+  if (!specificDays) return true
+
+  const weekday = dayTimeSpanMiddle.format('dd').toLowerCase()
+  return entries(specificDays).some(([day, isEnabled]) => isEnabled && day === weekday)
+}
 
 const drivers = (
   recurrence: Recurrence,
@@ -41,61 +51,41 @@ const drivers = (
 
   return ({
     'times-per-day': () => {
+      const { dayTimeSpan, endMinutes } = calcDayTimeSpan(dayBoundaries)
+      const { specificDays } = recurrence
+      const timesPerDay = recurrence.value
+      // The span is split into `timesPerDay` equal slots, each holding its occurrence at its
+      // midpoint. Mid-slot rather than on the edges, so no occurrence ever lands on the day's
+      // opening or closing minute: one firing the moment active hours end leaves no time to act.
+      const slotLength = dayTimeSpan / timesPerDay
+
+      // Day time span ending at or after referenceDate — the one containing it, unless
+      // referenceDate sits in the quiet gap between two days' active hours.
+      const sameDayEndDate = referenceDate.startOf('day').add(endMinutes, 'minutes')
+      const firstDayTimeEndDate = sameDayEndDate.isBefore(referenceDate) ?
+        sameDayEndDate.add(1, 'day') :
+        sameDayEndDate
+
       const getOccurrence = (
         calcNextIterationIndex: (currentIndex: number) => number,
-        calcIntervalsCountFromDayTimeStartToOccurrence: (
-          dayTimeStartDate: Dayjs,
-          intervalLength: number,
-          intervalsCount: number,
-        ) => number,
+        calcSlotIndex: (minutesFromDayTimeStart: number) => number,
         respectsReferenceDate: (closestOccurrenceContender: Dayjs) => boolean
       ) => {
-        const {
-          dayTimeSpan,
-          endMinutes,
-        } = calcDayTimeSpan(dayBoundaries)
-        const { specificDays } = recurrence
-        const timesPerDay = recurrence.value
-
-        const sameDayEndDate = referenceDate.startOf('day').add(endMinutes, 'minutes')
-        const firstDayTimeEndDate = sameDayEndDate.isBefore(referenceDate) ?
-          sameDayEndDate.add(1, 'day') :
-          sameDayEndDate
-
         const maxSearchHorizonInDays = 30
         let i = 0
         while (Math.abs(i) < maxSearchHorizonInDays) {
           const dayTimeEndDate = firstDayTimeEndDate.add(i, 'day')
           const dayTimeStartDate = dayTimeEndDate.subtract(dayTimeSpan, 'minutes')
-          const dayTimeSpanMiddle = dayTimeStartDate.add(dayTimeSpan / 2, 'minutes')
-          const dayTimeSpanMainDayWeekday = dayTimeSpanMiddle.format('dd').toLowerCase()
 
-          let closestOccurrenceContender: Dayjs
-
-          if (timesPerDay === 1) {
-            closestOccurrenceContender = dayTimeStartDate.add(dayTimeSpan / 2, 'minutes')
-          } else {
-            const intervalsCount = timesPerDay - 1
-            const intervalLength = dayTimeSpan / intervalsCount
-            const intervalsCountFromDayTimeStartToClosestOccurrence = calcIntervalsCountFromDayTimeStartToOccurrence(
-              dayTimeStartDate,
-              intervalLength,
-              intervalsCount,
-            )
-            const minutesFromDayTimeStartToClosestOccurrence =
-              intervalsCountFromDayTimeStartToClosestOccurrence * intervalLength
-            closestOccurrenceContender = dayTimeStartDate.add(minutesFromDayTimeStartToClosestOccurrence, 'minutes')
-          }
+          const slotIndex = calcSlotIndex(referenceDate.diff(dayTimeStartDate, 'minutes'))
+          const closestOccurrenceContender = dayTimeStartDate.add((slotIndex + 0.5) * slotLength, 'minutes')
 
           const isWithinDayTimeSpan = closestOccurrenceContender.isBetween(dayTimeStartDate, dayTimeEndDate, undefined, '[]')
-          const matchesSpecificDays = !specificDays ||
-            pipe(
-              specificDays,
-              entries(),
-              filter(([, value]) => value),
-              map(([key]) => key)
-            ).includes(dayTimeSpanMainDayWeekday as never)
-          if (isWithinDayTimeSpan && respectsReferenceDate(closestOccurrenceContender) && matchesSpecificDays) {
+          if (
+            isWithinDayTimeSpan &&
+            respectsReferenceDate(closestOccurrenceContender) &&
+            matchesSpecificDays(specificDays, dayTimeStartDate.add(dayTimeSpan / 2, 'minutes'))
+          ) {
             return closestOccurrenceContender
           }
 
@@ -107,16 +97,17 @@ const drivers = (
       return {
         next: () => getOccurrence(
           i => i + 1,
-          (dayTimeStartDate, intervalLength) => Math.ceil(
-            Math.max(referenceDate.diff(dayTimeStartDate, 'minutes'), 0) / intervalLength
+          minutesFromDayTimeStart => Math.max(
+            Math.ceil(minutesFromDayTimeStart / slotLength - 0.5),
+            0
           ),
           closestOccurrenceContender => !closestOccurrenceContender.isBefore(referenceDate)
         ),
         previous: () => getOccurrence(
           i => i - 1,
-          (dayTimeStartDate, intervalLength, intervalsCount) => Math.min(
-            Math.floor(referenceDate.diff(dayTimeStartDate, 'minutes') / intervalLength),
-            intervalsCount
+          minutesFromDayTimeStart => Math.min(
+            Math.floor(minutesFromDayTimeStart / slotLength - 0.5),
+            timesPerDay - 1
           ),
           closestOccurrenceContender => !closestOccurrenceContender.isAfter(referenceDate)
         ),

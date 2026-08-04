@@ -88,13 +88,18 @@ describe('next occurrence', () => {
     })
   })
 
+  // 08:00–20:00 boundaries: timesPerDay(2) fires at 11:00/17:00, timesPerDay(3) at 10:00/14:00/18:00
   describe('several times a day', () => {
     it('returns the first slot when starting before the day time span', () => {
-      expect(next(timesPerDay(3), `${MONDAY_DATE} 06:00`, dayBoundaries)).toBe(`${MONDAY_DATE} 08:00`)
+      expect(next(timesPerDay(3), `${MONDAY_DATE} 06:00`, dayBoundaries)).toBe(`${MONDAY_DATE} 10:00`)
+    })
+
+    it('returns the first slot when starting inside the span but ahead of it', () => {
+      expect(next(timesPerDay(3), `${MONDAY_DATE} 09:00`, dayBoundaries)).toBe(`${MONDAY_DATE} 10:00`)
     })
 
     it('returns the next slot when starting between slots', () => {
-      expect(next(timesPerDay(3), `${MONDAY_DATE} 09:00`, dayBoundaries)).toBe(`${MONDAY_DATE} 14:00`)
+      expect(next(timesPerDay(3), `${MONDAY_DATE} 11:00`, dayBoundaries)).toBe(`${MONDAY_DATE} 14:00`)
     })
 
     it('returns a slot lying exactly at referenceDate', () => {
@@ -102,21 +107,21 @@ describe('next occurrence', () => {
     })
 
     it('skips to the following slot right after one has passed', () => {
-      expect(next(timesPerDay(3), `${MONDAY_DATE} 14:01`, dayBoundaries)).toBe(`${MONDAY_DATE} 20:00`)
+      expect(next(timesPerDay(3), `${MONDAY_DATE} 14:01`, dayBoundaries)).toBe(`${MONDAY_DATE} 18:00`)
     })
 
-    it('rolls over to the next day after the last slot', () => {
-      expect(next(timesPerDay(3), `${MONDAY_DATE} 20:01`, dayBoundaries)).toBe('2026-07-07 08:00')
+    it('rolls over to the next day after the last slot, still inside the day time span', () => {
+      expect(next(timesPerDay(3), `${MONDAY_DATE} 18:01`, dayBoundaries)).toBe('2026-07-07 10:00')
     })
 
-    it('puts two daily occurrences exactly on the boundaries', () => {
-      expect(next(timesPerDay(2), `${MONDAY_DATE} 06:00`, dayBoundaries)).toBe(`${MONDAY_DATE} 08:00`)
-      expect(next(timesPerDay(2), `${MONDAY_DATE} 08:01`, dayBoundaries)).toBe(`${MONDAY_DATE} 20:00`)
+    it('centers two daily occurrences in their halves of the span, off the boundaries', () => {
+      expect(next(timesPerDay(2), `${MONDAY_DATE} 06:00`, dayBoundaries)).toBe(`${MONDAY_DATE} 11:00`)
+      expect(next(timesPerDay(2), `${MONDAY_DATE} 11:01`, dayBoundaries)).toBe(`${MONDAY_DATE} 17:00`)
     })
 
-    it('supports intervals not divisible into whole minutes', () => {
-      // 12h span / 7 intervals ≈ 102.86 min, so the second slot lands at 09:42:51
-      expect(next(timesPerDay(8), `${MONDAY_DATE} 08:01`, dayBoundaries)).toBe(`${MONDAY_DATE} 09:42`)
+    it('supports slots not divisible into whole minutes', () => {
+      // 12h span / 7 slots ≈ 102.86 min, so the second slot lands at 10:34:17
+      expect(next(timesPerDay(7), `${MONDAY_DATE} 08:52`, dayBoundaries)).toBe(`${MONDAY_DATE} 10:34`)
     })
   })
 
@@ -127,12 +132,13 @@ describe('next occurrence', () => {
       expect(next(timesPerDay(1), `${MONDAY_DATE} 20:00`, boundaries)).toBe('2026-07-07 02:00')
     })
 
+    // 22:00–06:00 boundaries: timesPerDay(3) fires at 23:20/02:00/04:40
     it('finds the morning slot when starting inside the span past midnight', () => {
-      expect(next(timesPerDay(3), '2026-07-07 03:00', boundaries)).toBe('2026-07-07 06:00')
+      expect(next(timesPerDay(3), '2026-07-07 03:00', boundaries)).toBe('2026-07-07 04:40')
     })
 
     it('finds the past-midnight slot when starting inside the span before midnight', () => {
-      expect(next(timesPerDay(3), `${MONDAY_DATE} 23:00`, boundaries)).toBe('2026-07-07 02:00')
+      expect(next(timesPerDay(3), `${MONDAY_DATE} 23:30`, boundaries)).toBe('2026-07-07 02:00')
     })
   })
 
@@ -154,11 +160,11 @@ describe('next occurrence', () => {
     })
 
     it('keeps the intra-day spread on enabled days', () => {
-      expect(next(timesPerDay(3, days('tu')), '2026-07-07 08:01', dayBoundaries)).toBe('2026-07-07 14:00')
+      expect(next(timesPerDay(3, days('tu')), '2026-07-07 10:01', dayBoundaries)).toBe('2026-07-07 14:00')
     })
 
     it('rolls over to the next enabled day after the last slot', () => {
-      expect(next(timesPerDay(2, days('mo', 'th')), `${MONDAY_DATE} 20:01`, dayBoundaries)).toBe('2026-07-09 08:00')
+      expect(next(timesPerDay(2, days('mo', 'th')), `${MONDAY_DATE} 17:01`, dayBoundaries)).toBe('2026-07-09 11:00')
     })
 
     it('treats all days enabled the same as no restriction', () => {
@@ -203,11 +209,15 @@ describe('previous occurrence', () => {
 
   describe('several times a day', () => {
     it('returns the last slot when starting after the day time span', () => {
-      expect(previous(timesPerDay(3), `${MONDAY_DATE} 22:00`, dayBoundaries)).toBe(`${MONDAY_DATE} 20:00`)
+      expect(previous(timesPerDay(3), `${MONDAY_DATE} 22:00`, dayBoundaries)).toBe(`${MONDAY_DATE} 18:00`)
+    })
+
+    it('returns the last slot when starting inside the span but past it', () => {
+      expect(previous(timesPerDay(3), `${MONDAY_DATE} 19:00`, dayBoundaries)).toBe(`${MONDAY_DATE} 18:00`)
     })
 
     it('returns the previous slot when starting between slots', () => {
-      expect(previous(timesPerDay(3), `${MONDAY_DATE} 13:00`, dayBoundaries)).toBe(`${MONDAY_DATE} 08:00`)
+      expect(previous(timesPerDay(3), `${MONDAY_DATE} 13:00`, dayBoundaries)).toBe(`${MONDAY_DATE} 10:00`)
     })
 
     it('returns a slot lying exactly at referenceDate', () => {
@@ -215,28 +225,28 @@ describe('previous occurrence', () => {
     })
 
     it('stays on the preceding slot right before the following one', () => {
-      expect(previous(timesPerDay(3), `${MONDAY_DATE} 13:59`, dayBoundaries)).toBe(`${MONDAY_DATE} 08:00`)
+      expect(previous(timesPerDay(3), `${MONDAY_DATE} 13:59`, dayBoundaries)).toBe(`${MONDAY_DATE} 10:00`)
     })
 
-    it('rolls back to the previous day before the first slot', () => {
-      expect(previous(timesPerDay(3), `${MONDAY_DATE} 07:59`, dayBoundaries)).toBe('2026-07-05 20:00')
+    it('rolls back to the previous day before the first slot, still inside the day time span', () => {
+      expect(previous(timesPerDay(3), `${MONDAY_DATE} 09:59`, dayBoundaries)).toBe('2026-07-05 18:00')
     })
 
-    it('puts two daily occurrences exactly on the boundaries', () => {
-      expect(previous(timesPerDay(2), `${MONDAY_DATE} 22:00`, dayBoundaries)).toBe(`${MONDAY_DATE} 20:00`)
-      expect(previous(timesPerDay(2), `${MONDAY_DATE} 19:59`, dayBoundaries)).toBe(`${MONDAY_DATE} 08:00`)
+    it('centers two daily occurrences in their halves of the span, off the boundaries', () => {
+      expect(previous(timesPerDay(2), `${MONDAY_DATE} 22:00`, dayBoundaries)).toBe(`${MONDAY_DATE} 17:00`)
+      expect(previous(timesPerDay(2), `${MONDAY_DATE} 16:59`, dayBoundaries)).toBe(`${MONDAY_DATE} 11:00`)
     })
 
-    it('supports intervals not divisible into whole minutes', () => {
-      // 12h span / 7 intervals ≈ 102.86 min, so the second slot lands at 09:42:51
-      expect(previous(timesPerDay(8), `${MONDAY_DATE} 09:43`, dayBoundaries)).toBe(`${MONDAY_DATE} 09:42`)
+    it('supports slots not divisible into whole minutes', () => {
+      // 12h span / 7 slots ≈ 102.86 min, so the second slot lands at 10:34:17
+      expect(previous(timesPerDay(7), `${MONDAY_DATE} 10:35`, dayBoundaries)).toBe(`${MONDAY_DATE} 10:34`)
     })
 
-    it('does not lose the last slot to float rounding of a fractional interval', () => {
-      // 302 min span / 7 intervals: span / intervalLength floats to 6.99…, so
-      // clamping minutes instead of the intervals count floors away the last slot
+    it('does not lose the last slot to float rounding of a fractional slot length', () => {
+      // 302 min span / 8 slots = 37.75 min: the last slot sits at 12:43:07, and clamping the
+      // slot index (not the minutes) is what keeps a reference past it from floating away
       const boundaries = { start: time(8, 0), end: time(13, 2) }
-      expect(previous(timesPerDay(8), `${MONDAY_DATE} 14:00`, boundaries)).toBe(`${MONDAY_DATE} 13:02`)
+      expect(previous(timesPerDay(8), `${MONDAY_DATE} 14:00`, boundaries)).toBe(`${MONDAY_DATE} 12:43`)
     })
   })
 
@@ -248,7 +258,7 @@ describe('previous occurrence', () => {
     })
 
     it('finds the late-evening slot when starting inside the span before midnight', () => {
-      expect(previous(timesPerDay(3), `${MONDAY_DATE} 23:00`, boundaries)).toBe(`${MONDAY_DATE} 22:00`)
+      expect(previous(timesPerDay(3), `${MONDAY_DATE} 23:30`, boundaries)).toBe(`${MONDAY_DATE} 23:20`)
     })
 
     it('finds the past-midnight slot when starting inside the span past midnight', () => {
@@ -276,11 +286,11 @@ describe('previous occurrence', () => {
     })
 
     it('keeps the intra-day spread on enabled days', () => {
-      expect(previous(timesPerDay(3, days('tu')), '2026-07-07 19:59', dayBoundaries)).toBe('2026-07-07 14:00')
+      expect(previous(timesPerDay(3, days('tu')), '2026-07-07 17:59', dayBoundaries)).toBe('2026-07-07 14:00')
     })
 
     it('rolls back to the previous enabled day before the first slot', () => {
-      expect(previous(timesPerDay(2, days('mo', 'th')), '2026-07-09 07:59', dayBoundaries)).toBe(`${MONDAY_DATE} 20:00`)
+      expect(previous(timesPerDay(2, days('mo', 'th')), '2026-07-09 10:59', dayBoundaries)).toBe(`${MONDAY_DATE} 17:00`)
     })
 
     it('treats all days enabled the same as no restriction', () => {

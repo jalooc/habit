@@ -8,7 +8,7 @@ const MONDAY_DATE = '2026-07-06'
 const time = (hour: number, minute: number) => ({ hour, minute })
 
 // 08:00–20:00 boundaries: timesPerDay(1) fires at 14:00,
-// timesPerDay(3) at 08:00/14:00/20:00, timesPerDay(4) at 08:00/12:00/16:00/20:00
+// timesPerDay(3) at 10:00/14:00/18:00, timesPerDay(4) at 09:30/12:30/15:30/18:30
 const dayBoundaries = { start: time(8, 0), end: time(20, 0) }
 
 const timesPerDay = (value: number) => ({ type: 'times-per-day', value } as const)
@@ -69,10 +69,10 @@ describe('buildHomeSections', () => {
   })
 
   it('places a completed rotation that fell behind ≤ 15 min into upNext (now kind)', () => {
-    // last occurrence 16:00 (10 min ago); completed yesterday → behind within the NOW window
+    // last occurrence 15:30 (10 min ago); completed yesterday → behind within the NOW window
     const groups = makeGroups([['g1', { habits: { h1: true }, recurrence: timesPerDay(4) }]])
     const habits = makeHabits([['h1', { timestamp: COMPLETED_YESTERDAY, type: 'completed' }]])
-    const result = build(groups, habits, `${MONDAY_DATE} 16:10`)
+    const result = build(groups, habits, `${MONDAY_DATE} 15:40`)
     expect(result.upNext).toHaveLength(1)
     expect(result.upNext[0].kind).toBe('now')
     expect(result.carried).toHaveLength(0)
@@ -81,16 +81,16 @@ describe('buildHomeSections', () => {
   it('places a completed rotation behind by exactly 15 min into upNext (now kind)', () => {
     const groups = makeGroups([['g1', { habits: { h1: true }, recurrence: timesPerDay(4) }]])
     const habits = makeHabits([['h1', { timestamp: COMPLETED_YESTERDAY, type: 'completed' }]])
-    const result = build(groups, habits, `${MONDAY_DATE} 16:15`)
+    const result = build(groups, habits, `${MONDAY_DATE} 15:45`)
     expect(result.upNext).toHaveLength(1)
     expect(result.upNext[0].kind).toBe('now')
   })
 
   it('places a completed rotation behind by more than 15 min into carried', () => {
-    // last occurrence 16:00 (16 min ago) → past the NOW window
+    // last occurrence 15:30 (16 min ago) → past the NOW window
     const groups = makeGroups([['g1', { habits: { h1: true }, recurrence: timesPerDay(4) }]])
     const habits = makeHabits([['h1', { timestamp: COMPLETED_YESTERDAY, type: 'completed' }]])
-    const result = build(groups, habits, `${MONDAY_DATE} 16:16`)
+    const result = build(groups, habits, `${MONDAY_DATE} 15:46`)
     expect(result.carried).toHaveLength(1)
     expect(result.upNext).toHaveLength(0)
   })
@@ -108,7 +108,7 @@ describe('buildHomeSections', () => {
   })
 
   it('sorts never-completed rotations ahead of completed "now" rows in upNext', () => {
-    // g_new: never completed, 2h10m behind → new "now"
+    // g_new: never completed, 1h40m behind → new "now"
     // g_recent: completed history, fell behind 10 min → "now"
     const groups = makeGroups([
       ['g_recent', { habits: { h_r: true }, recurrence: timesPerDay(4) }],
@@ -118,7 +118,7 @@ describe('buildHomeSections', () => {
       ['h_r', { timestamp: COMPLETED_YESTERDAY, type: 'completed' }],
       ['h_n', {}],
     ])
-    const result = build(groups, habits, `${MONDAY_DATE} 16:10`)
+    const result = build(groups, habits, `${MONDAY_DATE} 15:40`)
     expect(result.upNext.map(r => r.groupId)).toEqual(['g_new', 'g_recent'])
   })
 
@@ -144,14 +144,14 @@ describe('buildHomeSections', () => {
   })
 
   it('places into upcoming when not behind and next occurrence is within today window', () => {
-    // completed after the 14:00 occurrence → not behind; next occurrence 20:00 today
+    // completed after the 14:00 occurrence → not behind; next occurrence 18:00 today
     const groups = makeGroups([['g1', { habits: { h1: true }, recurrence: timesPerDay(3) }]])
     const habits = makeHabits([['h1', { timestamp: COMPLETED_AFTER_TODAYS_OCCURRENCE, type: 'completed' }]])
     const result = build(groups, habits, `${MONDAY_DATE} 15:00`)
     expect(result.upNext).toHaveLength(1)
     expect(result.upNext[0].kind).toBe('upcoming')
     if (result.upNext[0].kind === 'upcoming') {
-      expect(result.upNext[0].slotMs).toBe(dayjs(`${MONDAY_DATE} 20:00`).valueOf())
+      expect(result.upNext[0].slotMs).toBe(dayjs(`${MONDAY_DATE} 18:00`).valueOf())
     }
   })
 

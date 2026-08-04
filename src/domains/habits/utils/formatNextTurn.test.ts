@@ -25,9 +25,10 @@ describe('formatNextTurn', () => {
   })
 
   it('formats hours without a leading zero', () => {
-    vi.setSystemTime(new Date(`${MONDAY_DATE}T06:00:00`))
-    const boundaries = { start: time(9, 0), end: time(20, 0) }
-    expect(formatNextTurn(timesPerDay(3), boundaries)).toBe('today · 9:00')
+    vi.setSystemTime(new Date(`${MONDAY_DATE}T05:00:00`))
+    // 06:00–12:00 split into 3 slots → 07:00/09:00/11:00
+    const boundaries = { start: time(6, 0), end: time(12, 0) }
+    expect(formatNextTurn(timesPerDay(3), boundaries)).toBe('today · 7:00')
   })
 
   it('formats a next-day turn', () => {
