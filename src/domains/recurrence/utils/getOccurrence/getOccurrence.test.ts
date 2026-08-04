@@ -183,6 +183,65 @@ describe('next occurrence', () => {
   })
 })
 
+describe('current slot', () => {
+  const currentSlot = (
+    recurrence: Parameters<typeof getOccurrence['currentSlot']>[0],
+    referenceDate: string,
+    boundaries: Parameters<typeof getOccurrence['currentSlot']>[2] = dayBoundaries,
+  ) => {
+    const slot = getOccurrence.currentSlot(recurrence, dayjs(referenceDate), boundaries)
+    if (!slot) return undefined
+    return [slot.opensAt, slot.dueAt, slot.closesAt].map(date => date.format('YYYY-MM-DD HH:mm')).join(' → ')
+  }
+
+  it('runs the same recurrence value validation', () => {
+    expect(() => currentSlot(timesPerDay(0), `${MONDAY_DATE} 14:00`)).toThrow(RangeError)
+  })
+
+  it('spans the whole day time span for a single daily occurrence', () => {
+    expect(currentSlot(timesPerDay(1), `${MONDAY_DATE} 09:00`))
+      .toBe(`${MONDAY_DATE} 08:00 → ${MONDAY_DATE} 14:00 → ${MONDAY_DATE} 20:00`)
+  })
+
+  it('returns the slot the reference date falls into', () => {
+    expect(currentSlot(timesPerDay(3), `${MONDAY_DATE} 13:00`))
+      .toBe(`${MONDAY_DATE} 12:00 → ${MONDAY_DATE} 14:00 → ${MONDAY_DATE} 16:00`)
+  })
+
+  it('opens the first slot at the start of the day time span', () => {
+    expect(currentSlot(timesPerDay(3), `${MONDAY_DATE} 08:00`))
+      .toBe(`${MONDAY_DATE} 08:00 → ${MONDAY_DATE} 10:00 → ${MONDAY_DATE} 12:00`)
+  })
+
+  it('closes the last slot at the close of the day time span', () => {
+    expect(currentSlot(timesPerDay(3), `${MONDAY_DATE} 19:00`))
+      .toBe(`${MONDAY_DATE} 16:00 → ${MONDAY_DATE} 18:00 → ${MONDAY_DATE} 20:00`)
+  })
+
+  it('counts the closing instant as still inside the last slot', () => {
+    expect(currentSlot(timesPerDay(3), `${MONDAY_DATE} 20:00`))
+      .toBe(`${MONDAY_DATE} 16:00 → ${MONDAY_DATE} 18:00 → ${MONDAY_DATE} 20:00`)
+  })
+
+  it('returns nothing in the quiet gap after the day time span', () => {
+    expect(currentSlot(timesPerDay(3), `${MONDAY_DATE} 20:01`)).toBeUndefined()
+  })
+
+  it('returns nothing in the quiet gap before the day time span', () => {
+    expect(currentSlot(timesPerDay(3), `${MONDAY_DATE} 07:59`)).toBeUndefined()
+  })
+
+  it('returns nothing on a day the recurrence does not run', () => {
+    expect(currentSlot(timesPerDay(1, days('tu')), `${MONDAY_DATE} 14:00`)).toBeUndefined()
+  })
+
+  it('carries a slot across midnight', () => {
+    const boundaries = { start: time(22, 0), end: time(6, 0) }
+    expect(currentSlot(timesPerDay(1), '2026-07-07 03:00', boundaries))
+      .toBe(`${MONDAY_DATE} 22:00 → 2026-07-07 02:00 → 2026-07-07 06:00`)
+  })
+})
+
 describe('previous occurrence', () => {
   it('runs the same recurrence value validation', () => {
     expect(() => previous(timesPerDay(0), `${MONDAY_DATE} 06:00`, dayBoundaries)).toThrow(RangeError)

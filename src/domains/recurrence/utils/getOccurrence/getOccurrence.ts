@@ -7,6 +7,19 @@ import calcDayTimeSpan from './calcDayTimeSpan'
 
 dayjs.extend(isBetween)
 
+/*
+  Occurrence vs slot — two words for two different kinds of thing:
+
+  - An *occurrence* is an **instant**: the moment the recurrence fires. `next`/`previous` return
+    occurrences.
+  - A *slot* is the **interval** that instant sits in: one of the `value` equal parts the active
+    span is divided into. `currentSlot` returns one as `{ opensAt, dueAt, closesAt }`.
+
+  They map one to one: every slot has exactly one occurrence, its `dueAt`, and `next`/`previous`
+  are just "the `dueAt` of the slot after / at-or-before this moment". Both are needed because
+  "when does it fire" and "which stretch of time does that firing govern" are different questions.
+*/
+
 type Time = {
   hour: number, minute: number,
 }
@@ -111,6 +124,26 @@ const drivers = (
           ),
           closestOccurrenceContender => !closestOccurrenceContender.isAfter(referenceDate)
         ),
+        currentSlot: () => {
+          const dayTimeStartDate = firstDayTimeEndDate.subtract(dayTimeSpan, 'minutes')
+
+          const isWithinDayTimeSpan = !referenceDate.isBefore(dayTimeStartDate)
+          if (!isWithinDayTimeSpan) return undefined
+          if (!matchesSpecificDays(specificDays, dayTimeStartDate.add(dayTimeSpan / 2, 'minutes'))) return undefined
+
+          // The closing instant belongs to the last slot, hence the clamp.
+          const slotIndex = Math.min(
+            Math.floor(referenceDate.diff(dayTimeStartDate, 'minutes') / slotLength),
+            timesPerDay - 1,
+          )
+          const opensAt = dayTimeStartDate.add(slotIndex * slotLength, 'minutes')
+
+          return {
+            opensAt,
+            dueAt: opensAt.add(slotLength / 2, 'minutes'),
+            closesAt: opensAt.add(slotLength, 'minutes'),
+          }
+        },
       }
     },
     'every-x-hours': () => {
@@ -139,4 +172,12 @@ export default {
     referenceDate: Dayjs,
     dayBoundaries: DayBoundaries,
   ) => drivers(recurrence, referenceDate, dayBoundaries).previous(),
+  // The slot referenceDate falls into: when it opened, when its occurrence lands and when it
+  // closes (the next slot's opening, or the day's close for the last one). Undefined outside
+  // active hours and on days the recurrence doesn't run.
+  currentSlot: (
+    recurrence: Recurrence,
+    referenceDate: Dayjs,
+    dayBoundaries: DayBoundaries,
+  ) => drivers(recurrence, referenceDate, dayBoundaries).currentSlot(),
 }

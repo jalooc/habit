@@ -102,6 +102,29 @@ describe('buildNotifications', () => {
     expect(buildNotifications(groups, habits, dayBoundaries)[0].body).toBe('fresh')
   })
 
+  it('does not announce a turn already served ahead of its due moment', () => {
+    // timesPerDay(3) → turn 2 opens 12:00, comes due 14:00; completed 13:00 serves it,
+    // so the next reminder is turn 3 at 18:00 rather than a ping for what is already done
+    vi.setSystemTime(new Date('2026-07-06T13:30:00'))
+    const groups = observable({
+      'group-0': {
+        name: 'group 0',
+        habits: { 'habit-0': true as const },
+        recurrence: timesPerDay(3),
+      },
+    }).get()
+    const habits = {
+      'habit-0': {
+        name: 'habit 0',
+        lastActioned: { timestamp: dayjs('2026-07-06 13:00').valueOf(), type: 'completed' as const },
+      },
+    }
+
+    const [first] = buildNotifications(groups, habits, dayBoundaries)
+
+    expect(dayjs(first.date).format('YYYY-MM-DD HH:mm')).toBe('2026-07-06 18:00')
+  })
+
   it('skips groups without a recurrence', () => {
     const groups = observable({
       'group-0': { name: 'group 0', habits: { 'habit-0': true as const }},

@@ -1,5 +1,6 @@
 import orderQueue from 'src/domains/habits/utils/orderQueue'
 import isGroupDue from 'src/domains/habits/utils/isGroupDue'
+import nextTurnDueAt from 'src/domains/habits/utils/nextTurnDueAt'
 import lastCompletedInGroup from 'src/domains/habits/utils/lastCompletedInGroup'
 import type { HabitsStores } from 'src/domains/habits/stores/habits'
 import { Recurrence } from 'src/domains/recurrence/utils/recurrence'
@@ -26,7 +27,7 @@ type RowBase = {
 }
 
 export type CarriedRow = RowBase & { dueSinceMs: number }
-export type UpNextRow = RowBase & ({ kind: 'now' } | { kind: 'upcoming', slotMs: number })
+export type UpNextRow = RowBase & ({ kind: 'now' } | { kind: 'upcoming', dueAtMs: number })
 
 export type HomeSections = {
   carried: CarriedRow[],
@@ -35,7 +36,7 @@ export type HomeSections = {
 }
 
 type NowRow = RowBase & { kind: 'now', elapsed: number, isNew: boolean }
-type UpcomingRow = RowBase & { kind: 'upcoming', slotMs: number }
+type UpcomingRow = RowBase & { kind: 'upcoming', dueAtMs: number }
 
 const buildHomeSections = (params: {
   groups: Record<string, GroupInput | undefined>,
@@ -87,9 +88,9 @@ const buildHomeSections = (params: {
       continue
     }
 
-    const nextOccurrenceMs = getOccurrence.next(recurrence, now, dayBoundaries)?.valueOf()
+    const nextOccurrenceMs = nextTurnDueAt({ recurrence, lastCompletedMs, now, dayBoundaries })?.valueOf()
     if (nextOccurrenceMs !== undefined && isWithinTodayWindow(nextOccurrenceMs, now.valueOf(), dayBoundaries)) {
-      upcomingRows.push({ ...base, kind: 'upcoming', slotMs: nextOccurrenceMs })
+      upcomingRows.push({ ...base, kind: 'upcoming', dueAtMs: nextOccurrenceMs })
     } else {
       otherGroupIds.push(groupId)
     }
@@ -98,7 +99,7 @@ const buildHomeSections = (params: {
   carried.sort((a, b) => b.dueSinceMs - a.dueSinceMs)
   // new rotations first, then most-overdue first
   nowRows.sort((a, b) => Number(b.isNew) - Number(a.isNew) || b.elapsed - a.elapsed)
-  upcomingRows.sort((a, b) => a.slotMs - b.slotMs)
+  upcomingRows.sort((a, b) => a.dueAtMs - b.dueAtMs)
 
   const upNext: UpNextRow[] = [
     ...nowRows.map(({ elapsed: _elapsed, isNew: _isNew, ...rest }): UpNextRow => rest),

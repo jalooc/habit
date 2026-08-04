@@ -4,6 +4,8 @@ import dayjs, { Dayjs } from 'dayjs'
 import { GroupsStore } from 'src/domains/habits/stores/groups'
 import { HabitsStores } from 'src/domains/habits/stores/habits'
 import { createGroupScreenLink } from 'src/domains/habits/utils/linking'
+import lastCompletedInGroup from 'src/domains/habits/utils/lastCompletedInGroup'
+import nextTurnDueAt from 'src/domains/habits/utils/nextTurnDueAt'
 
 import getOccurrence from 'src/domains/recurrence/utils/getOccurrence'
 
@@ -34,13 +36,22 @@ export default (
     /*
       TODO: optimize by calculating occurrences taking into account how far they reach compared to each other, instead of calculating a batch of occurrences for each group and then ignoring the excess
      */
+    // Starting from the next *unserved* turn keeps an early tick from being nudged about:
+    // the scheduler rebuilds on every action, so a turn served ahead of time drops out here.
+    const firstOccurrence = nextTurnDueAt({
+      recurrence: group.recurrence,
+      lastCompletedMs: lastCompletedInGroup(keys(group.habits), allHabitsMap),
+      now: dayjs(),
+      dayBoundaries,
+    })
+
     const occurrences: Dayjs[] = []
     let nextOccurrence: Dayjs | undefined
-    while(nextOccurrence = getOccurrence.next( // eslint-disable-line no-cond-assign
+    while(nextOccurrence = nextOccurrence ? getOccurrence.next( // eslint-disable-line no-cond-assign
       group.recurrence,
-      nextOccurrence?.add(1, 'minute') ?? dayjs(),
+      nextOccurrence.add(1, 'minute'),
       dayBoundaries
-    )) {
+    ) : firstOccurrence) {
       occurrences.push(nextOccurrence)
       if (occurrences.length >= MAX_NOTIFICATIONS) break
     }

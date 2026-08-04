@@ -2,10 +2,9 @@ import { Recurrence } from 'src/domains/recurrence/utils/recurrence'
 import getOccurrence from 'src/domains/recurrence/utils/getOccurrence'
 import { Dayjs } from 'dayjs'
 
-// The single source of the "behind" rule: a rotation is behind
-// when its last completed tick predates the occurrence (or it never completed).
-const isBehind = (lastCompletedMs: number | undefined, occurrenceMs: number): boolean =>
-  lastCompletedMs === undefined || lastCompletedMs < occurrenceMs
+// Never having completed anything counts as behind.
+export const isBehind = (lastCompletedMs: number | undefined, thresholdMs: number): boolean =>
+  lastCompletedMs === undefined || lastCompletedMs < thresholdMs
 
 type Params = {
   recurrence: Recurrence | undefined,
@@ -20,7 +19,11 @@ const isGroupDue = ({ recurrence, lastCompletedMs, now, dayBoundaries }: Params)
   const mostRecentOccurrence = getOccurrence.previous(recurrence, now, dayBoundaries)
   if (!mostRecentOccurrence) return false
 
-  return isBehind(lastCompletedMs, mostRecentOccurrence.valueOf())
+  // Completing anywhere inside a turn serves it, so dueness hangs on when that turn opened,
+  // not on when it came due.
+  const mostRecentDueTurn = getOccurrence.currentSlot(recurrence, mostRecentOccurrence, dayBoundaries)
+
+  return isBehind(lastCompletedMs, (mostRecentDueTurn?.opensAt ?? mostRecentOccurrence).valueOf())
 }
 
 export default isGroupDue

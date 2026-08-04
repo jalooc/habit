@@ -3,7 +3,7 @@ import Animated, { LinearTransition } from 'react-native-reanimated'
 import { StyleSheet } from 'react-native-unistyles'
 import type { HomeSections } from '../buildHomeSections'
 import formatElapsedAgo from './formatElapsedAgo'
-import formatSlotTime from './formatSlotTime'
+import formatDueTime from './formatDueTime'
 import TodaySectionHeader from './TodaySectionHeader'
 import TodayRow from './TodayRow'
 
@@ -53,7 +53,7 @@ const TodaySections = ({ sections }: Props) => (
               <TodayRow
                 groupName={row.groupName}
                 habitName={row.habitName}
-                tag={row.kind === 'now' ? 'NOW' : formatSlotTime(new Date(row.slotMs))}
+                tag={row.kind === 'now' ? 'NOW' : formatDueTime(new Date(row.dueAtMs))}
                 dotKind={row.kind === 'now' ? 'now' : 'upcoming'}
                 habitId={row.habitId}
                 groupId={row.groupId}

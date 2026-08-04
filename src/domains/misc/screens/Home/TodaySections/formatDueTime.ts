@@ -1,4 +1,4 @@
-const formatSlotTime = (date: Date): string => {
+const formatDueTime = (date: Date): string => {
   const hour = date.getHours()
   const minute = date.getMinutes()
   const h12 = ((hour + 11) % 12) + 1
@@ -8,4 +8,4 @@ const formatSlotTime = (date: Date): string => {
   return `${h12}:${mm}${ap}`
 }
 
-export default formatSlotTime
+export default formatDueTime

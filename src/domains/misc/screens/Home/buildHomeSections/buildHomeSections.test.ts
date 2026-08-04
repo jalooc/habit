@@ -151,7 +151,21 @@ describe('buildHomeSections', () => {
     expect(result.upNext).toHaveLength(1)
     expect(result.upNext[0].kind).toBe('upcoming')
     if (result.upNext[0].kind === 'upcoming') {
-      expect(result.upNext[0].slotMs).toBe(dayjs(`${MONDAY_DATE} 18:00`).valueOf())
+      expect(result.upNext[0].dueAtMs).toBe(dayjs(`${MONDAY_DATE} 18:00`).valueOf())
+    }
+  })
+
+  it('announces the following turn when the current one was served ahead of its due moment', () => {
+    // timesPerDay(3) → turn 2 opens 12:00, comes due 14:00; completed 13:00 serves it,
+    // so what is upcoming is turn 3 at 18:00 — not the 14:00 turn already done
+    const groups = makeGroups([['g1', { habits: { h1: true }, recurrence: timesPerDay(3) }]])
+    const habits = makeHabits([['h1', { timestamp: dayjs(`${MONDAY_DATE} 13:00`).valueOf(), type: 'completed' }]])
+    const result = build(groups, habits, `${MONDAY_DATE} 13:30`)
+    expect(result.carried).toHaveLength(0)
+    expect(result.upNext).toHaveLength(1)
+    expect(result.upNext[0].kind).toBe('upcoming')
+    if (result.upNext[0].kind === 'upcoming') {
+      expect(result.upNext[0].dueAtMs).toBe(dayjs(`${MONDAY_DATE} 18:00`).valueOf())
     }
   })
 
