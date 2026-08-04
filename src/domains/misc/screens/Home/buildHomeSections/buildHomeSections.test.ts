@@ -107,8 +107,8 @@ describe('buildHomeSections', () => {
     expect(result.upNext[0].groupId).toBe('g1')
   })
 
-  it('sorts never-completed rotations ahead of completed "now" rows in upNext', () => {
-    // g_new: never completed, 1h40m behind → new "now"
+  it('sorts never-actioned rotations ahead of completed "now" rows in upNext', () => {
+    // g_new: never actioned, 1h40m behind → new "now"
     // g_recent: completed history, fell behind 10 min → "now"
     const groups = makeGroups([
       ['g_recent', { habits: { h_r: true }, recurrence: timesPerDay(4) }],
@@ -122,14 +122,26 @@ describe('buildHomeSections', () => {
     expect(result.upNext.map(r => r.groupId)).toEqual(['g_new', 'g_recent'])
   })
 
-  it('treats a skip-only rotation (never completed) as new → upNext, not carried', () => {
-    // only ever skipped, never completed → lastCompletedMs undefined → new
+  it('carries a skip-only rotation — a skip is history, so it is not new', () => {
+    // only ever skipped → still behind (skip ≠ complete), but it has history → carried, not a "now" pin
     const groups = makeGroups([['g1', { habits: { h1: true }, recurrence: timesPerDay(1) }]])
     const habits = makeHabits([['h1', { timestamp: dayjs(`${MONDAY_DATE} 15:00`).valueOf(), type: 'skipped' }]])
     const result = build(groups, habits, `${MONDAY_DATE} 17:00`)
-    expect(result.carried).toHaveLength(0)
-    expect(result.upNext).toHaveLength(1)
-    expect(result.upNext[0].kind).toBe('now')
+    expect(result.carried).toHaveLength(1)
+    expect(result.carried[0].dueSinceMs).toBe(3 * 60 * 60 * 1000)
+    expect(result.upNext).toHaveLength(0)
+  })
+
+  it('keeps a rotation new when only some of its habits were skipped', () => {
+    // h2 skipped, h1 never actioned → the rotation has history → carried
+    const groups = makeGroups([['g1', { habits: { h1: true, h2: true }, recurrence: timesPerDay(1) }]])
+    const habits = makeHabits([
+      ['h1', {}],
+      ['h2', { timestamp: dayjs(`${MONDAY_DATE} 15:00`).valueOf(), type: 'skipped' }],
+    ])
+    const result = build(groups, habits, `${MONDAY_DATE} 17:00`)
+    expect(result.carried).toHaveLength(1)
+    expect(result.upNext).toHaveLength(0)
   })
 
   it('keeps a rotation carried when its up-next was skipped but it has an older completion (skip ≠ complete)', () => {

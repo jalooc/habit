@@ -76,10 +76,11 @@ const buildHomeSections = (params: {
 
     if (behind && previousOccurrence) {
       const elapsed = now.diff(previousOccurrence, 'milliseconds')
-      const isNew = lastCompletedMs === undefined
-      // A never-completed rotation is new, not "carried" — it has no history to fall behind on,
-      // so surface it at the top of Up next. A rotation that fell behind only within the NOW
-      // window also reads as "now" rather than carried.
+      const isNew = habitIds.every(id => habits[id].lastActioned === undefined)
+      // A never-actioned rotation is new, not "carried" — it has no history to fall behind on,
+      // so surface it at the top of Up next. Once anything in it has been actioned (a skip counts
+      // as history, even though it doesn't satisfy the turn) it can fall behind like any other.
+      // A rotation that fell behind only within the NOW window also reads as "now" rather than carried.
       if (isNew || elapsed <= NOW_WINDOW_MS) {
         nowRows.push({ ...base, kind: 'now', elapsed, isNew })
       } else {
