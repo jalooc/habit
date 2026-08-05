@@ -110,6 +110,20 @@ describe('next occurrence', () => {
       expect(next(timesPerDay(3), `${MONDAY_DATE} 14:01`, dayBoundaries)).toBe(`${MONDAY_DATE} 18:00`)
     })
 
+    it('skips to the following occurrence within the same minute one has passed', () => {
+      // Sub-minute references must not round back onto the occurrence that just fired: doing so
+      // fails the "not before referenceDate" check and sends the search a whole day forward,
+      // dropping every remaining occurrence of the day. This is the minute a notification lands in.
+      expect(next(timesPerDay(3), `${MONDAY_DATE} 14:00:01`, dayBoundaries)).toBe(`${MONDAY_DATE} 18:00`)
+      expect(next(timesPerDay(3), `${MONDAY_DATE} 14:00:30`, dayBoundaries)).toBe(`${MONDAY_DATE} 18:00`)
+      expect(next(timesPerDay(3), `${MONDAY_DATE} 14:00:59`, dayBoundaries)).toBe(`${MONDAY_DATE} 18:00`)
+    })
+
+    it('keeps the whole day when the first occurrence passed seconds ago', () => {
+      // The earlier the occurrence, the more the day-jump costs: here 14:00 and 18:00 both.
+      expect(next(timesPerDay(3), `${MONDAY_DATE} 10:00:30`, dayBoundaries)).toBe(`${MONDAY_DATE} 14:00`)
+    })
+
     it('rolls over to the next day after the last slot, still inside the day time span', () => {
       expect(next(timesPerDay(3), `${MONDAY_DATE} 18:01`, dayBoundaries)).toBe('2026-07-07 10:00')
     })
@@ -302,10 +316,17 @@ describe('previous occurrence', () => {
     })
 
     it('does not lose the last slot to float rounding of a fractional slot length', () => {
-      // 302 min span / 8 slots = 37.75 min: the last slot sits at 12:43:07, and clamping the
+      // 302 min span / 8 slots = 37.75 min: the last occurrence sits at 12:43:07, and clamping the
       // slot index (not the minutes) is what keeps a reference past it from floating away
       const boundaries = { start: time(8, 0), end: time(13, 2) }
       expect(previous(timesPerDay(8), `${MONDAY_DATE} 14:00`, boundaries)).toBe(`${MONDAY_DATE} 12:43`)
+    })
+
+    it('returns an occurrence at a fractional second lying exactly at referenceDate', () => {
+      // 37.75 min slots put occurrence 8 at 12:43:07.5. Measuring the reference in whole minutes
+      // rounds it back below that instant, which answers with the occurrence before it.
+      const boundaries = { start: time(8, 0), end: time(13, 2) }
+      expect(previous(timesPerDay(8), `${MONDAY_DATE} 12:43:07.500`, boundaries)).toBe(`${MONDAY_DATE} 12:43`)
     })
   })
 

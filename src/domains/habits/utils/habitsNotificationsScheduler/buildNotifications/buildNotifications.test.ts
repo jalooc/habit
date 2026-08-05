@@ -125,6 +125,29 @@ describe('buildNotifications', () => {
     expect(dayjs(first.date).format('YYYY-MM-DD HH:mm')).toBe('2026-07-06 18:00')
   })
 
+  it('keeps the rest of the day scheduled when a turn is skipped seconds after it came due', () => {
+    // The scheduler rebuilds on every action, so a skip taken straight from the 14:00 notification
+    // rebuilds at 14:00:30 with the turn still unserved. Today's 18:00 reminder has to survive that.
+    vi.setSystemTime(new Date('2026-07-06T14:00:30'))
+    const groups = observable({
+      'group-0': {
+        name: 'group 0',
+        habits: { 'habit-0': true as const },
+        recurrence: timesPerDay(3),
+      },
+    }).get()
+    const habits = {
+      'habit-0': {
+        name: 'habit 0',
+        lastActioned: { timestamp: dayjs('2026-07-06 14:00:30').valueOf(), type: 'skipped' as const },
+      },
+    }
+
+    const [first] = buildNotifications(groups, habits, dayBoundaries)
+
+    expect(dayjs(first.date).format('YYYY-MM-DD HH:mm')).toBe('2026-07-06 18:00')
+  })
+
   it('skips groups without a recurrence', () => {
     const groups = observable({
       'group-0': { name: 'group 0', habits: { 'habit-0': true as const }},

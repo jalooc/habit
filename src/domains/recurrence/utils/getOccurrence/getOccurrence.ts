@@ -90,7 +90,10 @@ const drivers = (
           const dayTimeEndDate = firstDayTimeEndDate.add(i, 'day')
           const dayTimeStartDate = dayTimeEndDate.subtract(dayTimeSpan, 'minutes')
 
-          const slotIndex = calcSlotIndex(referenceDate.diff(dayTimeStartDate, 'minutes'))
+          // Fractional minutes, deliberately: a truncated diff rounds the reference back onto the
+          // occurrence that just passed, which then fails respectsReferenceDate and sends the search
+          // a whole day forward instead of one slot.
+          const slotIndex = calcSlotIndex(referenceDate.diff(dayTimeStartDate, 'minutes', true))
           const closestOccurrenceContender = dayTimeStartDate.add((slotIndex + 0.5) * slotLength, 'minutes')
 
           const isWithinDayTimeSpan = closestOccurrenceContender.isBetween(dayTimeStartDate, dayTimeEndDate, undefined, '[]')
@@ -133,7 +136,7 @@ const drivers = (
 
           // The closing instant belongs to the last slot, hence the clamp.
           const slotIndex = Math.min(
-            Math.floor(referenceDate.diff(dayTimeStartDate, 'minutes') / slotLength),
+            Math.floor(referenceDate.diff(dayTimeStartDate, 'minutes', true) / slotLength),
             timesPerDay - 1,
           )
           const opensAt = dayTimeStartDate.add(slotIndex * slotLength, 'minutes')
