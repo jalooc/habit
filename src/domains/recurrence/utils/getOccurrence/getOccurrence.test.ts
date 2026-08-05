@@ -230,14 +230,17 @@ describe('daylight saving transitions', () => {
     expect(next(timesPerDay(1), `${MONDAY_DATE} 06:00`, dayBoundaries)).toBe(`${MONDAY_DATE} 14:00`)
   })
 
-  // Known gap: a span containing the skipped hour is genuinely shorter that night (22:00–06:00 is
-  // 7 real hours, not 8), but the slot length still comes from the nominal minute count, so the
-  // span's start lands an hour early and the occurrence with it. Fixing it means deriving the span
-  // per day from its two wall-clock ends, which is the restructuring the engine needs anyway.
-  // Expected to start passing then — at which point drop the `.fails`.
-  it.fails('divides the real duration of an overnight span containing the transition', () => {
+  it('divides the real duration of an overnight span containing the transition', () => {
+    // 22:00–06:00 is 7 real hours that night, not 8, so the single turn comes due at its real
+    // midpoint of 01:30 rather than the 02:00 a nominal eight-hour span would put it at.
     const boundaries = { start: time(22, 0), end: time(6, 0) }
     expect(next(timesPerDay(1), '2026-03-28 23:00', boundaries)).toBe(`${SPRING_FORWARD} 01:30`)
+  })
+
+  it('divides the real duration of an overnight span when an hour repeats', () => {
+    // The same night in reverse: 22:00–06:00 runs 9 real hours, so the midpoint lands at 02:30
+    const boundaries = { start: time(22, 0), end: time(6, 0) }
+    expect(next(timesPerDay(1), '2026-10-24 23:00', boundaries)).toBe(`${FALL_BACK} 02:30`)
   })
 })
 
