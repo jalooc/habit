@@ -132,7 +132,7 @@ describe('buildHomeSections', () => {
     expect(result.upNext).toHaveLength(0)
   })
 
-  it('keeps a rotation new when only some of its habits were skipped', () => {
+  it('treats a rotation as having history when any of its habits was actioned', () => {
     // h2 skipped, h1 never actioned → the rotation has history → carried
     const groups = makeGroups([['g1', { habits: { h1: true, h2: true }, recurrence: timesPerDay(1) }]])
     const habits = makeHabits([

@@ -1,10 +1,7 @@
 import { Recurrence } from 'src/domains/recurrence/utils/recurrence'
 import getOccurrence from 'src/domains/recurrence/utils/getOccurrence'
+import hasCompletedSinceTurnOpened from 'src/domains/habits/utils/hasCompletedSinceTurnOpened'
 import { Dayjs } from 'dayjs'
-
-// Never having completed anything counts as behind.
-export const isBehind = (lastCompletedMs: number | undefined, thresholdMs: number): boolean =>
-  lastCompletedMs === undefined || lastCompletedMs < thresholdMs
 
 type Params = {
   recurrence: Recurrence | undefined,
@@ -23,7 +20,18 @@ const isGroupDue = ({ recurrence, lastCompletedMs, now, dayBoundaries }: Params)
   // not on when it came due.
   const mostRecentDueTurn = getOccurrence.currentSlot(recurrence, mostRecentOccurrence, dayBoundaries)
 
-  return isBehind(lastCompletedMs, (mostRecentDueTurn?.opensAt ?? mostRecentOccurrence).valueOf())
+  // An occurrence always sits inside a slot, so there is no known input that lands here — the
+  // branch exists because the engine's return type is optional and unreachability can't be proved
+  // across future changes to it. Falling back to the occurrence degrades to the rule that predates
+  // turns: a completion in the first half of a slot stops counting, an error bounded by half a slot
+  // length. Both alternatives are worse — a hardcoded boolean is unconditionally wrong in one
+  // direction, and throwing crashes the Group screen, which computes dueness during render with no
+  // error boundary above it.
+  if (!mostRecentDueTurn) {
+    return lastCompletedMs === undefined || lastCompletedMs < mostRecentOccurrence.valueOf()
+  }
+
+  return !hasCompletedSinceTurnOpened(mostRecentDueTurn, lastCompletedMs)
 }
 
 export default isGroupDue

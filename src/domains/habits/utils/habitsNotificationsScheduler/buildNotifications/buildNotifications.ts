@@ -46,14 +46,12 @@ export default (
     })
 
     const occurrences: Dayjs[] = []
-    let nextOccurrence: Dayjs | undefined
-    while(nextOccurrence = nextOccurrence ? getOccurrence.next( // eslint-disable-line no-cond-assign
-      group.recurrence,
-      nextOccurrence.add(1, 'minute'),
-      dayBoundaries
-    ) : firstOccurrence) {
+    let nextOccurrence = firstOccurrence
+    while (nextOccurrence) {
       occurrences.push(nextOccurrence)
       if (occurrences.length >= MAX_NOTIFICATIONS) break
+
+      nextOccurrence = getOccurrence.next(group.recurrence, nextOccurrence.add(1, 'minute'), dayBoundaries)
     }
 
     return occurrences.map(occurrence => ({

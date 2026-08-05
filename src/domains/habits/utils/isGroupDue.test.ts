@@ -89,7 +89,7 @@ describe('isGroupDue', () => {
 
   // A turn spans its whole slot: completing anywhere inside it serves it, and it stays owed
   // until the slot runs out — for the day's last turn, until active hours close.
-  describe('turn windows', () => {
+  describe('turn slots', () => {
     it('stays served when completed ahead of the turn coming due', () => {
       // timesPerDay(3) → turn 2 opens 12:00, comes due 14:00; completed at 13:00 inside it
       expect(isDue({
@@ -135,7 +135,8 @@ describe('isGroupDue', () => {
     })
 
     it('stays owed past the end of the day', () => {
-      // outside active hours there is no current turn — the carry falls back to the last occurrence
+      // the slot is found from the most recent occurrence, not from now, so at 22:00 this still
+      // asks about turn 3's slot [16:00, 20:00) — which 15:00 predates
       expect(isDue({
         recurrence: timesPerDay(3),
         lastCompleted: `${MONDAY_DATE} 15:00`,
@@ -143,7 +144,7 @@ describe('isGroupDue', () => {
       })).toBe(true)
     })
 
-    it('serves the last turn when completed early in its window', () => {
+    it('serves the last turn when completed early inside its slot', () => {
       // turn 3 opens 16:00 and comes due 18:00; completed 16:30 → served for the rest of the day
       expect(isDue({
         recurrence: timesPerDay(3),
