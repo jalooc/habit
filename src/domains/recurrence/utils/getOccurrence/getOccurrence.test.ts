@@ -197,6 +197,50 @@ describe('next occurrence', () => {
   })
 })
 
+// The suite pins TZ to Europe/Warsaw (see vitest.config.ts), which springs forward on 2026-03-29
+// (02:00 → 03:00) and falls back on 2026-10-25 (03:00 → 02:00).
+describe('daylight saving transitions', () => {
+  const SPRING_FORWARD = '2026-03-29'
+  const FALL_BACK = '2026-10-25'
+
+  it('keeps active hours at their wall-clock times on the day clocks go forward', () => {
+    expect(next(timesPerDay(1), `${SPRING_FORWARD} 06:00`, dayBoundaries)).toBe(`${SPRING_FORWARD} 14:00`)
+    expect(next(timesPerDay(3), `${SPRING_FORWARD} 06:00`, dayBoundaries)).toBe(`${SPRING_FORWARD} 10:00`)
+  })
+
+  it('keeps active hours at their wall-clock times on the day clocks go back', () => {
+    expect(next(timesPerDay(1), `${FALL_BACK} 06:00`, dayBoundaries)).toBe(`${FALL_BACK} 14:00`)
+    expect(next(timesPerDay(3), `${FALL_BACK} 06:00`, dayBoundaries)).toBe(`${FALL_BACK} 10:00`)
+  })
+
+  it('answers the same whether a transition day is asked about directly or walked into', () => {
+    // Stepping between days preserves wall clock while the seed used to add real minutes to
+    // midnight, so the two disagreed by an hour on transition days.
+    expect(next(timesPerDay(1), '2026-03-28 15:00', dayBoundaries))
+      .toBe(next(timesPerDay(1), `${SPRING_FORWARD} 06:00`, dayBoundaries))
+  })
+
+  it('reports the slot at its wall-clock boundaries across a transition', () => {
+    const slot = getOccurrence.currentSlot(timesPerDay(1), dayjs(`${SPRING_FORWARD} 13:00`), dayBoundaries)
+    expect(slot && [slot.opensAt, slot.dueAt, slot.closesAt].map(date => date.format('HH:mm')).join(' → '))
+      .toBe('08:00 → 14:00 → 20:00')
+  })
+
+  it('leaves ordinary days untouched', () => {
+    expect(next(timesPerDay(1), `${MONDAY_DATE} 06:00`, dayBoundaries)).toBe(`${MONDAY_DATE} 14:00`)
+  })
+
+  // Known gap: a span containing the skipped hour is genuinely shorter that night (22:00–06:00 is
+  // 7 real hours, not 8), but the slot length still comes from the nominal minute count, so the
+  // span's start lands an hour early and the occurrence with it. Fixing it means deriving the span
+  // per day from its two wall-clock ends, which is the restructuring the engine needs anyway.
+  // Expected to start passing then — at which point drop the `.fails`.
+  it.fails('divides the real duration of an overnight span containing the transition', () => {
+    const boundaries = { start: time(22, 0), end: time(6, 0) }
+    expect(next(timesPerDay(1), '2026-03-28 23:00', boundaries)).toBe(`${SPRING_FORWARD} 01:30`)
+  })
+})
+
 describe('current slot', () => {
   const currentSlot = (
     recurrence: Parameters<typeof getOccurrence['currentSlot']>[0],

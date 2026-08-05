@@ -64,7 +64,7 @@ const drivers = (
 
   return ({
     'times-per-day': () => {
-      const { dayTimeSpan, endMinutes } = calcDayTimeSpan(dayBoundaries)
+      const { dayTimeSpan } = calcDayTimeSpan(dayBoundaries)
       const { specificDays } = recurrence
       const timesPerDay = recurrence.value
       // The span is split into `timesPerDay` equal slots, each holding its occurrence at its
@@ -74,7 +74,14 @@ const drivers = (
 
       // Day time span ending at or after referenceDate — the one containing it, unless
       // referenceDate sits in the quiet gap between two days' active hours.
-      const sameDayEndDate = referenceDate.startOf('day').add(endMinutes, 'minutes')
+      // Set as wall-clock components, not as minutes added to midnight: active hours are a local
+      // time the user picked, and on a DST transition day midnight plus 20h is 21:00 local, which
+      // would slide the whole window. Stepping between days below uses `.add(_, 'day')`, which
+      // preserves wall clock, so only this seed needed it.
+      const sameDayEndDate = referenceDate
+        .startOf('day')
+        .hour(dayBoundaries.end.hour)
+        .minute(dayBoundaries.end.minute)
       const firstDayTimeEndDate = sameDayEndDate.isBefore(referenceDate) ?
         sameDayEndDate.add(1, 'day') :
         sameDayEndDate
