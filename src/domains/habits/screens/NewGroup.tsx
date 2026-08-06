@@ -18,7 +18,7 @@ const NewGroup = () => {
     const name = name$.peek().trim()
     if (!name) return
     navigation.goBack()
-    groups$[randomUUID()].set({ name, habits: {}})
+    groups$[randomUUID()].set({ name, habits: {}, lastServedAt: null })
   }
 
   return (

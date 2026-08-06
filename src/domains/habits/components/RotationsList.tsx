@@ -11,7 +11,6 @@ import habits$ from 'src/domains/habits/stores/habits'
 import orderQueue from 'src/domains/habits/utils/orderQueue'
 import OrbitMini from 'src/domains/habits/components/OrbitMini'
 import isGroupDue from 'src/domains/habits/utils/isGroupDue'
-import lastCompletedInGroup from 'src/domains/habits/utils/lastCompletedInGroup'
 import formatCadence from 'src/domains/habits/utils/formatCadence'
 
 type Props = {
@@ -70,7 +69,7 @@ const GroupCard = ({ id }: GroupCardProps) => {
     const upNextName = upNextId ? habitsMap[upNextId].name : null
     const due = isGroupDue({
       recurrence,
-      lastCompletedMs: lastCompletedInGroup(habitIds, habitsMap),
+      lastServedAt: group.lastServedAt,
       now: dayjs(),
       dayBoundaries: dayBoundaries$.get(),
     })

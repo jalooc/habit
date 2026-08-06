@@ -5,12 +5,12 @@ import { Dayjs } from 'dayjs'
 
 type Params = {
   recurrence: Recurrence | undefined,
-  lastCompletedMs: number | undefined,
+  lastServedAt: number | null,
   now: Dayjs,
   dayBoundaries: { start: { hour: number, minute: number }, end: { hour: number, minute: number }},
 }
 
-const isGroupDue = ({ recurrence, lastCompletedMs, now, dayBoundaries }: Params): boolean => {
+const isGroupDue = ({ recurrence, lastServedAt, now, dayBoundaries }: Params): boolean => {
   if (!recurrence) return false
 
   const mostRecentOccurrence = getOccurrence.previous(recurrence, now, dayBoundaries)
@@ -28,10 +28,10 @@ const isGroupDue = ({ recurrence, lastCompletedMs, now, dayBoundaries }: Params)
   // direction, and throwing crashes the Group screen, which computes dueness during render with no
   // error boundary above it.
   if (!mostRecentDueTurn) {
-    return lastCompletedMs === undefined || lastCompletedMs < mostRecentOccurrence.valueOf()
+    return lastServedAt === null || lastServedAt < mostRecentOccurrence.valueOf()
   }
 
-  return !hasCompletedSinceTurnOpened(mostRecentDueTurn, lastCompletedMs)
+  return !hasCompletedSinceTurnOpened(mostRecentDueTurn, lastServedAt)
 }
 
 export default isGroupDue

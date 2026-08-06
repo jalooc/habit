@@ -13,7 +13,6 @@ import UndoToast from 'src/domains/habits/components/UndoToast'
 import { actionHabit } from 'src/domains/habits/utils/habitActions'
 import orderQueue from 'src/domains/habits/utils/orderQueue'
 import isGroupDue from 'src/domains/habits/utils/isGroupDue'
-import lastCompletedInGroup from 'src/domains/habits/utils/lastCompletedInGroup'
 import formatCadence from 'src/domains/habits/utils/formatCadence'
 import formatNextTurn from 'src/domains/habits/utils/formatNextTurn'
 import Chip from 'src/domains/misc/components/Chip'
@@ -38,7 +37,7 @@ const Group = ({ route }: Props) => {
   const navigation = useNavigation()
   const { width } = useWindowDimensions()
 
-  const { name, recurrence } = useValue(groups$[groupId])
+  const { name, recurrence, lastServedAt } = useValue(groups$[groupId])
   const dayBoundaries = useValue(dayBoundaries$)
 
   const orderedHabitIds = useSelector(() => {
@@ -55,13 +54,7 @@ const Group = ({ route }: Props) => {
     })
   })
 
-  const lastCompletedMs = useSelector(() => {
-    const habitsMap = habits$.get()
-    const groupHabitIds = Object.keys(groups$[groupId].habits.get())
-    return lastCompletedInGroup(groupHabitIds, habitsMap)
-  })
-
-  const isDue = isGroupDue({ recurrence, lastCompletedMs, now: dayjs(), dayBoundaries })
+  const isDue = isGroupDue({ recurrence, lastServedAt, now: dayjs(), dayBoundaries })
 
   const ringSize = Math.max(220, Math.min(276, width - 2 * SCREEN_PADDING - 2 * CARD_PADDING))
   const hasHabits = orderedHabits.length > 0
@@ -75,14 +68,14 @@ const Group = ({ route }: Props) => {
   const habitCountLabel = habitCount === 1 ? '1 habit in rotation' : `${habitCount} habits in rotation`
 
   const nextTurnLabel = !isDue && hasHabits && recurrence ?
-    formatNextTurn(recurrence, lastCompletedMs, dayBoundaries) :
+    formatNextTurn(recurrence, lastServedAt, dayBoundaries) :
     undefined
 
   const handleMarkDone = () => {
-    if (upNext) actionHabit(upNext.id, 'completed')
+    if (upNext) actionHabit(upNext.id, 'completed', groupId)
   }
   const handleSkip = () => {
-    if (upNext) actionHabit(upNext.id, 'skipped')
+    if (upNext) actionHabit(upNext.id, 'skipped', groupId)
   }
 
   return (

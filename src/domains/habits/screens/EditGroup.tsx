@@ -10,6 +10,7 @@ import habits$ from 'src/domains/habits/stores/habits'
 import groups$ from 'src/domains/habits/stores/groups'
 import Button from 'src/domains/misc/components/Button'
 import { imagesDir } from 'src/domains/habits/utils/habitImages'
+import { dismissLastAction } from 'src/domains/habits/utils/habitActions'
 import { devLog } from 'src/domains/devTools/utils/devLog'
 import useUnmountPromise from 'src/domains/misc/utils/useUnmountPromise'
 
@@ -70,6 +71,9 @@ const EditGroup = ({ route }: Props) => {
                 habits$[habitId].delete()
               })
               groups$[groupId].delete()
+              // a pending undo would write the rotation back as a nameless partial, which fails the
+              // schema on the next load and takes every rotation with it
+              dismissLastAction()
             })
           },
         },

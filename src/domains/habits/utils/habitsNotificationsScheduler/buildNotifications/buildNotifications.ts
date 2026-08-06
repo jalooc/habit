@@ -4,7 +4,6 @@ import dayjs, { Dayjs } from 'dayjs'
 import { GroupsStore } from 'src/domains/habits/stores/groups'
 import { HabitsStores } from 'src/domains/habits/stores/habits'
 import { createGroupScreenLink } from 'src/domains/habits/utils/linking'
-import lastCompletedInGroup from 'src/domains/habits/utils/lastCompletedInGroup'
 import nextTurnDueAt from 'src/domains/habits/utils/nextTurnDueAt'
 
 import getOccurrence from 'src/domains/recurrence/utils/getOccurrence'
@@ -40,7 +39,7 @@ export default (
     // the scheduler rebuilds on every action, so a turn served ahead of time drops out here.
     const firstOccurrence = nextTurnDueAt({
       recurrence: group.recurrence,
-      lastCompletedMs: lastCompletedInGroup(keys(group.habits), allHabitsMap),
+      lastServedAt: group.lastServedAt,
       now: dayjs(),
       dayBoundaries,
     })

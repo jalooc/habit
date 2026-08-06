@@ -13,16 +13,16 @@ const dayBoundaries = { start: time(8, 0), end: time(20, 0) }
 const timesPerDay = (value: number, specificDays?: Parameters<typeof nextTurnDueAt>[0]['recurrence']['specificDays']) =>
   ({ type: 'times-per-day', value, specificDays } as const)
 
-const NEVER_COMPLETED = undefined
+const NEVER_SERVED = null
 
 const dueAt = (
   recurrence: Parameters<typeof nextTurnDueAt>[0]['recurrence'],
   now: string,
-  lastCompleted?: string,
+  lastServed: string | null = NEVER_SERVED,
   boundaries = dayBoundaries,
 ) => nextTurnDueAt({
   recurrence,
-  lastCompletedMs: lastCompleted === undefined ? NEVER_COMPLETED : dayjs(lastCompleted).valueOf(),
+  lastServedAt: lastServed === null ? NEVER_SERVED : dayjs(lastServed).valueOf(),
   now: dayjs(now),
   dayBoundaries: boundaries,
 })?.format('YYYY-MM-DD HH:mm')
@@ -53,7 +53,7 @@ describe('nextTurnDueAt', () => {
   })
 
   it('answers with today from inside the quiet gap before active hours', () => {
-    expect(dueAt(timesPerDay(3), `${MONDAY_DATE} 06:00`, NEVER_COMPLETED)).toBe(`${MONDAY_DATE} 10:00`)
+    expect(dueAt(timesPerDay(3), `${MONDAY_DATE} 06:00`, NEVER_SERVED)).toBe(`${MONDAY_DATE} 10:00`)
   })
 
   it('never looks back at a turn that is past due and unserved', () => {
@@ -64,7 +64,7 @@ describe('nextTurnDueAt', () => {
 
   it('skips days the recurrence does not run', () => {
     const thursdayOnly = timesPerDay(1, { mo: false, tu: false, we: false, th: true, fr: false, sa: false, su: false })
-    expect(dueAt(thursdayOnly, `${MONDAY_DATE} 12:00`, NEVER_COMPLETED)).toBe('2026-07-09 14:00')
+    expect(dueAt(thursdayOnly, `${MONDAY_DATE} 12:00`, NEVER_SERVED)).toBe('2026-07-09 14:00')
   })
 
   it('does not treat a completion on an off day as serving the next running day\'s turn', () => {
@@ -81,7 +81,7 @@ describe('nextTurnDueAt', () => {
   it('carries a turn across midnight', () => {
     // 22:00–06:00 boundaries: the single turn opens 22:00 and comes due 02:00
     const boundaries = { start: time(22, 0), end: time(6, 0) }
-    expect(dueAt(timesPerDay(1), `${MONDAY_DATE} 23:00`, NEVER_COMPLETED, boundaries)).toBe('2026-07-07 02:00')
+    expect(dueAt(timesPerDay(1), `${MONDAY_DATE} 23:00`, NEVER_SERVED, boundaries)).toBe('2026-07-07 02:00')
     expect(dueAt(timesPerDay(1), `${MONDAY_DATE} 23:00`, `${MONDAY_DATE} 22:30`, boundaries))
       .toBe('2026-07-08 02:00')
   })

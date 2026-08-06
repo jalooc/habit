@@ -1,18 +1,32 @@
+import { batch } from '@legendapp/state'
+import groups$ from 'src/domains/habits/stores/groups'
 import habits$ from 'src/domains/habits/stores/habits'
 import lastAction$ from 'src/domains/habits/stores/lastAction'
 
-export const actionHabit = (habitId: string, type: 'completed' | 'skipped') => {
+// Writing by path into a rotation that is already gone would persist a partial group object, which
+// fails the schema on the next load and takes every rotation down with it.
+const rotationExists = (groupId: string) => groupId in groups$.peek()
+
+export const actionHabit = (habitId: string, type: 'completed' | 'skipped', groupId: string) => {
   const habit = habits$[habitId].peek()
+  const now = Date.now()
+  const doesRotationExist = rotationExists(groupId)
 
-  lastAction$.set({
-    habitId,
-    habitName: habit.name,
-    type,
-    prevLastActioned: habit.lastActioned,
-    at: Date.now(),
+  batch(() => {
+    lastAction$.set({
+      habitId,
+      habitName: habit.name,
+      groupId,
+      type,
+      prevLastActioned: habit.lastActioned,
+      prevLastServedAt: doesRotationExist ? groups$[groupId].lastServedAt.peek() : null,
+      at: now,
+    })
+
+    habits$[habitId].lastActioned.set({ timestamp: now, type })
+
+    if (type === 'completed' && doesRotationExist) groups$[groupId].lastServedAt.set(now)
   })
-
-  habits$[habitId].lastActioned.set({ timestamp: Date.now(), type })
 }
 
 export const undoLastAction = () => {
@@ -22,13 +36,19 @@ export const undoLastAction = () => {
     return
   }
 
-  if (action.prevLastActioned === undefined) {
-    habits$[action.habitId].lastActioned.delete()
-  } else {
-    habits$[action.habitId].lastActioned.set(action.prevLastActioned)
-  }
+  batch(() => {
+    if (action.prevLastActioned === undefined) {
+      habits$[action.habitId].lastActioned.delete()
+    } else {
+      habits$[action.habitId].lastActioned.set(action.prevLastActioned)
+    }
 
-  lastAction$.set(undefined)
+    if (rotationExists(action.groupId)) {
+      groups$[action.groupId].lastServedAt.set(action.prevLastServedAt)
+    }
+
+    lastAction$.set(undefined)
+  })
 }
 
 export const dismissLastAction = () => {

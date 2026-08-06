@@ -16,6 +16,7 @@ import groups$ from 'src/domains/habits/stores/groups'
 import Button from 'src/domains/misc/components/Button'
 import usePendingImages from 'src/domains/habits/utils/usePendingImages'
 import { imageFileUri, imagesDir } from 'src/domains/habits/utils/habitImages'
+import { dismissLastAction } from 'src/domains/habits/utils/habitActions'
 import useUnmountPromise from 'src/domains/misc/utils/useUnmountPromise'
 import PendingImageRow from './PendingImageRow'
 
@@ -141,6 +142,8 @@ const HabitEditor = ({ groupId, habitId, onDone, onCancel, onRemoved }: Props) =
               batch(() => {
                 groups$[groupId].habits[habitId].delete()
                 habits$[habitId].delete()
+                // a pending undo would write the habit back as a nameless partial
+                dismissLastAction()
               })
             },
           },
