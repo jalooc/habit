@@ -51,7 +51,10 @@ export default (
       occurrences.push(nextOccurrence)
       if (occurrences.length >= MAX_NOTIFICATIONS) break
 
-      nextOccurrence = getOccurrence.next(group.recurrence, nextOccurrence.add(1, 'minute'), dayBoundaries)
+      // Stepped past by the smallest amount that clears the occurrence just taken, since next()
+      // is inclusive of one landing exactly on its reference. A minute also clears it, but only
+      // while slots stay minutes long — the step shouldn't assume how far apart occurrences are.
+      nextOccurrence = getOccurrence.next(group.recurrence, nextOccurrence.add(1, 'millisecond'), dayBoundaries)
     }
 
     return occurrences.map(occurrence => ({
