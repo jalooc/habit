@@ -30,7 +30,7 @@ const TodayRow = ({ groupName, habitName, tag, dotKind, habitId, groupId, isFirs
   const navigation = useNavigation()
 
   return (
-    <SwipeToLog label="Logged" onTrigger={() => void actionHabit(habitId, 'completed')}>
+    <SwipeToLog label="Logged" onTrigger={() => void actionHabit(habitId, 'completed', groupId)}>
       <Pressable
         onPress={() => void navigation.navigate('Habit', { habitId, groupId })}
         style={[

@@ -6,11 +6,11 @@ import nextTurnDueAt from 'src/domains/habits/utils/nextTurnDueAt'
 
 const formatNextTurn = (
   recurrence: Recurrence,
-  lastCompletedMs: number | undefined,
+  lastServedAt: number | null,
   dayBoundaries: Parameters<typeof getOccurrence['next']>[2],
 ): string | undefined => {
   const now = dayjs()
-  const next = nextTurnDueAt({ recurrence, lastCompletedMs, now, dayBoundaries })
+  const next = nextTurnDueAt({ recurrence, lastServedAt, now, dayBoundaries })
   if (!next) return undefined
 
   const time = next.format('H:mm')

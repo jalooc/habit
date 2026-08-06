@@ -20,8 +20,13 @@ const COMPLETED_AFTER_TODAYS_OCCURRENCE = dayjs(`${MONDAY_DATE} 14:30`).valueOf(
 
 type GroupsInput = Parameters<typeof buildHomeSections>[0]['groups']
 
-const makeGroups = (entries: [string, Omit<NonNullable<GroupsInput[string]>, 'name'>][]): GroupsInput =>
-  Object.fromEntries(entries.map(([id, group]) => [id, { name: `Group ${id}`, ...group }]))
+// `lastServedAt` defaults to never-served, so a fixture only states it when the rotation's own
+// service record is what the case is about — habit ticks no longer imply it.
+type GroupFixture =
+  Omit<NonNullable<GroupsInput[string]>, 'name' | 'lastServedAt'> & { lastServedAt?: number | null }
+
+const makeGroups = (entries: [string, GroupFixture][]): GroupsInput =>
+  Object.fromEntries(entries.map(([id, group]) => [id, { name: `Group ${id}`, lastServedAt: null, ...group }]))
 
 const makeHabits = (entries: [string, { timestamp?: number, type?: 'completed' | 'skipped' }][]): HabitsStores =>
   Object.fromEntries(entries.map(([id, opts]) => [id, {
@@ -58,7 +63,9 @@ describe('buildHomeSections', () => {
 
   it('places into carried when the last completed tick is older than the last occurrence (> 15 min behind)', () => {
     // occurrence 14:00; now 17:00 → elapsed 3h (> 15 min); completed yesterday → behind, with a real history
-    const groups = makeGroups([['g1', { habits: { h1: true }, recurrence: timesPerDay(1) }]])
+    const groups = makeGroups([
+      ['g1', { habits: { h1: true }, recurrence: timesPerDay(1), lastServedAt: COMPLETED_YESTERDAY }],
+    ])
     const habits = makeHabits([['h1', { timestamp: COMPLETED_YESTERDAY, type: 'completed' }]])
     const result = build(groups, habits, `${MONDAY_DATE} 17:00`)
     expect(result.carried).toHaveLength(1)
@@ -70,7 +77,9 @@ describe('buildHomeSections', () => {
 
   it('places a completed rotation that fell behind ≤ 15 min into upNext (now kind)', () => {
     // last occurrence 15:30 (10 min ago); completed yesterday → behind within the NOW window
-    const groups = makeGroups([['g1', { habits: { h1: true }, recurrence: timesPerDay(4) }]])
+    const groups = makeGroups([
+      ['g1', { habits: { h1: true }, recurrence: timesPerDay(4), lastServedAt: COMPLETED_YESTERDAY }],
+    ])
     const habits = makeHabits([['h1', { timestamp: COMPLETED_YESTERDAY, type: 'completed' }]])
     const result = build(groups, habits, `${MONDAY_DATE} 15:40`)
     expect(result.upNext).toHaveLength(1)
@@ -79,7 +88,9 @@ describe('buildHomeSections', () => {
   })
 
   it('places a completed rotation behind by exactly 15 min into upNext (now kind)', () => {
-    const groups = makeGroups([['g1', { habits: { h1: true }, recurrence: timesPerDay(4) }]])
+    const groups = makeGroups([
+      ['g1', { habits: { h1: true }, recurrence: timesPerDay(4), lastServedAt: COMPLETED_YESTERDAY }],
+    ])
     const habits = makeHabits([['h1', { timestamp: COMPLETED_YESTERDAY, type: 'completed' }]])
     const result = build(groups, habits, `${MONDAY_DATE} 15:45`)
     expect(result.upNext).toHaveLength(1)
@@ -88,11 +99,36 @@ describe('buildHomeSections', () => {
 
   it('places a completed rotation behind by more than 15 min into carried', () => {
     // last occurrence 15:30 (16 min ago) → past the NOW window
-    const groups = makeGroups([['g1', { habits: { h1: true }, recurrence: timesPerDay(4) }]])
+    const groups = makeGroups([
+      ['g1', { habits: { h1: true }, recurrence: timesPerDay(4), lastServedAt: COMPLETED_YESTERDAY }],
+    ])
     const habits = makeHabits([['h1', { timestamp: COMPLETED_YESTERDAY, type: 'completed' }]])
     const result = build(groups, habits, `${MONDAY_DATE} 15:46`)
     expect(result.carried).toHaveLength(1)
     expect(result.upNext).toHaveLength(0)
+  })
+
+  it('keeps a rotation behind when the habit it shares was completed for a different rotation', () => {
+    // x sits in both. The fast rotation was served at 16:30, which is also what pushed x to the back
+    // of both queues — but it bought the slow rotation nothing, so that one is still behind and
+    // offers a habit of its own rather than the one already done.
+    const groups = makeGroups([
+      ['g_fast', {
+        habits: { x: true },
+        recurrence: timesPerDay(3),
+        lastServedAt: dayjs(`${MONDAY_DATE} 16:30`).valueOf(),
+      }],
+      ['g_slow', { habits: { x: true, h_own: true }, recurrence: timesPerDay(1) }],
+    ])
+    const habits = makeHabits([
+      ['x', { timestamp: dayjs(`${MONDAY_DATE} 16:30`).valueOf(), type: 'completed' }],
+      ['h_own', {}],
+    ])
+    const result = build(groups, habits, `${MONDAY_DATE} 17:00`)
+
+    expect(result.carried.map(r => r.groupId)).toEqual(['g_slow'])
+    expect(result.carried[0].habitId).toBe('h_own')
+    expect(result.otherGroupIds).toEqual(['g_fast'])
   })
 
   it('surfaces a never-completed rotation in upNext (now), never in carried — even when long overdue', () => {
@@ -111,7 +147,7 @@ describe('buildHomeSections', () => {
     // g_new: never actioned, 1h40m behind → new "now"
     // g_recent: completed history, fell behind 10 min → "now"
     const groups = makeGroups([
-      ['g_recent', { habits: { h_r: true }, recurrence: timesPerDay(4) }],
+      ['g_recent', { habits: { h_r: true }, recurrence: timesPerDay(4), lastServedAt: COMPLETED_YESTERDAY }],
       ['g_new', { habits: { h_n: true }, recurrence: timesPerDay(1) }],
     ])
     const habits = makeHabits([
@@ -145,8 +181,10 @@ describe('buildHomeSections', () => {
   })
 
   it('keeps a rotation carried when its up-next was skipped but it has an older completion (skip ≠ complete)', () => {
-    // h1 completed yesterday (the real history); h2 only skipped today → lastCompleted = yesterday < 14:00
-    const groups = makeGroups([['g1', { habits: { h1: true, h2: true }, recurrence: timesPerDay(1) }]])
+    // the rotation was last served yesterday; h2 was only skipped today, and a skip serves nothing
+    const groups = makeGroups([
+      ['g1', { habits: { h1: true, h2: true }, recurrence: timesPerDay(1), lastServedAt: COMPLETED_YESTERDAY }],
+    ])
     const habits = makeHabits([
       ['h1', { timestamp: COMPLETED_YESTERDAY, type: 'completed' }],
       ['h2', { timestamp: dayjs(`${MONDAY_DATE} 16:30`).valueOf(), type: 'skipped' }],
@@ -157,7 +195,13 @@ describe('buildHomeSections', () => {
 
   it('places into upcoming when not behind and next occurrence is within today window', () => {
     // completed after the 14:00 occurrence → not behind; next occurrence 18:00 today
-    const groups = makeGroups([['g1', { habits: { h1: true }, recurrence: timesPerDay(3) }]])
+    const groups = makeGroups([
+      ['g1', {
+        habits: { h1: true },
+        recurrence: timesPerDay(3),
+        lastServedAt: COMPLETED_AFTER_TODAYS_OCCURRENCE,
+      }],
+    ])
     const habits = makeHabits([['h1', { timestamp: COMPLETED_AFTER_TODAYS_OCCURRENCE, type: 'completed' }]])
     const result = build(groups, habits, `${MONDAY_DATE} 15:00`)
     expect(result.upNext).toHaveLength(1)
@@ -170,7 +214,13 @@ describe('buildHomeSections', () => {
   it('announces the following turn when the current one was served ahead of its due moment', () => {
     // timesPerDay(3) → turn 2 opens 12:00, comes due 14:00; completed 13:00 serves it,
     // so what is upcoming is turn 3 at 18:00 — not the 14:00 turn already done
-    const groups = makeGroups([['g1', { habits: { h1: true }, recurrence: timesPerDay(3) }]])
+    const groups = makeGroups([
+      ['g1', {
+        habits: { h1: true },
+        recurrence: timesPerDay(3),
+        lastServedAt: dayjs(`${MONDAY_DATE} 13:00`).valueOf(),
+      }],
+    ])
     const habits = makeHabits([['h1', { timestamp: dayjs(`${MONDAY_DATE} 13:00`).valueOf(), type: 'completed' }]])
     const result = build(groups, habits, `${MONDAY_DATE} 13:30`)
     expect(result.carried).toHaveLength(0)
@@ -183,7 +233,13 @@ describe('buildHomeSections', () => {
 
   it('places into other when not behind and next occurrence is beyond today window', () => {
     // completed after the 14:00 occurrence → not behind; next occurrence tomorrow 14:00 → beyond today
-    const groups = makeGroups([['g1', { habits: { h1: true }, recurrence: timesPerDay(1) }]])
+    const groups = makeGroups([
+      ['g1', {
+        habits: { h1: true },
+        recurrence: timesPerDay(1),
+        lastServedAt: COMPLETED_AFTER_TODAYS_OCCURRENCE,
+      }],
+    ])
     const habits = makeHabits([['h1', { timestamp: COMPLETED_AFTER_TODAYS_OCCURRENCE, type: 'completed' }]])
     const result = build(groups, habits, `${MONDAY_DATE} 15:00`)
     expect(result.otherGroupIds).toContain('g1')
@@ -194,8 +250,8 @@ describe('buildHomeSections', () => {
   it('sorts carried oldest-first (dueSinceMs descending)', () => {
     // g1 behind 3h (occurrence 14:00), g2 behind 1h (occurrence 16:00) — both with a real completion history
     const groups = makeGroups([
-      ['g1', { habits: { h1: true }, recurrence: timesPerDay(1) }],
-      ['g2', { habits: { h2: true }, recurrence: timesPerDay(4) }],
+      ['g1', { habits: { h1: true }, recurrence: timesPerDay(1), lastServedAt: COMPLETED_YESTERDAY }],
+      ['g2', { habits: { h2: true }, recurrence: timesPerDay(4), lastServedAt: COMPLETED_YESTERDAY }],
     ])
     const habits = makeHabits([
       ['h1', { timestamp: COMPLETED_YESTERDAY, type: 'completed' }],
@@ -210,7 +266,11 @@ describe('buildHomeSections', () => {
   it('sorts upNext: now rows before upcoming rows', () => {
     // now row: never-completed, behind → new "now"; upcoming row: not behind, next occurrence 20:00
     const groups = makeGroups([
-      ['g_upcoming', { habits: { h_u: true }, recurrence: timesPerDay(3) }],
+      ['g_upcoming', {
+        habits: { h_u: true },
+        recurrence: timesPerDay(3),
+        lastServedAt: COMPLETED_AFTER_TODAYS_OCCURRENCE,
+      }],
       ['g_now', { habits: { h_n: true }, recurrence: timesPerDay(1) }],
     ])
     const habits = makeHabits([
@@ -225,9 +285,9 @@ describe('buildHomeSections', () => {
   it('preserves otherGroupIds in original Object.entries order', () => {
     // all completed after today's occurrence → not behind, next occurrence tomorrow → other
     const groups = makeGroups([
-      ['g1', { habits: { h1: true }, recurrence: timesPerDay(1) }],
-      ['g2', { habits: { h2: true }, recurrence: timesPerDay(1) }],
-      ['g3', { habits: { h3: true }, recurrence: timesPerDay(1) }],
+      ['g1', { habits: { h1: true }, recurrence: timesPerDay(1), lastServedAt: COMPLETED_AFTER_TODAYS_OCCURRENCE }],
+      ['g2', { habits: { h2: true }, recurrence: timesPerDay(1), lastServedAt: COMPLETED_AFTER_TODAYS_OCCURRENCE }],
+      ['g3', { habits: { h3: true }, recurrence: timesPerDay(1), lastServedAt: COMPLETED_AFTER_TODAYS_OCCURRENCE }],
     ])
     const habits = makeHabits([
       ['h1', { timestamp: COMPLETED_AFTER_TODAYS_OCCURRENCE, type: 'completed' }],
@@ -240,10 +300,14 @@ describe('buildHomeSections', () => {
 
   it('no group appears in more than one section', () => {
     const groups = makeGroups([
-      ['g_carried', { habits: { h1: true }, recurrence: timesPerDay(1) }],
-      ['g_upcoming', { habits: { h2: true }, recurrence: timesPerDay(3) }],
+      ['g_carried', { habits: { h1: true }, recurrence: timesPerDay(1), lastServedAt: COMPLETED_YESTERDAY }],
+      ['g_upcoming', {
+        habits: { h2: true },
+        recurrence: timesPerDay(3),
+        lastServedAt: COMPLETED_AFTER_TODAYS_OCCURRENCE,
+      }],
       ['g_new', { habits: { h3: true }, recurrence: timesPerDay(1) }],
-      ['g_other', { habits: { h4: true }, recurrence: timesPerDay(1) }],
+      ['g_other', { habits: { h4: true }, recurrence: timesPerDay(1), lastServedAt: COMPLETED_AFTER_TODAYS_OCCURRENCE }],
     ])
     const habits = makeHabits([
       ['h1', { timestamp: COMPLETED_YESTERDAY, type: 'completed' }], // carried (behind 3h, has history)

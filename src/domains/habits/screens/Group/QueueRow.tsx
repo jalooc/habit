@@ -22,7 +22,7 @@ const QueueRow = ({ id, name, images, hasNote, isFirst, groupId }: Props) => {
 
   return (
     <>
-      <SwipeToLog label="Logged" onTrigger={() => void actionHabit(id, 'completed')}>
+      <SwipeToLog label="Logged" onTrigger={() => void actionHabit(id, 'completed', groupId)}>
         <Pressable
           onPress={() => void navigation.navigate('Habit', { habitId: id, groupId })}
           style={[styles.row, !isFirst && styles.rowBorder]}

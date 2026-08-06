@@ -23,7 +23,7 @@ const isDue = (params: {
   boundaries?: Params['dayBoundaries'],
 }) => isGroupDue({
   recurrence: params.recurrence,
-  lastCompletedMs: params.lastCompleted === undefined ? undefined : dayjs(params.lastCompleted).valueOf(),
+  lastServedAt: params.lastCompleted === undefined ? null : dayjs(params.lastCompleted).valueOf(),
   now: dayjs(params.now),
   dayBoundaries: params.boundaries ?? defaultBoundaries,
 })

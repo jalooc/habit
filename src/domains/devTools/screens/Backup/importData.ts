@@ -8,6 +8,7 @@ import groups$, { parsePersistedGroups } from 'src/domains/habits/stores/groups'
 import dayBoundaries$, { dayBoundariesSchema } from 'src/domains/misc/stores/dayBoundaries'
 import { batch } from '@legendapp/state'
 import { cleanupOrphanedImages, imagesDir } from 'src/domains/habits/utils/habitImages'
+import { dismissLastAction } from 'src/domains/habits/utils/habitActions'
 import { devLog } from 'src/domains/devTools/utils/devLog'
 import { toNativePath } from './backupUtils'
 
@@ -75,6 +76,8 @@ const parseAndApplyImport = (serializedData: string) => {
   const parsedGroups = parsePersistedGroups(groups)
 
   batch(() => {
+    dismissLastAction()
+
     habits$.delete()
     groups$.delete()
     dayBoundaries$.delete()

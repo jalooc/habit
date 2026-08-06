@@ -1,7 +1,6 @@
 import orderQueue from 'src/domains/habits/utils/orderQueue'
 import isGroupDue from 'src/domains/habits/utils/isGroupDue'
 import nextTurnDueAt from 'src/domains/habits/utils/nextTurnDueAt'
-import lastCompletedInGroup from 'src/domains/habits/utils/lastCompletedInGroup'
 import type { HabitsStores } from 'src/domains/habits/stores/habits'
 import { Recurrence } from 'src/domains/recurrence/utils/recurrence'
 import getOccurrence from 'src/domains/recurrence/utils/getOccurrence'
@@ -17,6 +16,7 @@ type GroupInput = {
   name: string,
   habits: Record<string, true>,
   recurrence?: Recurrence,
+  lastServedAt: number | null,
 }
 
 type RowBase = {
@@ -55,7 +55,7 @@ const buildHomeSections = (params: {
     if (!group) continue
 
     const habitIds = Object.keys(group.habits)
-    const { recurrence } = group
+    const { recurrence, lastServedAt } = group
 
     if (habitIds.length === 0 || !recurrence) {
       otherGroupIds.push(groupId)
@@ -71,8 +71,7 @@ const buildHomeSections = (params: {
     }
 
     const previousOccurrence = getOccurrence.previous(recurrence, now, dayBoundaries)
-    const lastCompletedMs = lastCompletedInGroup(habitIds, habits)
-    const behind = isGroupDue({ recurrence, lastCompletedMs, now, dayBoundaries })
+    const behind = isGroupDue({ recurrence, lastServedAt, now, dayBoundaries })
 
     if (behind && previousOccurrence) {
       const elapsed = now.diff(previousOccurrence, 'milliseconds')
@@ -89,7 +88,7 @@ const buildHomeSections = (params: {
       continue
     }
 
-    const nextOccurrenceMs = nextTurnDueAt({ recurrence, lastCompletedMs, now, dayBoundaries })?.valueOf()
+    const nextOccurrenceMs = nextTurnDueAt({ recurrence, lastServedAt, now, dayBoundaries })?.valueOf()
     if (nextOccurrenceMs !== undefined && isWithinTodayWindow(nextOccurrenceMs, now.valueOf(), dayBoundaries)) {
       upcomingRows.push({ ...base, kind: 'upcoming', dueAtMs: nextOccurrenceMs })
     } else {

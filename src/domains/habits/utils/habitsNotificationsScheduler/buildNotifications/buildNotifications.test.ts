@@ -28,6 +28,7 @@ const makeFixture = (groupCount: number, habitsPerGroup: number, dailyRate: numb
         name: `group ${String(g)}`,
         habits: Object.fromEntries(habitEntries.map(([id]) => [id, true as const])),
         recurrence: timesPerDay(dailyRate),
+        lastServedAt: Date.now() - 60_000,
       },
       habitEntries,
     }
@@ -92,6 +93,7 @@ describe('buildNotifications', () => {
         name: 'group 0',
         habits: { 'habit-actioned': true as const, 'habit-fresh': true as const },
         recurrence: timesPerDay(1),
+        lastServedAt: Date.now(),
       },
     }).get()
     const habits = {
@@ -111,6 +113,7 @@ describe('buildNotifications', () => {
         name: 'group 0',
         habits: { 'habit-0': true as const },
         recurrence: timesPerDay(3),
+        lastServedAt: dayjs('2026-07-06 13:00').valueOf(),
       },
     }).get()
     const habits = {
@@ -134,6 +137,8 @@ describe('buildNotifications', () => {
         name: 'group 0',
         habits: { 'habit-0': true as const },
         recurrence: timesPerDay(3),
+        // a skip serves nothing, so the rotation's own record stays empty
+        lastServedAt: null,
       },
     }).get()
     const habits = {
@@ -150,7 +155,7 @@ describe('buildNotifications', () => {
 
   it('skips groups without a recurrence', () => {
     const groups = observable({
-      'group-0': { name: 'group 0', habits: { 'habit-0': true as const }},
+      'group-0': { name: 'group 0', habits: { 'habit-0': true as const }, lastServedAt: null },
     }).get()
 
     expect(buildNotifications(groups, { 'habit-0': { name: 'habit 0' }}, dayBoundaries)).toEqual([])
@@ -158,7 +163,7 @@ describe('buildNotifications', () => {
 
   it('produces nothing for a group with no habits', () => {
     const groups = observable({
-      'group-empty': { name: 'empty', habits: {}, recurrence: timesPerDay(1) },
+      'group-empty': { name: 'empty', habits: {}, recurrence: timesPerDay(1), lastServedAt: null },
     }).get()
 
     expect(buildNotifications(groups, {}, dayBoundaries)).toEqual([])
@@ -170,11 +175,13 @@ describe('buildNotifications', () => {
         name: 'once daily',
         habits: { 'habit-once': true as const },
         recurrence: timesPerDay(1),
+        lastServedAt: null,
       },
       'group-twice': {
         name: 'twice daily',
         habits: { 'habit-twice': true as const },
         recurrence: timesPerDay(2),
+        lastServedAt: null,
       },
     }).get()
     const habits = { 'habit-once': { name: 'once' }, 'habit-twice': { name: 'twice' }}

@@ -6,7 +6,7 @@ import hasCompletedSinceTurnOpened from 'src/domains/habits/utils/hasCompletedSi
 
 type Params = {
   recurrence: Recurrence,
-  lastCompletedMs: number | undefined,
+  lastServedAt: number | null,
   now: Dayjs,
   dayBoundaries: Parameters<typeof getOccurrence['next']>[2],
 }
@@ -18,9 +18,9 @@ type Params = {
 // due and unserved is *not* the answer, since the rotation is already behind and there is nothing
 // left to announce — ask `isGroupDue` for that. So this is "the next turn to look forward to", not
 // "the earliest turn still owed".
-const nextTurnDueAt = ({ recurrence, lastCompletedMs, now, dayBoundaries }: Params): Dayjs | undefined => {
+const nextTurnDueAt = ({ recurrence, lastServedAt, now, dayBoundaries }: Params): Dayjs | undefined => {
   const currentTurn = getOccurrence.currentSlot(recurrence, now, dayBoundaries)
-  const isCurrentTurnServed = currentTurn && hasCompletedSinceTurnOpened(currentTurn, lastCompletedMs)
+  const isCurrentTurnServed = currentTurn && hasCompletedSinceTurnOpened(currentTurn, lastServedAt)
 
   return getOccurrence.next(
     recurrence,
