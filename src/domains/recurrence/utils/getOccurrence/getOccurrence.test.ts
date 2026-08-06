@@ -137,6 +137,14 @@ describe('next occurrence', () => {
       // 12h span / 7 slots ≈ 102.86 min, so the second occurrence lands at 10:34:17
       expect(next(timesPerDay(7), `${MONDAY_DATE} 08:52`, dayBoundaries)).toBe(`${MONDAY_DATE} 10:34`)
     })
+
+    it('keeps an occurrence on the minute when the slot length is fractional', () => {
+      // 12h / 7 puts occurrence 4 exactly on 14:00. Measuring each edge from the span's opening
+      // keeps it there; measuring it from the previous edge truncates twice and lands a
+      // millisecond short, which every caller that formats to the minute would show as 13:59.
+      const occurrence = getOccurrence.next(timesPerDay(7), dayjs(`${MONDAY_DATE} 13:00`), dayBoundaries)
+      expect(occurrence?.format('HH:mm:ss.SSS')).toBe('14:00:00.000')
+    })
   })
 
   describe('day boundaries across midnight', () => {
@@ -300,6 +308,19 @@ describe('current slot', () => {
     const boundaries = { start: time(22, 0), end: time(6, 0) }
     expect(currentSlot(timesPerDay(1), '2026-07-07 03:00', boundaries))
       .toBe(`${MONDAY_DATE} 22:00 → 2026-07-07 02:00 → 2026-07-07 06:00`)
+  })
+
+  it('closes each slot exactly where the next one opens, at a fractional slot length', () => {
+    // 12h / 7 slots ≈ 102.857 min, which is not a whole number of milliseconds. Measuring each
+    // edge from the one before it truncates over and over and leaves gaps between consecutive
+    // slots — instants that belong to no slot at all. Probed at the day's seven occurrences,
+    // which is one per slot.
+    const slots = ['08:51', '10:34', '12:17', '14:00', '15:42', '17:25', '19:08'].map(occurrence =>
+      getOccurrence.currentSlot(timesPerDay(7), dayjs(`${MONDAY_DATE} ${occurrence}`), dayBoundaries))
+
+    expect(slots).not.toContain(undefined)
+    expect(slots.slice(0, -1).map(slot => slot?.closesAt.valueOf()))
+      .toEqual(slots.slice(1).map(slot => slot?.opensAt.valueOf()))
   })
 })
 

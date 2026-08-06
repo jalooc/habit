@@ -82,20 +82,24 @@ const drivers = (
 
       type Span = ReturnType<typeof spanClosingAt>
 
-      // The one definition of where a slot sits: the span split into `timesPerDay` equal parts,
-      // each holding its occurrence at its midpoint. Mid-slot rather than on the edges, so no
-      // occurrence lands on the day's opening or closing minute — one firing the moment active
-      // hours end leaves no time to act.
-      const slotAt = (span: Span, index: number) => {
-        const slotLength = span.lengthInMinutes / timesPerDay
-        const opensAt = span.opensAt.add(index * slotLength, 'minutes')
+      // The one definition of where a slot's edges sit: the span split into `timesPerDay` equal
+      // parts. Offsets count whole slots from the span's opening rather than from the previous
+      // edge, so a slot length that isn't a whole millisecond is truncated once instead of
+      // accumulating: one slot's close is exactly the next one's opening.
+      const slotEdgeAt = (span: Span, slotsFromOpening: number) =>
+        span.opensAt.add(slotsFromOpening * (span.lengthInMinutes / timesPerDay), 'minutes')
 
-        return {
-          opensAt,
-          dueAt: opensAt.add(slotLength / 2, 'minutes'),
-          closesAt: opensAt.add(slotLength, 'minutes'),
-        }
-      }
+      // Half a slot in is where the occurrence sits — mid-slot rather than on an edge, so none
+      // lands on the day's opening or closing minute: one firing the moment active hours end
+      // leaves no time to act. Asked for on its own because next/previous need nothing else, and
+      // they ask per index.
+      const occurrenceAt = (span: Span, index: number) => slotEdgeAt(span, index + 0.5)
+
+      const slotAt = (span: Span, index: number) => ({
+        opensAt: slotEdgeAt(span, index),
+        dueAt: occurrenceAt(span, index),
+        closesAt: slotEdgeAt(span, index + 1),
+      })
 
       const slotIndexes = Array.from({ length: timesPerDay }, (_, index) => index)
 
@@ -139,17 +143,17 @@ const drivers = (
 
       // Scanning the indexes rather than materialising every slot: the match is usually the first
       // one tried from whichever end the search runs, so the rest are never built.
-      const dueAtIn = (span: Span, index: number | undefined) =>
-        index === undefined ? undefined : slotAt(span, index).dueAt
+      const occurrenceIn = (span: Span, index: number | undefined) =>
+        index === undefined ? undefined : occurrenceAt(span, index)
 
       return {
-        next: () => search(0, 1, span => dueAtIn(
+        next: () => search(0, 1, span => occurrenceIn(
           span,
-          slotIndexes.find(index => !slotAt(span, index).dueAt.isBefore(referenceDate)),
+          slotIndexes.find(index => !occurrenceAt(span, index).isBefore(referenceDate)),
         )),
-        previous: () => search(0, -1, span => dueAtIn(
+        previous: () => search(0, -1, span => occurrenceIn(
           span,
-          slotIndexes.findLast(index => !slotAt(span, index).dueAt.isAfter(referenceDate)),
+          slotIndexes.findLast(index => !occurrenceAt(span, index).isAfter(referenceDate)),
         )),
         currentSlot: () => {
           const span = firstSpan
@@ -157,7 +161,7 @@ const drivers = (
           if (!runsOn(span)) return undefined
 
           // The closing instant belongs to the last slot, which is what the fallback covers.
-          const index = slotIndexes.find(i => referenceDate.isBefore(slotAt(span, i).closesAt))
+          const index = slotIndexes.find(i => referenceDate.isBefore(slotEdgeAt(span, i + 1)))
 
           return slotAt(span, index ?? timesPerDay - 1)
         },
