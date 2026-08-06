@@ -2,7 +2,7 @@ import { Recurrence, RecurrenceType } from 'src/domains/recurrence/utils/recurre
 import { Dayjs } from 'dayjs'
 import { entries, isTruthy } from 'remeda'
 
-import calcDayTimeSpan from './calcDayTimeSpan'
+import { areDayBoundariesAcrossMidnight, areDayBoundariesZeroDuration } from './dayBoundaries'
 
 /*
   Occurrence vs slot — two words for two different kinds of thing:
@@ -63,11 +63,13 @@ const drivers = (
   ) {
     throw new RangeError('At least one specific day has to be picked.')
   }
+  if (areDayBoundariesZeroDuration(dayBoundaries)) {
+    throw new RangeError('Day boundaries can\'t be zero-duration.')
+  }
 
   return ({
     'times-per-day': () => {
-      const { startMinutes, endMinutes } = calcDayTimeSpan(dayBoundaries)
-      const isAcrossMidnight = startMinutes > endMinutes
+      const isAcrossMidnight = areDayBoundariesAcrossMidnight(dayBoundaries)
       const timesPerDay = recurrence.value
       const { specificDays } = recurrence
 

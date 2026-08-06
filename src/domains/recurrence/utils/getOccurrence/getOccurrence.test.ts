@@ -68,6 +68,16 @@ describe('recurrence value validation', () => {
   })
 })
 
+describe('day boundaries validation', () => {
+  it('throws a RangeError when the boundaries meet, leaving no active hours', () => {
+    const zeroDuration = { start: time(9, 30), end: time(9, 30) }
+    expect(() => next(timesPerDay(1), `${MONDAY_DATE} 06:00`, zeroDuration)).toThrow(RangeError)
+    expect(() => previous(timesPerDay(1), `${MONDAY_DATE} 06:00`, zeroDuration)).toThrow(RangeError)
+    expect(() => getOccurrence.currentSlot(timesPerDay(1), dayjs(`${MONDAY_DATE} 06:00`), zeroDuration))
+      .toThrow(RangeError)
+  })
+})
+
 describe('next occurrence', () => {
   describe('once a day', () => {
     it('places the occurrence in the middle of the day boundaries', () => {
