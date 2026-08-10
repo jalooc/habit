@@ -32,7 +32,7 @@ const TodayRow = ({ groupName, habitName, tag, dotKind, habitId, groupId, isFirs
   return (
     <SwipeToLog label="Logged" onTrigger={() => void actionHabit(habitId, 'completed', groupId)}>
       <Pressable
-        onPress={() => void navigation.navigate('Habit', { habitId, groupId })}
+        onPress={() => void navigation.navigate('Group', { id: groupId })}
         style={[
           styles.row,
           surface === 'carried' ? styles.rowCarried : styles.rowUpNext,
