@@ -183,4 +183,42 @@ describe('isGroupDue', () => {
       boundaries,
     })).toBe(false)
   })
+
+  const everyXDays = (value: number) => ({ type: 'every-x-days', value } as const)
+
+  it('returns true when nothing has ever been served for every-x-days', () => {
+    expect(isDue({ recurrence: everyXDays(2), now: `${MONDAY_DATE} 15:00` })).toBe(true)
+  })
+
+  it('returns false when every-x-days was served inside the current slot', () => {
+    expect(isDue({
+      recurrence: everyXDays(2),
+      lastCompleted: `${MONDAY_DATE} 10:30`,
+      now: `${MONDAY_DATE} 15:00`,
+    })).toBe(false)
+  })
+
+  it('stays served when every-x-days was completed ahead of its due moment', () => {
+    expect(isDue({
+      recurrence: everyXDays(2),
+      lastCompleted: `${MONDAY_DATE} 09:30`,
+      now: '2026-07-08 10:00',
+    })).toBe(false)
+  })
+
+  it('comes due again once a new every-x-days obligation opens after the previous slot closes', () => {
+    expect(isDue({
+      recurrence: everyXDays(2),
+      lastCompleted: `${MONDAY_DATE} 10:30`,
+      now: '2026-07-10 11:00',
+    })).toBe(true)
+  })
+
+  it('is behind after the served slot closes even before the next due moment', () => {
+    expect(isDue({
+      recurrence: everyXDays(2),
+      lastCompleted: `${MONDAY_DATE} 10:30`,
+      now: '2026-07-09 15:00',
+    })).toBe(true)
+  })
 })

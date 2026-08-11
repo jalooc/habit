@@ -13,20 +13,23 @@ type Params = {
 const isGroupDue = ({ recurrence, lastServedAt, now, dayBoundaries }: Params): boolean => {
   if (!recurrence) return false
 
-  const mostRecentOccurrence = getOccurrence.previous(recurrence, now, dayBoundaries)
+  if (recurrence.type === 'every-x-days') {
+    const turn = getOccurrence.currentSlot(recurrence, now, dayBoundaries, lastServedAt)
+    if (!turn) return lastServedAt === null
+
+    return !hasCompletedSinceTurnOpened(turn, lastServedAt)
+  }
+
+  const mostRecentOccurrence = getOccurrence.previous(recurrence, now, dayBoundaries, lastServedAt)
   if (!mostRecentOccurrence) return false
 
-  // Completing anywhere inside a turn serves it, so dueness hangs on when that turn opened,
-  // not on when it came due.
-  const mostRecentDueTurn = getOccurrence.currentSlot(recurrence, mostRecentOccurrence, dayBoundaries)
+  const mostRecentDueTurn = getOccurrence.currentSlot(
+    recurrence,
+    mostRecentOccurrence,
+    dayBoundaries,
+    lastServedAt,
+  )
 
-  // An occurrence always sits inside a slot, so there is no known input that lands here — the
-  // branch exists because the engine's return type is optional and unreachability can't be proved
-  // across future changes to it. Falling back to the occurrence degrades to the rule that predates
-  // turns: a completion in the first half of a slot stops counting, an error bounded by half a slot
-  // length. Both alternatives are worse — a hardcoded boolean is unconditionally wrong in one
-  // direction, and throwing crashes the Group screen, which computes dueness during render with no
-  // error boundary above it.
   if (!mostRecentDueTurn) {
     return lastServedAt === null || lastServedAt < mostRecentOccurrence.valueOf()
   }

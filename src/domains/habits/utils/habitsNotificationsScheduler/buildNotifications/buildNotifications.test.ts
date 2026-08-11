@@ -10,6 +10,8 @@ const dayBoundaries = { start: time(8, 0), end: time(20, 0) }
 
 const timesPerDay = (value: number) => ({ type: 'times-per-day', value } as const)
 
+const everyXDays = (value: number) => ({ type: 'every-x-days', value } as const)
+
 // Group fixtures pass through an observable so they have the exact type and
 // shape buildNotifications receives in production (stores hand it `.get()` output).
 const makeFixture = (groupCount: number, habitsPerGroup: number, dailyRate: number) => {
@@ -200,5 +202,28 @@ describe('buildNotifications', () => {
     expect(dates).toHaveLength(64)
     expect(dates).toEqual([...dates].sort((a, b) => a - b))
     expect(new Set(notifications.map(notification => notification.title))).toEqual(new Set(['group 0', 'group 1']))
+  })
+
+  it('projects every-x-days reminders from on-time completions', () => {
+    vi.setSystemTime(new Date('2026-07-06T06:00:00'))
+    const groups = observable({
+      'group-0': {
+        name: 'every two days',
+        habits: { 'habit-0': true as const },
+        recurrence: everyXDays(2),
+        lastServedAt: null,
+      },
+    }).get()
+    const habits = { 'habit-0': { name: 'habit 0' }}
+
+    const dates = buildNotifications(groups, habits, dayBoundaries)
+      .slice(0, 3)
+      .map(notification => dayjs(notification.date).format('YYYY-MM-DD HH:mm'))
+
+    expect(dates).toEqual([
+      '2026-07-06 08:00',
+      '2026-07-08 08:00',
+      '2026-07-10 08:00',
+    ])
   })
 })

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import dayjs from 'dayjs'
+import dayjs, { Dayjs } from 'dayjs'
 import { objectFromEntries } from 'tsafe'
 import { RECURRENCE_TYPES, Weekday, WEEKDAYS } from 'src/domains/recurrence/utils/recurrence'
 
@@ -12,14 +12,28 @@ const time = (hour: number, minute: number) => ({ hour, minute })
 const timesPerDay = (value: number, specificDays?: Record<Weekday, boolean>) =>
   ({ type: 'times-per-day', value, specificDays } as const)
 
+const everyXDays = (value: number, specificDays?: Record<Weekday, boolean>) =>
+  ({ type: 'every-x-days', value, specificDays } as const)
+
 const days = (...selected: Weekday[]) =>
   objectFromEntries(WEEKDAYS.map(day => [day, selected.includes(day)]))
 
+const dayBoundaries = { start: time(8, 0), end: time(20, 0) }
+
 const { next, previous } = (() => {
-  const call = (getOccurrenceFunction: typeof getOccurrence['next'] | typeof getOccurrence['previous']) => (
-    recurrence: Parameters<typeof getOccurrenceFunction>[0],
+  type TimesPerDayRecurrence = ReturnType<typeof timesPerDay>
+  type Boundaries = typeof dayBoundaries
+
+  const call = (
+    getOccurrenceFunction: (
+      recurrence: TimesPerDayRecurrence,
+      referenceDate: Dayjs,
+      dayBoundaries: Boundaries,
+    ) => Dayjs | undefined,
+  ) => (
+    recurrence: TimesPerDayRecurrence,
     referenceDate: string,
-    boundaries: Parameters<typeof getOccurrenceFunction>[2],
+    boundaries: Boundaries,
   ) => {
     const occurrence = getOccurrenceFunction(recurrence, dayjs(referenceDate), boundaries)
     if (!occurrence) throw new Error('Expected an occurrence')
@@ -32,11 +46,17 @@ const { next, previous } = (() => {
   }
 })()
 
-const dayBoundaries = { start: time(8, 0), end: time(20, 0) }
-
 describe('isRecurrenceTypeImplemented', () => {
   it.each(RECURRENCE_TYPES)('agrees with what the engine does for %s', type => {
-    const askForOccurrence = () => getOccurrence.next({ type, value: 1 }, dayjs(`${MONDAY_DATE} 06:00`), dayBoundaries)
+    const askForOccurrence = () => {
+      const referenceDate = dayjs(`${MONDAY_DATE} 06:00`)
+
+      if (type === 'times-per-day') {
+        getOccurrence.next({ type: 'times-per-day', value: 1 }, referenceDate, dayBoundaries)
+      } else {
+        getOccurrence.next({ type, value: 1 }, referenceDate, dayBoundaries, null)
+      }
+    }
 
     if (isRecurrenceTypeImplemented(type)) {
       expect(askForOccurrence).not.toThrow()
@@ -264,9 +284,9 @@ describe('daylight saving transitions', () => {
 
 describe('current slot', () => {
   const currentSlot = (
-    recurrence: Parameters<typeof getOccurrence['currentSlot']>[0],
+    recurrence: ReturnType<typeof timesPerDay>,
     referenceDate: string,
-    boundaries: Parameters<typeof getOccurrence['currentSlot']>[2] = dayBoundaries,
+    boundaries: typeof dayBoundaries = dayBoundaries,
   ) => {
     const slot = getOccurrence.currentSlot(recurrence, dayjs(referenceDate), boundaries)
     if (!slot) return undefined
@@ -463,6 +483,112 @@ describe('previous occurrence', () => {
 
     it('throws a RangeError when no days are enabled', () => {
       expect(() => previous(timesPerDay(1, days()), `${MONDAY_DATE} 06:00`, dayBoundaries)).toThrow(RangeError)
+    })
+  })
+})
+
+describe('every-x-days', () => {
+  const NEVER_SERVED = null
+
+  const nextEvery = (
+    recurrence: ReturnType<typeof everyXDays>,
+    referenceDate: string,
+    lastServedAt: number | null = NEVER_SERVED,
+    boundaries = dayBoundaries,
+  ) => {
+    const occurrence = getOccurrence.next(recurrence, dayjs(referenceDate), boundaries, lastServedAt)
+    if (!occurrence) throw new Error('Expected an occurrence')
+    return occurrence.format('YYYY-MM-DD HH:mm')
+  }
+
+  const previousEvery = (
+    recurrence: ReturnType<typeof everyXDays>,
+    referenceDate: string,
+    lastServedAt: number | null = NEVER_SERVED,
+    boundaries = dayBoundaries,
+  ) => {
+    const occurrence = getOccurrence.previous(recurrence, dayjs(referenceDate), boundaries, lastServedAt)
+    if (!occurrence) throw new Error('Expected an occurrence')
+    return occurrence.format('YYYY-MM-DD HH:mm')
+  }
+
+  const currentSlotEvery = (
+    recurrence: ReturnType<typeof everyXDays>,
+    referenceDate: string,
+    lastServedAt: number | null = NEVER_SERVED,
+    boundaries = dayBoundaries,
+  ) => {
+    const slot = getOccurrence.currentSlot(recurrence, dayjs(referenceDate), boundaries, lastServedAt)
+    if (!slot) return undefined
+    return [slot.opensAt, slot.dueAt, slot.closesAt].map(date => date.format('YYYY-MM-DD HH:mm')).join(' → ')
+  }
+
+  describe('next occurrence', () => {
+    it('is due immediately at the start of active hours when nothing has been served', () => {
+      expect(nextEvery(everyXDays(2), `${MONDAY_DATE} 06:00`)).toBe(`${MONDAY_DATE} 08:00`)
+    })
+
+    it('preserves the anchor time of day after a completion', () => {
+      const lastServedAt = dayjs(`${MONDAY_DATE} 10:30`).valueOf()
+      expect(nextEvery(everyXDays(2), `${MONDAY_DATE} 11:00`, lastServedAt)).toBe('2026-07-08 10:30')
+    })
+
+    it('steps forward across missed cycles', () => {
+      const lastServedAt = dayjs(`${MONDAY_DATE} 10:30`).valueOf()
+      expect(nextEvery(everyXDays(2), '2026-07-12 11:00', lastServedAt)).toBe('2026-07-14 10:30')
+    })
+
+    it('snaps the day forward while keeping the time of day', () => {
+      const lastServedAt = dayjs(`${MONDAY_DATE} 10:30`).valueOf()
+      expect(nextEvery(everyXDays(2), `${MONDAY_DATE} 11:00`, lastServedAt, dayBoundaries))
+        .toBe('2026-07-08 10:30')
+      expect(nextEvery(
+        everyXDays(2, days('mo', 'we', 'fr')),
+        `${MONDAY_DATE} 11:00`,
+        lastServedAt,
+      )).toBe('2026-07-08 10:30')
+    })
+  })
+
+  describe('previous occurrence', () => {
+    it('returns the bootstrap due while still inside the first obligation', () => {
+      expect(previousEvery(everyXDays(2), `${MONDAY_DATE} 15:00`)).toBe(`${MONDAY_DATE} 08:00`)
+    })
+
+    it('returns nothing before the bootstrap due has arrived', () => {
+      expect(getOccurrence.previous(everyXDays(2), dayjs(`${MONDAY_DATE} 07:00`), dayBoundaries, NEVER_SERVED))
+        .toBeUndefined()
+    })
+
+    it('returns the pending due once referenceDate has reached it', () => {
+      const lastServedAt = dayjs(`${MONDAY_DATE} 10:30`).valueOf()
+      expect(previousEvery(everyXDays(2), '2026-07-08 11:00', lastServedAt)).toBe('2026-07-08 10:30')
+    })
+
+    it('returns nothing while still ahead of the pending due', () => {
+      const lastServedAt = dayjs(`${MONDAY_DATE} 10:30`).valueOf()
+      expect(getOccurrence.previous(everyXDays(2), dayjs(`${MONDAY_DATE} 15:00`), dayBoundaries, lastServedAt))
+        .toBeUndefined()
+    })
+
+    it('returns the due instant once referenceDate has passed it, without skipping to the next cycle', () => {
+      const lastServedAt = dayjs(`${MONDAY_DATE} 10:30`).valueOf()
+      expect(previousEvery(everyXDays(2), '2026-07-10 11:00', lastServedAt)).toBe('2026-07-10 10:30')
+    })
+  })
+
+  describe('current slot', () => {
+    it('centres the slot on the due instant', () => {
+      expect(currentSlotEvery(everyXDays(2), `${MONDAY_DATE} 09:00`))
+        .toBe('2026-07-05 08:00 → 2026-07-06 08:00 → 2026-07-07 08:00')
+    })
+
+    it('returns nothing in the overnight quiet gap', () => {
+      expect(currentSlotEvery(everyXDays(2), `${MONDAY_DATE} 06:00`)).toBeUndefined()
+    })
+
+    it('returns nothing after the slot closes', () => {
+      expect(currentSlotEvery(everyXDays(2), '2026-07-07 20:01')).toBeUndefined()
     })
   })
 })

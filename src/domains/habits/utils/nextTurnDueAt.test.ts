@@ -85,4 +85,14 @@ describe('nextTurnDueAt', () => {
     expect(dueAt(timesPerDay(1), `${MONDAY_DATE} 23:00`, `${MONDAY_DATE} 22:30`, boundaries))
       .toBe('2026-07-08 02:00')
   })
+
+  const everyXDays = (value: number) => ({ type: 'every-x-days', value } as const)
+
+  it('announces the bootstrap due for every-x-days when nothing has been served', () => {
+    expect(dueAt(everyXDays(2), `${MONDAY_DATE} 06:00`, NEVER_SERVED)).toBe(`${MONDAY_DATE} 08:00`)
+  })
+
+  it('preserves the completion time of day for the next every-x-days turn', () => {
+    expect(dueAt(everyXDays(2), `${MONDAY_DATE} 15:00`, `${MONDAY_DATE} 10:30`)).toBe('2026-07-08 10:30')
+  })
 })

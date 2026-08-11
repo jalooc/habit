@@ -1,8 +1,18 @@
 import { Recurrence, RecurrenceType } from 'src/domains/recurrence/utils/recurrence'
 import { Dayjs } from 'dayjs'
+import dayjs from 'dayjs'
 import { entries, isTruthy } from 'remeda'
 
 import { areDayBoundariesAcrossMidnight, areDayBoundariesZeroDuration } from './dayBoundaries'
+import {
+  clampToActiveHours,
+  DayBoundaries,
+  isWithinActiveHours,
+  preserveWallClockAddDays,
+  slotFromDueAt,
+  snapToSpecificDays,
+  Time,
+} from './intervalHelpers'
 
 /*
   Occurrence vs slot — two words for two different kinds of thing:
@@ -16,25 +26,25 @@ import { areDayBoundariesAcrossMidnight, areDayBoundariesZeroDuration } from './
   are just "the `dueAt` of the slot after / at-or-before this moment" — which is how they are
   implemented: one slot definition, read three ways. Both words are needed because "when does it
   fire" and "which stretch of time does that firing govern" are different questions.
+
+  `times-per-day` is calendar-anchored and ignores `lastServedAt`. Interval types (`every-x-days`,
+  …) anchor slots on rotation service history instead.
 */
 
 const MAX_SEARCH_HORIZON_IN_DAYS = 30
 
-type Time = {
-  hour: number, minute: number,
-}
-
-type DayBoundaries = {
-  start: Time,
-  end: Time,
-}
-
 const atWallClock = (day: Dayjs, time: Time) => day.startOf('day').hour(time.hour).minute(time.minute)
 
 // Keep in sync with the drivers below — every type missing here throws when asked for an occurrence.
-const IMPLEMENTED_RECURRENCE_TYPES = new Set<RecurrenceType>(['times-per-day'])
+const IMPLEMENTED_RECURRENCE_TYPES = new Set<RecurrenceType>(['times-per-day', 'every-x-days'])
 
 export const isRecurrenceTypeImplemented = (type: RecurrenceType) => IMPLEMENTED_RECURRENCE_TYPES.has(type)
+
+export type OccurrenceSlot = {
+  opensAt: Dayjs,
+  dueAt: Dayjs,
+  closesAt: Dayjs,
+}
 
 // A day time span is attributed to the weekday its middle falls on, so a span crossing midnight
 // goes to whichever side holds the larger part of it: 22:00–06:00 belongs to the day it ends in,
@@ -46,9 +56,8 @@ const matchesSpecificDays = (specificDays: Recurrence['specificDays'], dayTimeSp
   return entries(specificDays).some(([day, isEnabled]) => isEnabled && day === weekday)
 }
 
-const drivers = (
+const validateRecurrence = (
   recurrence: Recurrence,
-  referenceDate: Dayjs,
   dayBoundaries: DayBoundaries,
 ) => {
   if (recurrence.value < 1) {
@@ -66,115 +75,219 @@ const drivers = (
   if (areDayBoundariesZeroDuration(dayBoundaries)) {
     throw new RangeError('Day boundaries can\'t be zero-duration.')
   }
+}
+
+const timesPerDayDriver = (
+  recurrence: Recurrence,
+  referenceDate: Dayjs,
+  dayBoundaries: DayBoundaries,
+) => {
+  const isAcrossMidnight = areDayBoundariesAcrossMidnight(dayBoundaries)
+  const timesPerDay = recurrence.value
+  const { specificDays } = recurrence
+
+  const spanClosingAt = (closesAt: Dayjs) => {
+    const opensAt = atWallClock(isAcrossMidnight ? closesAt.subtract(1, 'day') : closesAt, dayBoundaries.start)
+
+    return { opensAt, closesAt, lengthInMinutes: closesAt.diff(opensAt, 'minutes', true) }
+  }
+
+  type Span = ReturnType<typeof spanClosingAt>
+
+  const slotEdgeAt = (span: Span, slotsFromOpening: number) =>
+    span.opensAt.add(slotsFromOpening * (span.lengthInMinutes / timesPerDay), 'minutes')
+
+  const occurrenceAt = (span: Span, index: number) => slotEdgeAt(span, index + 0.5)
+
+  const slotAt = (span: Span, index: number) => ({
+    opensAt: slotEdgeAt(span, index),
+    dueAt: occurrenceAt(span, index),
+    closesAt: slotEdgeAt(span, index + 1),
+  })
+
+  const slotIndexes = Array.from({ length: timesPerDay }, (_, index) => index)
+
+  const runsOn = (span: Span) =>
+    matchesSpecificDays(specificDays, span.opensAt.add(span.lengthInMinutes / 2, 'minutes'))
+
+  const sameDayCloses = atWallClock(referenceDate, dayBoundaries.end)
+  const firstSpan = spanClosingAt(
+    sameDayCloses.isBefore(referenceDate) ? sameDayCloses.add(1, 'day') : sameDayCloses
+  )
+
+  const spanAt = (dayOffset: number) => {
+    if (dayOffset === 0) return firstSpan
+
+    const opensAt = firstSpan.opensAt.add(dayOffset, 'day')
+    const closesAt = firstSpan.closesAt.add(dayOffset, 'day')
+
+    return { opensAt, closesAt, lengthInMinutes: closesAt.diff(opensAt, 'minutes', true) }
+  }
+
+  const search = (
+    dayOffset: number,
+    step: 1 | -1,
+    pickFrom: (span: Span) => Dayjs | undefined,
+  ): Dayjs | undefined => {
+    if (Math.abs(dayOffset) >= MAX_SEARCH_HORIZON_IN_DAYS) return undefined
+
+    const span = spanAt(dayOffset)
+    const occurrence = runsOn(span) ? pickFrom(span) : undefined
+
+    return occurrence ?? search(dayOffset + step, step, pickFrom)
+  }
+
+  const occurrenceIn = (span: Span, index: number | undefined) =>
+    index === undefined ? undefined : occurrenceAt(span, index)
+
+  return {
+    next: () => search(0, 1, span => occurrenceIn(
+      span,
+      slotIndexes.find(index => !occurrenceAt(span, index).isBefore(referenceDate)),
+    )),
+    previous: () => search(0, -1, span => occurrenceIn(
+      span,
+      slotIndexes.findLast(index => !occurrenceAt(span, index).isAfter(referenceDate)),
+    )),
+    currentSlot: () => {
+      const span = firstSpan
+      if (referenceDate.isBefore(span.opensAt)) return undefined
+      if (!runsOn(span)) return undefined
+
+      const index = slotIndexes.find(i => referenceDate.isBefore(slotEdgeAt(span, i + 1)))
+
+      return slotAt(span, index ?? timesPerDay - 1)
+    },
+  }
+}
+
+const everyXDaysDriver = (
+  recurrence: Recurrence,
+  referenceDate: Dayjs,
+  dayBoundaries: DayBoundaries,
+  lastServedAt: number | null,
+) => {
+  const intervalDays = recurrence.value
+  const { specificDays } = recurrence
+
+  const bootstrapDueAt = (reference: Dayjs) => {
+    const snapped = snapToSpecificDays(reference, specificDays)
+    const dayStart = atWallClock(snapped, dayBoundaries.start)
+    const clamped = clampToActiveHours(snapped, dayBoundaries)
+
+    return clamped.isAfter(dayStart) ? dayStart : clamped
+  }
+
+  const dueAfterServe = (servedAt: number) =>
+    snapToSpecificDays(preserveWallClockAddDays(dayjs(servedAt), intervalDays), specificDays)
+
+  const advanceDueAt = (dueAt: Dayjs) =>
+    snapToSpecificDays(preserveWallClockAddDays(dueAt, intervalDays), specificDays)
+
+  const slotForDueAt = (dueAt: Dayjs): OccurrenceSlot => slotFromDueAt(dueAt, intervalDays)
+
+  const slotAfterServe = (servedAt: number): OccurrenceSlot => {
+    const dueAt = dueAfterServe(servedAt)
+
+    return {
+      opensAt: dayjs(servedAt),
+      dueAt,
+      closesAt: preserveWallClockAddDays(dueAt, intervalDays / 2),
+    }
+  }
+
+  const duesNear = () => {
+    if (lastServedAt === null) return [bootstrapDueAt(referenceDate)]
+
+    const dues = [dueAfterServe(lastServedAt)]
+    for (let step = 1; step <= MAX_SEARCH_HORIZON_IN_DAYS; step += 1) {
+      dues.unshift(snapToSpecificDays(preserveWallClockAddDays(dues[0], -intervalDays), specificDays))
+      const lastDue = dues.at(-1)
+      if (!lastDue) break
+      dues.push(advanceDueAt(lastDue))
+    }
+    return dues
+  }
+
+  const slotContaining = (): OccurrenceSlot | undefined => {
+    if (!isWithinActiveHours(referenceDate, dayBoundaries)) return undefined
+
+    if (lastServedAt !== null) {
+      const servedSlot = slotAfterServe(lastServedAt)
+      if (!referenceDate.isBefore(servedSlot.opensAt) && !referenceDate.isAfter(servedSlot.closesAt)) {
+        return servedSlot
+      }
+
+      if (!referenceDate.isBefore(servedSlot.closesAt)) {
+        let due = advanceDueAt(servedSlot.dueAt)
+        while (due.isBefore(referenceDate)) due = advanceDueAt(due)
+
+        const forwardSlot = slotForDueAt(due)
+        if (!referenceDate.isBefore(forwardSlot.opensAt) && !referenceDate.isAfter(forwardSlot.closesAt)) {
+          return forwardSlot
+        }
+      }
+    }
+
+    const bootstrap = bootstrapDueAt(referenceDate)
+    const bootstrapSlot = slotForDueAt(bootstrap)
+    if (!referenceDate.isBefore(bootstrapSlot.opensAt) && !referenceDate.isAfter(bootstrapSlot.closesAt)) {
+      return bootstrapSlot
+    }
+
+    return duesNear().map(slotForDueAt).find(slot =>
+      !referenceDate.isBefore(slot.opensAt) && !referenceDate.isAfter(slot.closesAt))
+  }
+
+  return {
+    next: () => {
+      if (lastServedAt === null) {
+        const bootstrap = bootstrapDueAt(referenceDate)
+        return bootstrap.isBefore(referenceDate) ? undefined : bootstrap
+      }
+
+      let due = dueAfterServe(lastServedAt)
+      while (due.isBefore(referenceDate)) due = advanceDueAt(due)
+      return due
+    },
+    previous: () => {
+      if (lastServedAt === null) {
+        const bootstrap = bootstrapDueAt(referenceDate)
+        return bootstrap.isAfter(referenceDate) ? undefined : bootstrap
+      }
+
+      let due = dueAfterServe(lastServedAt)
+      let nextDue = advanceDueAt(due)
+
+      while (!nextDue.isAfter(referenceDate)) {
+        due = nextDue
+        nextDue = advanceDueAt(due)
+      }
+
+      return due.isAfter(referenceDate) ? undefined : due
+    },
+    currentSlot: () => slotContaining(),
+  }
+}
+
+const drivers = (
+  recurrence: Recurrence,
+  referenceDate: Dayjs,
+  dayBoundaries: DayBoundaries,
+  lastServedAt: number | null | undefined,
+) => {
+  validateRecurrence(recurrence, dayBoundaries)
+
+  if (recurrence.type !== 'times-per-day' && lastServedAt === undefined) {
+    throw new TypeError(`lastServedAt is required for ${recurrence.type}.`)
+  }
 
   return ({
-    'times-per-day': () => {
-      const isAcrossMidnight = areDayBoundariesAcrossMidnight(dayBoundaries)
-      const timesPerDay = recurrence.value
-      const { specificDays } = recurrence
-
-      // A day's active span. Both ends are set as wall-clock components, so its length is whatever
-      // the clock actually did that day: the night an hour is skipped is genuinely an hour shorter,
-      // and the slots divide what is really there rather than a nominal count.
-      const spanClosingAt = (closesAt: Dayjs) => {
-        const opensAt = atWallClock(isAcrossMidnight ? closesAt.subtract(1, 'day') : closesAt, dayBoundaries.start)
-
-        return { opensAt, closesAt, lengthInMinutes: closesAt.diff(opensAt, 'minutes', true) }
-      }
-
-      type Span = ReturnType<typeof spanClosingAt>
-
-      // The one definition of where a slot's edges sit: the span split into `timesPerDay` equal
-      // parts. Offsets count whole slots from the span's opening rather than from the previous
-      // edge, so a slot length that isn't a whole millisecond is truncated once instead of
-      // accumulating: one slot's close is exactly the next one's opening.
-      const slotEdgeAt = (span: Span, slotsFromOpening: number) =>
-        span.opensAt.add(slotsFromOpening * (span.lengthInMinutes / timesPerDay), 'minutes')
-
-      // Half a slot in is where the occurrence sits — mid-slot rather than on an edge, so none
-      // lands on the day's opening or closing minute: one firing the moment active hours end
-      // leaves no time to act. Asked for on its own because next/previous need nothing else, and
-      // they ask per index.
-      const occurrenceAt = (span: Span, index: number) => slotEdgeAt(span, index + 0.5)
-
-      const slotAt = (span: Span, index: number) => ({
-        opensAt: slotEdgeAt(span, index),
-        dueAt: occurrenceAt(span, index),
-        closesAt: slotEdgeAt(span, index + 1),
-      })
-
-      const slotIndexes = Array.from({ length: timesPerDay }, (_, index) => index)
-
-      const runsOn = (span: Span) =>
-        matchesSpecificDays(specificDays, span.opensAt.add(span.lengthInMinutes / 2, 'minutes'))
-
-      // The span ending at or after referenceDate — the one containing it, unless referenceDate
-      // sits in the quiet gap between two days' active hours.
-      const sameDayCloses = atWallClock(referenceDate, dayBoundaries.end)
-      const firstSpan = spanClosingAt(
-        sameDayCloses.isBefore(referenceDate) ? sameDayCloses.add(1, 'day') : sameDayCloses
-      )
-
-      // Every other span is the first one stepped whole days, which is cheaper than rebuilding
-      // both ends and just as correct: `.add(_, 'day')` holds wall-clock time, so a span landing
-      // on a transition still measures the hours that day really has.
-      const spanAt = (dayOffset: number) => {
-        if (dayOffset === 0) return firstSpan
-
-        const opensAt = firstSpan.opensAt.add(dayOffset, 'day')
-        const closesAt = firstSpan.closesAt.add(dayOffset, 'day')
-
-        return { opensAt, closesAt, lengthInMinutes: closesAt.diff(opensAt, 'minutes', true) }
-      }
-
-      // Walking day by day rather than jumping to a computed index: a day whose length is not
-      // known in advance has no closed-form index, and `.add(_, 'day')` keeps wall-clock time
-      // where adding elapsed minutes would drift across a transition.
-      const search = (
-        dayOffset: number,
-        step: 1 | -1,
-        pickFrom: (span: Span) => Dayjs | undefined,
-      ): Dayjs | undefined => {
-        if (Math.abs(dayOffset) >= MAX_SEARCH_HORIZON_IN_DAYS) return undefined
-
-        const span = spanAt(dayOffset)
-        const occurrence = runsOn(span) ? pickFrom(span) : undefined
-
-        return occurrence ?? search(dayOffset + step, step, pickFrom)
-      }
-
-      // Scanning the indexes rather than materialising every slot: the match is usually the first
-      // one tried from whichever end the search runs, so the rest are never built.
-      const occurrenceIn = (span: Span, index: number | undefined) =>
-        index === undefined ? undefined : occurrenceAt(span, index)
-
-      return {
-        next: () => search(0, 1, span => occurrenceIn(
-          span,
-          slotIndexes.find(index => !occurrenceAt(span, index).isBefore(referenceDate)),
-        )),
-        previous: () => search(0, -1, span => occurrenceIn(
-          span,
-          slotIndexes.findLast(index => !occurrenceAt(span, index).isAfter(referenceDate)),
-        )),
-        currentSlot: () => {
-          const span = firstSpan
-          if (referenceDate.isBefore(span.opensAt)) return undefined
-          if (!runsOn(span)) return undefined
-
-          // The closing instant belongs to the last slot, which is what the fallback covers.
-          const index = slotIndexes.find(i => referenceDate.isBefore(slotEdgeAt(span, i + 1)))
-
-          return slotAt(span, index ?? timesPerDay - 1)
-        },
-      }
-    },
+    'times-per-day': () => timesPerDayDriver(recurrence, referenceDate, dayBoundaries),
     'every-x-hours': () => {
       throw new Error('every-x-hours is not implemented.')
     },
-    'every-x-days': () => {
-      throw new Error('every-x-days is not implemented.')
-    },
+    'every-x-days': () => everyXDaysDriver(recurrence, referenceDate, dayBoundaries, lastServedAt ?? null),
     'times-per-week': () => {
       throw new Error('times-per-week is not implemented.')
     },
@@ -184,23 +297,71 @@ const drivers = (
   }[recurrence.type])()
 }
 
+type TimesPerDayRecurrence = Recurrence & { type: 'times-per-day' }
+
+const isTimesPerDay = (recurrence: Recurrence): recurrence is TimesPerDayRecurrence =>
+  recurrence.type === 'times-per-day'
+
+const lastServedAtForDriver = (recurrence: Recurrence, lastServedAt?: number | null) =>
+  isTimesPerDay(recurrence) ? undefined : lastServedAt
+
+type OccurrenceNext = {
+  (recurrence: TimesPerDayRecurrence, referenceDate: Dayjs, dayBoundaries: DayBoundaries): Dayjs | undefined,
+  (
+    recurrence: Recurrence,
+    referenceDate: Dayjs,
+    dayBoundaries: DayBoundaries,
+    lastServedAt: number | null,
+  ): Dayjs | undefined,
+}
+
+type OccurrencePrevious = {
+  (recurrence: TimesPerDayRecurrence, referenceDate: Dayjs, dayBoundaries: DayBoundaries): Dayjs | undefined,
+  (
+    recurrence: Recurrence,
+    referenceDate: Dayjs,
+    dayBoundaries: DayBoundaries,
+    lastServedAt: number | null,
+  ): Dayjs | undefined,
+}
+
+type OccurrenceCurrentSlot = {
+  (
+    recurrence: TimesPerDayRecurrence,
+    referenceDate: Dayjs,
+    dayBoundaries: DayBoundaries,
+  ): OccurrenceSlot | undefined,
+  (
+    recurrence: Recurrence,
+    referenceDate: Dayjs,
+    dayBoundaries: DayBoundaries,
+    lastServedAt: number | null,
+  ): OccurrenceSlot | undefined,
+}
+
+const next: OccurrenceNext = (
+  recurrence: Recurrence,
+  referenceDate: Dayjs,
+  dayBoundaries: DayBoundaries,
+  lastServedAt?: number | null,
+) => drivers(recurrence, referenceDate, dayBoundaries, lastServedAtForDriver(recurrence, lastServedAt)).next()
+
+const previous: OccurrencePrevious = (
+  recurrence: Recurrence,
+  referenceDate: Dayjs,
+  dayBoundaries: DayBoundaries,
+  lastServedAt?: number | null,
+) => drivers(recurrence, referenceDate, dayBoundaries, lastServedAtForDriver(recurrence, lastServedAt)).previous()
+
+const currentSlot: OccurrenceCurrentSlot = (
+  recurrence: Recurrence,
+  referenceDate: Dayjs,
+  dayBoundaries: DayBoundaries,
+  lastServedAt?: number | null,
+) => drivers(recurrence, referenceDate, dayBoundaries, lastServedAtForDriver(recurrence, lastServedAt)).currentSlot()
+
 export default {
-  next: (
-    recurrence: Recurrence,
-    referenceDate: Dayjs,
-    dayBoundaries: DayBoundaries,
-  ) => drivers(recurrence, referenceDate, dayBoundaries).next(),
-  previous: (
-    recurrence: Recurrence,
-    referenceDate: Dayjs,
-    dayBoundaries: DayBoundaries,
-  ) => drivers(recurrence, referenceDate, dayBoundaries).previous(),
-  // The slot referenceDate falls into: when it opened, when its occurrence lands and when it
-  // closes (the next slot's opening, or the day's close for the last one). Undefined outside
-  // active hours and on days the recurrence doesn't run.
-  currentSlot: (
-    recurrence: Recurrence,
-    referenceDate: Dayjs,
-    dayBoundaries: DayBoundaries,
-  ) => drivers(recurrence, referenceDate, dayBoundaries).currentSlot(),
+  next,
+  previous,
+  currentSlot,
 }

@@ -1,12 +1,12 @@
 import orderQueue from 'src/domains/habits/utils/orderQueue'
 import isGroupDue from 'src/domains/habits/utils/isGroupDue'
 import nextTurnDueAt from 'src/domains/habits/utils/nextTurnDueAt'
-import type { HabitsStores } from 'src/domains/habits/stores/habits'
-import { Recurrence } from 'src/domains/recurrence/utils/recurrence'
 import getOccurrence from 'src/domains/recurrence/utils/getOccurrence'
 
 import isWithinTodayWindow from './isWithinTodayWindow'
 import { Dayjs } from 'dayjs'
+import type { HabitsStores } from 'src/domains/habits/stores/habits'
+import { Recurrence } from 'src/domains/recurrence/utils/recurrence'
 
 const NOW_WINDOW_MS = 15 * 60 * 1000
 
@@ -70,7 +70,7 @@ const buildHomeSections = (params: {
       habitName: habits[upNextId].name,
     }
 
-    const previousOccurrence = getOccurrence.previous(recurrence, now, dayBoundaries)
+    const previousOccurrence = getOccurrence.previous(recurrence, now, dayBoundaries, lastServedAt)
     const behind = isGroupDue({ recurrence, lastServedAt, now, dayBoundaries })
 
     if (behind && previousOccurrence) {
