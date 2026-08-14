@@ -25,8 +25,11 @@ const UndoToast = ({ bottomOffset = 14 }: Props) => {
 
   if (!action) return null
 
-  const prefix = action.type === 'completed' ? 'Logged' : 'Skipped'
-  const label = `${prefix} · ${action.habitName}`
+  const label = {
+    linked: `Added · ${action.habitName}`,
+    completed: `Logged · ${action.habitName}`,
+    skipped: `Skipped · ${action.habitName}`,
+  }[action.type]
 
   return (
     <Animated.View

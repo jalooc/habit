@@ -29,6 +29,23 @@ export const actionHabit = (habitId: string, type: 'completed' | 'skipped', grou
   })
 }
 
+export const linkHabit = (habitId: string, groupId: string) => {
+  const habit = habits$[habitId].peek()
+  const now = Date.now()
+
+  batch(() => {
+    lastAction$.set({
+      type: 'linked',
+      habitId,
+      habitName: habit.name,
+      groupId,
+      at: now,
+    })
+
+    if (rotationExists(groupId)) groups$[groupId].habits[habitId].set(true)
+  })
+}
+
 export const undoLastAction = () => {
   const action = lastAction$.peek()
   if (!action) {
@@ -37,14 +54,20 @@ export const undoLastAction = () => {
   }
 
   batch(() => {
-    if (action.prevLastActioned === undefined) {
-      habits$[action.habitId].lastActioned.delete()
+    if (action.type === 'linked') {
+      if (rotationExists(action.groupId)) {
+        groups$[action.groupId].habits[action.habitId].delete()
+      }
     } else {
-      habits$[action.habitId].lastActioned.set(action.prevLastActioned)
-    }
+      if (action.prevLastActioned === undefined) {
+        habits$[action.habitId].lastActioned.delete()
+      } else {
+        habits$[action.habitId].lastActioned.set(action.prevLastActioned)
+      }
 
-    if (rotationExists(action.groupId)) {
-      groups$[action.groupId].lastServedAt.set(action.prevLastServedAt)
+      if (rotationExists(action.groupId)) {
+        groups$[action.groupId].lastServedAt.set(action.prevLastServedAt)
+      }
     }
 
     lastAction$.set(undefined)

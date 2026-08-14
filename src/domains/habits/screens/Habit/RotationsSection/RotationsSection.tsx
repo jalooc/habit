@@ -20,7 +20,7 @@ import formatCadence from 'src/domains/habits/utils/formatCadence'
 import { formatStanding } from './rotationStanding'
 import RotationRow from './RotationRow'
 import { useNativeStackNavigation } from 'src/domains/misc/utils/navigation'
-import RoundToggle from './RoundToggle'
+import RoundToggle from 'src/domains/habits/components/RoundToggle'
 
 type Props = {
   habitId: string,

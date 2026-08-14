@@ -14,7 +14,7 @@ vi.mock('src/domains/habits/stores/groups', async () => {
 import habits$ from 'src/domains/habits/stores/habits'
 import groups$ from 'src/domains/habits/stores/groups'
 import lastAction$ from 'src/domains/habits/stores/lastAction'
-import { actionHabit, undoLastAction } from './habitActions'
+import { actionHabit, linkHabit, undoLastAction } from './habitActions'
 
 const SHARED_HABIT = 'habit-shared'
 const FAST_ROTATION = 'group-fast'
@@ -95,5 +95,38 @@ describe('undoLastAction', () => {
     undoLastAction()
 
     expect(groups$.peek()).not.toHaveProperty(FAST_ROTATION)
+  })
+})
+
+describe('linkHabit', () => {
+  const UNLINKED = 'habit-new'
+
+  beforeEach(() => {
+    habits$[UNLINKED].set({ name: 'New habit' })
+  })
+
+  it('adds the habit to the rotation', () => {
+    linkHabit(UNLINKED, FAST_ROTATION)
+
+    expect(groups$[FAST_ROTATION].habits[UNLINKED].peek()).toBe(true)
+  })
+
+  it('records a linked action for undo', () => {
+    linkHabit(UNLINKED, FAST_ROTATION)
+
+    expect(lastAction$.peek()).toMatchObject({
+      type: 'linked',
+      habitId: UNLINKED,
+      habitName: 'New habit',
+      groupId: FAST_ROTATION,
+    })
+  })
+
+  it('undoes by removing membership only', () => {
+    linkHabit(UNLINKED, FAST_ROTATION)
+    undoLastAction()
+
+    expect(groups$[FAST_ROTATION].habits.peek()).not.toHaveProperty(UNLINKED)
+    expect(habits$[UNLINKED].peek()).toEqual({ name: 'New habit' })
   })
 })

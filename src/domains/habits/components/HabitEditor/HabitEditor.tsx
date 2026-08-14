@@ -1,11 +1,13 @@
-import { useEffect, useRef } from 'react'
+import { useDeferredValue, useEffect, useRef } from 'react'
 import { Alert, Text, TextInput, View } from 'react-native'
+import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated'
 import { StyleSheet, useUnistyles } from 'react-native-unistyles'
-import { useObservable, useSelector } from '@legendapp/state/react'
+import { useObservable, useSelector, useValue } from '@legendapp/state/react'
 import { $TextInput } from '@legendapp/state/react-native'
 import { TextInputWrapper } from 'expo-paste-input'
 import { File } from 'expo-file-system'
 import { randomUUID } from 'expo-crypto'
+import * as Haptics from 'expo-haptics'
 import { EnrichedMarkdownTextInput } from 'react-native-enriched-markdown'
 import type { EnrichedMarkdownTextInputInstance, MarkdownTextInputStyle } from 'react-native-enriched-markdown'
 import type { PasteEventPayload } from 'expo-paste-input'
@@ -16,9 +18,12 @@ import groups$ from 'src/domains/habits/stores/groups'
 import Button from 'src/domains/misc/components/Button'
 import usePendingImages from 'src/domains/habits/utils/usePendingImages'
 import { imageFileUri, imagesDir } from 'src/domains/habits/utils/habitImages'
-import { dismissLastAction } from 'src/domains/habits/utils/habitActions'
+import { dismissLastAction, linkHabit } from 'src/domains/habits/utils/habitActions'
+import searchHabits from 'src/domains/habits/utils/searchHabits'
 import useUnmountPromise from 'src/domains/misc/utils/useUnmountPromise'
 import PendingImageRow from './PendingImageRow'
+import HabitSuggestions from './HabitSuggestions'
+import AnimatedKicker from './AnimatedKicker'
 
 type Props = {
   groupId: string,
@@ -32,6 +37,15 @@ const HabitEditor = ({ groupId, habitId, onDone, onCancel, onRemoved }: Props) =
   const isEditMode = isNonNullish(habitId)
   const { theme } = useUnistyles()
   const name$ = useObservable(() => habitId ? habits$[habitId].name.get() : '')
+  const suggestionsDismissed$ = useObservable(false)
+  const suggestionsDismissed = useValue(suggestionsDismissed$)
+  const query = useDeferredValue(useSelector(() => name$.get().trim()))
+  const suggestionResults = useSelector(() => isEditMode ? null : searchHabits(groupId, query))
+  const showSuggestions = !isEditMode &&
+    query.trim().length > 0 &&
+    !!suggestionResults &&
+    suggestionResults.length > 0 &&
+    !suggestionsDismissed
   const canSubmit = useSelector(() => name$.get().trim().length > 0)
   const nameInputRef = useRef<TextInput>(null)
   const descInputRef = useRef<EnrichedMarkdownTextInputInstance | null>(null)
@@ -59,6 +73,10 @@ const HabitEditor = ({ groupId, habitId, onDone, onCancel, onRemoved }: Props) =
   const { pendingImages, addPendingImage, commitPendingImages, clearPendingImages } = usePendingImages()
 
   useEffect(() => () => void clearPendingImages(), [])
+
+  useEffect(() => name$.onChange(() => void suggestionsDismissed$.set(false)), [])
+
+  const dismissSuggestions = () => void suggestionsDismissed$.set(true)
 
   const submit = async () => {
     const [description, newFilenames] = await Promise.all([
@@ -94,6 +112,12 @@ const HabitEditor = ({ groupId, habitId, onDone, onCancel, onRemoved }: Props) =
         groups$[groupId].habits[id].set(true)
       })
     }
+  }
+
+  const handleLink = (linkedHabitId: string) => {
+    void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
+    linkHabit(linkedHabitId, groupId)
+    onDone()
   }
 
   const handlePaste = async (payload: PasteEventPayload) => {
@@ -152,28 +176,13 @@ const HabitEditor = ({ groupId, habitId, onDone, onCancel, onRemoved }: Props) =
     }
   }
 
-  return (
-    <View style={styles.sheet}>
-      <Text style={styles.kicker}>{isEditMode ? 'Edit habit' : 'New habit'}</Text>
-
-      <View style={styles.fieldGroup}>
-        <Text style={styles.fieldLabel}>Name</Text>
-        <TextInputWrapper onPaste={handlePaste}>
-          <$TextInput
-            style={styles.input}
-            $value={name$}
-            // @ts-expect-error ref type in Legend State components doesn't match
-            ref={nameInputRef}
-            autoFocus={!isEditMode}
-            placeholder="e.g. Hollow hold"
-            placeholderTextColor={theme.colors.textTertiary}
-            onKeyPress={e => {
-              if (e.nativeEvent.key === 'Enter' && canSubmit) void submit()
-            }}
-          />
-        </TextInputWrapper>
-      </View>
-
+  const formSections = (
+    <Animated.View
+      entering={FadeIn.duration(200)}
+      exiting={FadeOut.duration(200)}
+      layout={LinearTransition.duration(200)}
+      style={styles.formSections}
+    >
       <View style={styles.fieldGroup}>
         <View style={styles.fieldLabelRow}>
           <Text style={styles.fieldLabel}>Note</Text>
@@ -220,7 +229,52 @@ const HabitEditor = ({ groupId, habitId, onDone, onCancel, onRemoved }: Props) =
           variant="secondary"
         />
       )}
-    </View>
+    </Animated.View>
+  )
+
+  const sheetContent = (
+    <>
+      {isEditMode ? (
+        <Text style={styles.kicker}>Edit habit</Text>
+      ) : (
+        <AnimatedKicker suffix={showSuggestions ? ' / link existing habit' : undefined}>New habit</AnimatedKicker>
+      )}
+
+      <View style={styles.fieldGroup}>
+        <Text style={styles.fieldLabel}>Name</Text>
+        <TextInputWrapper onPaste={handlePaste}>
+          <$TextInput
+            style={styles.input}
+            $value={name$}
+            // @ts-expect-error ref type in Legend State components doesn't match
+            ref={nameInputRef}
+            autoFocus={!isEditMode}
+            placeholder="e.g. Hollow hold"
+            placeholderTextColor={theme.colors.textTertiary}
+            onKeyPress={e => {
+              if (e.nativeEvent.key === 'Enter' && canSubmit && !showSuggestions) void submit()
+            }}
+          />
+        </TextInputWrapper>
+      </View>
+
+      {showSuggestions ? (
+        <HabitSuggestions
+          habitSuggestions={suggestionResults}
+          onLink={handleLink}
+          onDismiss={dismissSuggestions}
+        />
+      ) : formSections}
+    </>
+  )
+
+  return (
+    <Animated.View
+      style={[styles.sheet, !isEditMode && showSuggestions && styles.sheetExpanded]}
+      layout={LinearTransition.duration(200)}
+    >
+      {sheetContent}
+    </Animated.View>
   )
 }
 
@@ -231,6 +285,9 @@ const styles = StyleSheet.create(theme => ({
     padding: theme.spacing['3xl'],
     paddingBottom: theme.spacing['4xl'],
     gap: theme.spacing.xl,
+  },
+  sheetExpanded: {
+    flex: 1,
   },
   kicker: {
     ...theme.typography.label,
@@ -286,5 +343,8 @@ const styles = StyleSheet.create(theme => ({
   },
   footerSubmit: {
     flex: 1.3,
+  },
+  formSections: {
+    gap: theme.spacing.xl,
   },
 }))
