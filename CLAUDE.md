@@ -21,7 +21,7 @@ This is an Expo dev-client project: `npm start` alone is not enough — `npm run
 ## Architecture
 
 ### Tech Stack
-- **Expo SDK 56** + React Native 0.85 (New Architecture is always on)
+- **Expo SDK 57** + React Native 0.86 (New Architecture is always on)
 - **React Navigation 7** static API (`createStaticNavigation`)
 - **Legend State 3** (`@legendapp/state`) for reactive state, persisted via MMKV
 - **Unistyles 3** for styling (babel plugin configured with `root: 'src'` — must stay in sync if `src/` is renamed)

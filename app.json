@@ -127,7 +127,9 @@
             "backgroundColor": "#1c1d20"
           }
         }
-      ]
+      ],
+      "expo-image",
+      "expo-status-bar"
     ]
   }
 }
