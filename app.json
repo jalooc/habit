@@ -25,7 +25,8 @@
       "package": "com.anonymous.habit",
       "permissions": [
         "android.permission.USE_EXACT_ALARM",
-        "android.permission.READ_MEDIA_IMAGES"
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "plugins": [
@@ -130,6 +131,11 @@
       ],
       "expo-image",
       "expo-status-bar"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "02e912b5-094e-454b-bb23-4eaf7d77bf1e"
+      }
+    }
   }
 }
