@@ -2,7 +2,7 @@ import { firstBy, isEmptyish, keys, map, pipe, sort, take } from 'remeda'
 import dayjs, { Dayjs } from 'dayjs'
 
 import { GroupsStore } from 'src/domains/habits/stores/groups'
-import { HabitsStores } from 'src/domains/habits/stores/habits'
+import { HabitsStore } from 'src/domains/habits/stores/habits'
 import { createGroupScreenLink } from 'src/domains/habits/utils/linking'
 import nextTurnDueAt from 'src/domains/habits/utils/nextTurnDueAt'
 
@@ -19,7 +19,7 @@ type ScheduledNotification = {
 
 export default (
   groups: GroupsStore,
-  allHabitsMap: HabitsStores,
+  allHabitsMap: HabitsStore,
   dayBoundaries: Parameters<typeof getOccurrence['next']>[2],
 ): ScheduledNotification[] => {
   const all = Object.entries(groups).flatMap(([groupId, group]) => {

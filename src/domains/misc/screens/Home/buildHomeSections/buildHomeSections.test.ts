@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import dayjs from 'dayjs'
-import type { HabitsStores } from 'src/domains/habits/stores/habits'
+import type { HabitsStore } from 'src/domains/habits/stores/habits'
 import buildHomeSections from './buildHomeSections'
 
 const MONDAY_DATE = '2026-07-06'
@@ -28,7 +28,7 @@ type GroupFixture =
 const makeGroups = (entries: [string, GroupFixture][]): GroupsInput =>
   Object.fromEntries(entries.map(([id, group]) => [id, { name: `Group ${id}`, lastServedAt: null, ...group }]))
 
-const makeHabits = (entries: [string, { timestamp?: number, type?: 'completed' | 'skipped' }][]): HabitsStores =>
+const makeHabits = (entries: [string, { timestamp?: number, type?: 'completed' | 'skipped' }][]): HabitsStore =>
   Object.fromEntries(entries.map(([id, opts]) => [id, {
     name: `Habit ${id}`,
     ...(opts.timestamp !== undefined && {
@@ -36,7 +36,7 @@ const makeHabits = (entries: [string, { timestamp?: number, type?: 'completed' |
     }),
   }]))
 
-const build = (groups: GroupsInput, habits: HabitsStores, now: string) =>
+const build = (groups: GroupsInput, habits: HabitsStore, now: string) =>
   buildHomeSections({ groups, habits, dayBoundaries, now: dayjs(now) })
 
 describe('buildHomeSections', () => {

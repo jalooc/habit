@@ -5,7 +5,7 @@ import getOccurrence from 'src/domains/recurrence/utils/getOccurrence'
 
 import isWithinTodayWindow from './isWithinTodayWindow'
 import { Dayjs } from 'dayjs'
-import type { HabitsStores } from 'src/domains/habits/stores/habits'
+import type { HabitsStore } from 'src/domains/habits/stores/habits'
 import { Recurrence } from 'src/domains/recurrence/utils/recurrence'
 
 const NOW_WINDOW_MS = 15 * 60 * 1000
@@ -40,7 +40,7 @@ type UpcomingRow = RowBase & { kind: 'upcoming', dueAtMs: number }
 
 const buildHomeSections = (params: {
   groups: Record<string, GroupInput | undefined>,
-  habits: HabitsStores,
+  habits: HabitsStore,
   dayBoundaries: { start: { hour: number, minute: number }, end: { hour: number, minute: number }},
   now: Dayjs,
 }): HomeSections => {

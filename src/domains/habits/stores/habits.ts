@@ -68,4 +68,4 @@ const habits$ = observable<StoreType>(synced({
 
 export default habits$
 
-export type HabitsStores = ReturnType<typeof habits$.get>
+export type HabitsStore = ReturnType<typeof habits$.get>

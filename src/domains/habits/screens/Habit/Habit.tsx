@@ -3,7 +3,7 @@ import { ScrollView, Text, useWindowDimensions, View } from 'react-native'
 import { StaticScreenProps, useNavigation } from '@react-navigation/native'
 import { StyleSheet } from 'react-native-unistyles'
 import { useObservable, useSelector, useValue } from '@legendapp/state/react'
-import habits$, { HabitsStores } from 'src/domains/habits/stores/habits'
+import habits$, { HabitsStore } from 'src/domains/habits/stores/habits'
 import Button from 'src/domains/misc/components/Button'
 import Description from 'src/domains/habits/components/Description'
 import HabitEditor from 'src/domains/habits/components/HabitEditor'
@@ -20,7 +20,7 @@ const Habit = ({ route }: Props) => {
   const { habitId, groupId } = route.params
   const navigation = useNavigation()
   const habit = useSelector(() => {
-    const habits: Partial<HabitsStores> = habits$.get()
+    const habits: Partial<HabitsStore> = habits$.get()
     const found = habits[habitId]
     // Spread: Legend State mutates the stored object in place on set, so the selector would
     // otherwise return the same reference, and edits made in the editor mode would not re-render.

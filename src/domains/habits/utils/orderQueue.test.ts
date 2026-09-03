@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import type { HabitsStores } from '../stores/habits'
+import type { HabitsStore } from '../stores/habits'
 import orderQueue from './orderQueue'
 
-const makeHabits = (entries: [string, number | undefined][]): HabitsStores =>
+const makeHabits = (entries: [string, number | undefined][]): HabitsStore =>
   Object.fromEntries(
-    entries.map(([id, ts]): [string, HabitsStores[string]] => [
+    entries.map(([id, ts]): [string, HabitsStore[string]] => [
       id,
       {
         name: id,

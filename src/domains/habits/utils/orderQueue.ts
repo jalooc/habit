@@ -1,8 +1,8 @@
-import type { HabitsStores } from 'src/domains/habits/stores/habits'
+import type { HabitsStore } from 'src/domains/habits/stores/habits'
 
 const orderQueue = (
   habitIds: string[],
-  habits: HabitsStores,
+  habits: HabitsStore,
 ): string[] =>
   [...habitIds].sort(
     (a, b) =>
