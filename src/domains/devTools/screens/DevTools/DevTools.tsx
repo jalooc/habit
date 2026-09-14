@@ -1,7 +1,10 @@
+import { Suspense } from 'react'
 import { ScrollView, Text, Pressable, View } from 'react-native'
 import { StyleSheet } from 'react-native-unistyles'
 import { useLinkProps } from '@react-navigation/native'
 import Box from '../../../misc/components/Box'
+
+import AppMetadata, { BORDER_COLOR_NAME } from './AppMetadata'
 
 type Tool = {
   key: string,
@@ -31,6 +34,9 @@ const DevTools = () => (
       {tools.map(tool => (
         <ToolRow key={tool.key} tool={tool} />
       ))}
+      <Suspense fallback={<View style={styles.skeleton} />}>
+        <AppMetadata />
+      </Suspense>
     </ScrollView>
   </Box>
 )
@@ -86,5 +92,10 @@ const styles = StyleSheet.create(theme => ({
     fontSize: 24,
     color: theme.colors.textTertiary,
     marginLeft: theme.spacing.sm,
+  },
+  skeleton: {
+    backgroundColor: theme.colors[BORDER_COLOR_NAME],
+    borderRadius: theme.radii.md,
+    height: 250,
   },
 }))
