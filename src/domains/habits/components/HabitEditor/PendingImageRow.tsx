@@ -1,7 +1,7 @@
+import { useState } from 'react'
 import { Pressable, ScrollView, View } from 'react-native'
 import { StyleSheet } from 'react-native-unistyles'
 import { Image } from 'expo-image'
-import { useObservable, useValue } from '@legendapp/state/react'
 import Lucide from '@react-native-vector-icons/lucide'
 import ImageSourceChips from './ImageSourceChips'
 
@@ -14,8 +14,7 @@ type Props = {
 }
 
 const PendingImageRow = ({ pendingImages, onAddImage }: Props) => {
-  const sourcesVisible$ = useObservable(false)
-  const sourcesVisible = useValue(sourcesVisible$)
+  const [sourcesVisible, setSourcesVisible] = useState(false)
 
   return (
     <View style={styles.container}>
@@ -34,7 +33,7 @@ const PendingImageRow = ({ pendingImages, onAddImage }: Props) => {
         ))}
         <Pressable
           style={({ pressed }) => [styles.addTile, pressed && styles.addTilePressed]}
-          onPress={() => void sourcesVisible$.toggle()}
+          onPress={() => void setSourcesVisible(visible => !visible)}
         >
           <Lucide name={sourcesVisible ? 'x' : 'plus'} size={20} style={styles.addTileIcon} />
         </Pressable>
@@ -43,7 +42,7 @@ const PendingImageRow = ({ pendingImages, onAddImage }: Props) => {
       {sourcesVisible && (
         <ImageSourceChips
           onAdd={onAddImage}
-          onDone={() => void sourcesVisible$.set(false)}
+          onDone={() => void setSourcesVisible(false)}
         />
       )}
     </View>

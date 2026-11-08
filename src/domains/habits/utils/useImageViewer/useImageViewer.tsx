@@ -1,19 +1,17 @@
-import { useObservable, useValue } from '@legendapp/state/react'
+import { useState } from 'react'
 import ImageViewer from './ImageViewer'
 
 const useImageViewer = () => {
-  const viewerState$ = useObservable({ visible: false, index: 0 })
-  const visible = useValue(viewerState$.visible)
-  const index = useValue(viewerState$.index)
+  const [viewerState, setViewerState] = useState({ visible: false, index: 0 })
 
-  const setVisibleImageIndex = (index: number) => void viewerState$.set({ visible: true, index })
+  const setVisibleImageIndex = (index: number) => void setViewerState({ visible: true, index })
 
   const renderImageViewer = (images: string[]) => (
     <ImageViewer
       images={images}
-      initialIndex={index}
-      visible={visible}
-      onClose={() => void viewerState$.visible.set(false)}
+      initialIndex={viewerState.index}
+      visible={viewerState.visible}
+      onClose={() => void setViewerState(state => ({ ...state, visible: false }))}
     />
   )
 

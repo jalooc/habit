@@ -1,6 +1,5 @@
 import 'src/domains/misc/utils/theme'
 import 'src/domains/notifications/utils/notifications'
-import 'src/domains/habits/utils/habitsNotificationsScheduler'
 import { useEffect } from 'react'
 import {
   DefaultTheme,
@@ -12,8 +11,10 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import * as Notifications from 'src/domains/notifications/utils/notifications'
 import { useReactNavigationDevTools } from '@dev-plugins/react-navigation'
 import { setupNotifications } from 'src/domains/notifications/utils/notifications'
+import { startNotificationsScheduler } from 'src/domains/habits/utils/habitsNotificationsScheduler'
 import { devLog } from 'src/domains/devTools/utils/devLog'
 import { isNonNullish } from 'remeda'
+import { serializeError } from 'serialize-error'
 import { Navigation } from 'src/domains/misc/utils/navigation'
 import { cleanupPendingImages } from 'src/domains/habits/utils/usePendingImages'
 import { cleanupOrphanedImages } from 'src/domains/habits/utils/habitImages'
@@ -43,9 +44,14 @@ const App = () => {
   useReactNavigationDevTools(navigationRef)
 
   useEffect(() => {
-    void setupNotifications()
+    const scheduler = setupNotifications()
+      // the scheduler starts regardless: without it nothing would ever be scheduled again
+      .catch((error: unknown) => void devLog('Setting up notifications failed', { error: serializeError(error) }))
+      .then(startNotificationsScheduler)
     cleanupOrphanedImages()
     cleanupPendingImages()
+
+    return () => void scheduler.then(stop => void stop())
   }, [])
 
   return (

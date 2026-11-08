@@ -1,79 +1,73 @@
-import { batch } from '@legendapp/state'
-import groups$ from 'src/domains/habits/stores/groups'
-import habits$ from 'src/domains/habits/stores/habits'
-import lastAction$ from 'src/domains/habits/stores/lastAction'
+import { atom, getDefaultStore } from 'jotai'
+import groupsAtom, { withGroupUpdated, withHabitLinked, withHabitUnlinked } from 'src/domains/habits/stores/groups'
+import habitsAtom, { withHabitUpdated } from 'src/domains/habits/stores/habits'
+import lastActionAtom from 'src/domains/habits/stores/lastAction'
 
-// Writing by path into a rotation that is already gone would persist a partial group object, which
-// fails the schema on the next load and takes every rotation down with it.
-const rotationExists = (groupId: string) => groupId in groups$.peek()
+const store = getDefaultStore()
 
-export const actionHabit = (habitId: string, type: 'completed' | 'skipped', groupId: string) => {
-  const habit = habits$[habitId].peek()
-  const now = Date.now()
-  const doesRotationExist = rotationExists(groupId)
-
-  batch(() => {
-    lastAction$.set({
-      habitId,
-      habitName: habit.name,
-      groupId,
-      type,
-      prevLastActioned: habit.lastActioned,
-      prevLastServedAt: doesRotationExist ? groups$[groupId].lastServedAt.peek() : null,
-      at: now,
-    })
-
-    habits$[habitId].lastActioned.set({ timestamp: now, type })
-
-    if (type === 'completed' && doesRotationExist) groups$[groupId].lastServedAt.set(now)
-  })
-}
-
-export const linkHabit = (habitId: string, groupId: string) => {
-  const habit = habits$[habitId].peek()
+const actionHabitAtom = atom(null, (get, set, habitId: string, type: 'completed' | 'skipped', groupId: string) => {
+  const habit = get(habitsAtom)[habitId]
+  const rotations = get(groupsAtom)
   const now = Date.now()
 
-  batch(() => {
-    lastAction$.set({
-      type: 'linked',
-      habitId,
-      habitName: habit.name,
-      groupId,
-      at: now,
-    })
-
-    if (rotationExists(groupId)) groups$[groupId].habits[habitId].set(true)
+  set(lastActionAtom, {
+    habitId,
+    habitName: habit.name,
+    groupId,
+    type,
+    prevLastActioned: habit.lastActioned,
+    prevLastServedAt: Object.hasOwn(rotations, groupId) ? rotations[groupId].lastServedAt : null,
+    at: now,
   })
-}
 
-export const undoLastAction = () => {
-  const action = lastAction$.peek()
+  set(habitsAtom, habits => withHabitUpdated(habits, habitId, current => ({
+    ...current,
+    lastActioned: { timestamp: now, type },
+  })))
+
+  if (type === 'completed') {
+    set(groupsAtom, groups => withGroupUpdated(groups, groupId, group => ({ ...group, lastServedAt: now })))
+  }
+})
+
+const linkHabitAtom = atom(null, (get, set, habitId: string, groupId: string) => {
+  set(lastActionAtom, {
+    type: 'linked',
+    habitId,
+    habitName: get(habitsAtom)[habitId].name,
+    groupId,
+    at: Date.now(),
+  })
+
+  set(groupsAtom, groups => withHabitLinked(groups, groupId, habitId))
+})
+
+const undoLastActionAtom = atom(null, (get, set) => {
+  const action = get(lastActionAtom)
   if (!action) {
     console.error('undoLastAction called with no action to undo')
     return
   }
 
-  batch(() => {
-    if (action.type === 'linked') {
-      if (rotationExists(action.groupId)) {
-        groups$[action.groupId].habits[action.habitId].delete()
-      }
-    } else {
-      if (action.prevLastActioned === undefined) {
-        habits$[action.habitId].lastActioned.delete()
-      } else {
-        habits$[action.habitId].lastActioned.set(action.prevLastActioned)
-      }
+  if (action.type === 'linked') {
+    set(groupsAtom, groups => withHabitUnlinked(groups, action.groupId, action.habitId))
+  } else {
+    set(habitsAtom, habits => withHabitUpdated(habits, action.habitId, ({ lastActioned: _undone, ...habit }) =>
+      action.prevLastActioned === undefined ? habit : { ...habit, lastActioned: action.prevLastActioned }))
+    set(groupsAtom, groups => withGroupUpdated(groups, action.groupId, group => ({
+      ...group,
+      lastServedAt: action.prevLastServedAt,
+    })))
+  }
 
-      if (rotationExists(action.groupId)) {
-        groups$[action.groupId].lastServedAt.set(action.prevLastServedAt)
-      }
-    }
+  set(lastActionAtom, undefined)
+})
 
-    lastAction$.set(undefined)
-  })
-}
+export const actionHabit = (habitId: string, type: 'completed' | 'skipped', groupId: string) =>
+  void store.set(actionHabitAtom, habitId, type, groupId)
 
-export const dismissLastAction = () => {
-  lastAction$.set(undefined)
-}
+export const linkHabit = (habitId: string, groupId: string) => void store.set(linkHabitAtom, habitId, groupId)
+
+export const undoLastAction = () => void store.set(undoLastActionAtom)
+
+export const dismissLastAction = () => void store.set(lastActionAtom, undefined)

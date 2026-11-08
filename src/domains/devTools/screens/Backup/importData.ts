@@ -3,14 +3,38 @@ import * as DocumentPicker from 'expo-document-picker'
 import { unzip } from 'react-native-zip-archive'
 import { z } from 'zod'
 import { randomUUID } from 'expo-crypto'
-import habits$, { parsePersistedHabits } from 'src/domains/habits/stores/habits'
-import groups$, { parsePersistedGroups } from 'src/domains/habits/stores/groups'
-import dayBoundaries$, { dayBoundariesSchema } from 'src/domains/misc/stores/dayBoundaries'
-import { batch } from '@legendapp/state'
+import { atom, getDefaultStore } from 'jotai'
+import habitsAtom, { type HabitsStore, parsePersistedHabits } from 'src/domains/habits/stores/habits'
+import groupsAtom, { type GroupsStore, parsePersistedGroups } from 'src/domains/habits/stores/groups'
+import dayBoundariesAtom, { dayBoundariesSchema } from 'src/domains/misc/stores/dayBoundaries'
+import lastActionAtom from 'src/domains/habits/stores/lastAction'
 import { cleanupOrphanedImages, imagesDir } from 'src/domains/habits/utils/habitImages'
-import { dismissLastAction } from 'src/domains/habits/utils/habitActions'
 import { devLog } from 'src/domains/devTools/utils/devLog'
 import { toNativePath } from './backupUtils'
+
+const backupSchema = z.object({
+  version: z.union([z.literal(1), z.literal(2)]),
+  exportedAt: z.iso.datetime(),
+  habits: z.unknown(),
+  groups: z.unknown(),
+  dayBoundaries: dayBoundariesSchema,
+})
+
+type ParsedBackup = {
+  habits: HabitsStore,
+  groups: GroupsStore,
+  dayBoundaries: z.infer<typeof dayBoundariesSchema>,
+}
+
+// One write, so that nothing derived from the stores ever sees the imported habits next to the
+// previous rotations. A pending undo would write its target back into the imported data, so it
+// goes in the same write.
+const applyBackupAtom = atom(null, (_get, set, backup: ParsedBackup) => {
+  set(lastActionAtom, undefined)
+  set(habitsAtom, backup.habits)
+  set(groupsAtom, backup.groups)
+  set(dayBoundariesAtom, backup.dayBoundaries)
+})
 
 export const importData = async () => {
   const result = await DocumentPicker.getDocumentAsync({
@@ -29,7 +53,7 @@ export const importData = async () => {
 }
 
 const importJson = async (uri: string) => {
-  parseAndApplyImport(await new File(uri).text())
+  applyBackup(parseBackup(await new File(uri).text()))
   cleanupOrphanedImages()
   return { imported: true as const }
 }
@@ -41,6 +65,9 @@ const importZip = async (uri: string) => {
   try {
     await unzip(toNativePath(uri), toNativePath(tempDir.uri))
 
+    // parsed before the images are swapped, so a backup that gets refused leaves the current ones alone
+    const backup = parseBackup(await new File(tempDir, 'data.json').text())
+
     const srcImagesDir = new Directory(tempDir, 'images')
     if (srcImagesDir.exists) {
       if (imagesDir.exists) {
@@ -50,7 +77,7 @@ const importZip = async (uri: string) => {
       await srcImagesDir.move(imagesDir)
     }
 
-    parseAndApplyImport(await new File(tempDir, 'data.json').text())
+    applyBackup(backup)
     cleanupOrphanedImages()
 
     return { imported: true as const }
@@ -59,31 +86,19 @@ const importZip = async (uri: string) => {
   }
 }
 
-const parseAndApplyImport = (serializedData: string) => {
-  const {
-    habits,
-    groups,
-    dayBoundaries: parsedDayBoundaries,
-  } = z.object({
-    version: z.union([z.literal(1), z.literal(2)]),
-    exportedAt: z.iso.datetime(),
-    habits: z.unknown(),
-    groups: z.unknown(),
-    dayBoundaries: dayBoundariesSchema,
-  }).parse(JSON.parse(serializedData))
+const parseBackup = (serializedData: string) => {
+  const { habits, groups, dayBoundaries } = backupSchema.parse(JSON.parse(serializedData))
 
-  const parsedHabits = parsePersistedHabits(habits)
-  const parsedGroups = parsePersistedGroups(groups)
-
-  batch(() => {
-    dismissLastAction()
-
-    habits$.delete()
-    groups$.delete()
-    dayBoundaries$.delete()
-
-    habits$.set(parsedHabits)
-    groups$.set(parsedGroups)
-    dayBoundaries$.set(parsedDayBoundaries)
-  })
+  return {
+    habits: parsePersistedHabits(habits, rejectUnreadable('Habit')),
+    groups: parsePersistedGroups(groups, rejectUnreadable('Rotation')),
+    dayBoundaries,
+  }
 }
+
+// Unlike a launch, an import can refuse: rejecting the backup leaves the current data as it is.
+const rejectUnreadable = (entity: string) => (id: string, error: unknown) => {
+  throw new Error(`${entity} ${id} in the backup could not be read`, { cause: error })
+}
+
+const applyBackup = (backup: ParsedBackup) => void getDefaultStore().set(applyBackupAtom, backup)

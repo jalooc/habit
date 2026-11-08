@@ -1,4 +1,5 @@
-import { observable } from '@legendapp/state'
+import { atom } from 'jotai'
+
 import type { HabitsStore } from 'src/domains/habits/stores/habits'
 import type { GroupsStore } from 'src/domains/habits/stores/groups'
 
@@ -22,6 +23,6 @@ type LinkedAction = {
 
 export type LastAction = TickAction | LinkedAction
 
-const lastAction$ = observable<LastAction | undefined>(undefined)
+const lastActionAtom = atom<LastAction | undefined>(undefined)
 
-export default lastAction$
+export default lastActionAtom

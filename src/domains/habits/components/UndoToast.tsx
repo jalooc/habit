@@ -2,9 +2,9 @@ import { useEffect } from 'react'
 import { Pressable, Text } from 'react-native'
 import Animated, { FadeInDown, FadeOutDown } from 'react-native-reanimated'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { useValue } from '@legendapp/state/react'
+import { useAtomValue } from 'jotai'
 import { StyleSheet } from 'react-native-unistyles'
-import lastAction$ from 'src/domains/habits/stores/lastAction'
+import lastActionAtom from 'src/domains/habits/stores/lastAction'
 import { undoLastAction, dismissLastAction } from 'src/domains/habits/utils/habitActions'
 
 type Props = {
@@ -14,7 +14,7 @@ type Props = {
 const DISMISS_DELAY_MS = 5500
 
 const UndoToast = ({ bottomOffset = 14 }: Props) => {
-  const action = useValue(lastAction$)
+  const action = useAtomValue(lastActionAtom)
   const { bottom: bottomInset } = useSafeAreaInsets()
 
   useEffect(() => {

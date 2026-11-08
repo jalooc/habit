@@ -47,6 +47,11 @@ describe('orderQueue', () => {
     expect(new Set(['a', 'b']).has(result[1])).toBe(true)
   })
 
+  it('leaves out a habit the rotation names but that did not load', () => {
+    const habits = makeHabits([['a', 2000], ['b', 1000]])
+    expect(orderQueue(['a', 'unloaded', 'b'], habits)).toEqual(['b', 'a'])
+  })
+
   it('does not mutate the input array', () => {
     const ids = ['a', 'b']
     const habits = makeHabits([['a', 2000], ['b', 1000]])

@@ -1,6 +1,6 @@
 import Fuse, { type FuseResult, type IFuseOptions } from 'fuse.js'
-import habits$ from 'src/domains/habits/stores/habits'
-import groups$ from 'src/domains/habits/stores/groups'
+import type { HabitsStore } from 'src/domains/habits/stores/habits'
+import type { GroupsStore } from 'src/domains/habits/stores/groups'
 
 export type SearchableHabit = {
   id: string,
@@ -25,8 +25,7 @@ const fuseOptions = {
   minMatchCharLength: 3,
 } satisfies IFuseOptions<SearchableHabit>
 
-const getHabitRotationInfo = (habitId: string, currentGroupId?: string) => {
-  const groupsMap = groups$.peek()
+const getHabitRotationInfo = (groupsMap: GroupsStore, habitId: string, currentGroupId?: string) => {
   const memberGroupIds = Object.keys(groupsMap).filter(id => habitId in groupsMap[id].habits)
 
   if (memberGroupIds.length === 0) return ''
@@ -44,9 +43,7 @@ const getHabitRotationInfo = (habitId: string, currentGroupId?: string) => {
   return `${firstGroupName} · ${restCount} more`
 }
 
-const buildSearchableHabits = (groupId: string): SearchableHabit[] => {
-  const habitsMap = habits$.peek()
-  const groupsMap = groups$.peek()
+const buildSearchableHabits = (habitsMap: HabitsStore, groupsMap: GroupsStore, groupId: string): SearchableHabit[] => {
   const groupHabits = groupId in groupsMap ? groupsMap[groupId].habits : {}
 
   return Object.entries(habitsMap).map(([habitId, habit]) => ({
@@ -55,17 +52,24 @@ const buildSearchableHabits = (groupId: string): SearchableHabit[] => {
     description: habit.description,
     images: habit.images,
     isInRotation: habitId in groupHabits,
-    rotationInfo: getHabitRotationInfo(habitId, groupId),
+    rotationInfo: getHabitRotationInfo(groupsMap, habitId, groupId),
   }))
 }
 
 const getFuseIndex = (habits: SearchableHabit[]) => new Fuse(habits, fuseOptions)
 
-export default (groupId: string, query: string): HabitSearchResult[] => {
+type SearchParams = {
+  habits: HabitsStore,
+  groups: GroupsStore,
+  groupId: string,
+  query: string,
+}
+
+export default ({ habits, groups, groupId, query }: SearchParams): HabitSearchResult[] => {
   const trimmed = query.trim()
   if (!trimmed) return []
 
-  const searchable = buildSearchableHabits(groupId)
+  const searchable = buildSearchableHabits(habits, groups, groupId)
   if (searchable.length === 0) return []
 
   const fuse = getFuseIndex(searchable)

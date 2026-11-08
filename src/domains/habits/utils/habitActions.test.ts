@@ -1,19 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { getDefaultStore } from 'jotai'
 
-// The stores are stood up as bare observables: `habitActions` is about which record a tick writes
-// to, and persistence would only drag MMKV into a node test to answer that.
-vi.mock('src/domains/habits/stores/habits', async () => {
-  const { observable } = await import('@legendapp/state')
-  return { default: observable({}) }
-})
-vi.mock('src/domains/habits/stores/groups', async () => {
-  const { observable } = await import('@legendapp/state')
-  return { default: observable({}) }
-})
+vi.mock('react-native-mmkv')
+vi.mock('src/domains/devTools/utils/devLog', () => ({ devLog: () => undefined }))
 
-import habits$ from 'src/domains/habits/stores/habits'
-import groups$ from 'src/domains/habits/stores/groups'
-import lastAction$ from 'src/domains/habits/stores/lastAction'
+import habitsAtom from 'src/domains/habits/stores/habits'
+import groupsAtom from 'src/domains/habits/stores/groups'
+import lastActionAtom from 'src/domains/habits/stores/lastAction'
 import { actionHabit, linkHabit, undoLastAction } from './habitActions'
 
 const SHARED_HABIT = 'habit-shared'
@@ -22,10 +15,12 @@ const SLOW_ROTATION = 'group-slow'
 
 const SERVED_YESTERDAY = 1_700_000_000_000
 
+const store = getDefaultStore()
+
 beforeEach(() => {
-  lastAction$.set(undefined)
-  habits$.set({ [SHARED_HABIT]: { name: 'Shared' }})
-  groups$.set({
+  store.set(lastActionAtom, undefined)
+  store.set(habitsAtom, { [SHARED_HABIT]: { name: 'Shared' }})
+  store.set(groupsAtom, {
     [FAST_ROTATION]: {
       name: 'Fast',
       habits: { [SHARED_HABIT]: true },
@@ -43,27 +38,28 @@ describe('actionHabit', () => {
   it('serves only the rotation the tick was made in', () => {
     actionHabit(SHARED_HABIT, 'completed', FAST_ROTATION)
 
-    expect(groups$[FAST_ROTATION].lastServedAt.peek()).toBe(habits$[SHARED_HABIT].lastActioned.timestamp.peek())
-    expect(groups$[SLOW_ROTATION].lastServedAt.peek()).toBeNull()
+    expect(store.get(groupsAtom)[FAST_ROTATION].lastServedAt)
+      .toBe(store.get(habitsAtom)[SHARED_HABIT].lastActioned?.timestamp)
+    expect(store.get(groupsAtom)[SLOW_ROTATION].lastServedAt).toBeNull()
   })
 
   it('records the tick on the habit itself, where every rotation\'s queue reads it', () => {
     actionHabit(SHARED_HABIT, 'completed', FAST_ROTATION)
 
-    expect(habits$[SHARED_HABIT].lastActioned.type.peek()).toBe('completed')
+    expect(store.get(habitsAtom)[SHARED_HABIT].lastActioned?.type).toBe('completed')
   })
 
   it('lets a skip advance the habit without serving the rotation', () => {
     actionHabit(SHARED_HABIT, 'skipped', FAST_ROTATION)
 
-    expect(habits$[SHARED_HABIT].lastActioned.type.peek()).toBe('skipped')
-    expect(groups$[FAST_ROTATION].lastServedAt.peek()).toBe(SERVED_YESTERDAY)
+    expect(store.get(habitsAtom)[SHARED_HABIT].lastActioned?.type).toBe('skipped')
+    expect(store.get(groupsAtom)[FAST_ROTATION].lastServedAt).toBe(SERVED_YESTERDAY)
   })
 
   it('leaves a rotation that no longer exists alone rather than writing it back as a partial', () => {
     actionHabit(SHARED_HABIT, 'completed', 'group-deleted')
 
-    expect(groups$.peek()).not.toHaveProperty('group-deleted')
+    expect(store.get(groupsAtom)).not.toHaveProperty('group-deleted')
   })
 })
 
@@ -72,29 +68,38 @@ describe('undoLastAction', () => {
     actionHabit(SHARED_HABIT, 'completed', FAST_ROTATION)
     undoLastAction()
 
-    expect(habits$[SHARED_HABIT].lastActioned.peek()).toBeUndefined()
-    expect(groups$[FAST_ROTATION].lastServedAt.peek()).toBe(SERVED_YESTERDAY)
-    expect(lastAction$.peek()).toBeUndefined()
+    expect(store.get(habitsAtom)[SHARED_HABIT].lastActioned).toBeUndefined()
+    expect(store.get(groupsAtom)[FAST_ROTATION].lastServedAt).toBe(SERVED_YESTERDAY)
+    expect(store.get(lastActionAtom)).toBeUndefined()
   })
 
   it('restores a previous tick rather than clearing it', () => {
     actionHabit(SHARED_HABIT, 'completed', FAST_ROTATION)
-    const firstTick = habits$[SHARED_HABIT].lastActioned.peek()
+    const firstTick = store.get(habitsAtom)[SHARED_HABIT].lastActioned
 
     actionHabit(SHARED_HABIT, 'completed', SLOW_ROTATION)
     undoLastAction()
 
-    expect(habits$[SHARED_HABIT].lastActioned.peek()).toEqual(firstTick)
-    expect(groups$[SLOW_ROTATION].lastServedAt.peek()).toBeNull()
+    expect(store.get(habitsAtom)[SHARED_HABIT].lastActioned).toEqual(firstTick)
+    expect(store.get(groupsAtom)[SLOW_ROTATION].lastServedAt).toBeNull()
   })
 
   it('does not resurrect a rotation deleted while the undo was pending', () => {
     actionHabit(SHARED_HABIT, 'completed', FAST_ROTATION)
-    groups$[FAST_ROTATION].delete()
+    store.set(groupsAtom, ({ [FAST_ROTATION]: _deleted, ...groups }) => groups)
 
     undoLastAction()
 
-    expect(groups$.peek()).not.toHaveProperty(FAST_ROTATION)
+    expect(store.get(groupsAtom)).not.toHaveProperty(FAST_ROTATION)
+  })
+
+  it('does not resurrect a habit deleted while the undo was pending', () => {
+    actionHabit(SHARED_HABIT, 'completed', FAST_ROTATION)
+    store.set(habitsAtom, ({ [SHARED_HABIT]: _deleted, ...habits }) => habits)
+
+    undoLastAction()
+
+    expect(store.get(habitsAtom)).not.toHaveProperty(SHARED_HABIT)
   })
 })
 
@@ -102,19 +107,19 @@ describe('linkHabit', () => {
   const UNLINKED = 'habit-new'
 
   beforeEach(() => {
-    habits$[UNLINKED].set({ name: 'New habit' })
+    store.set(habitsAtom, habits => ({ ...habits, [UNLINKED]: { name: 'New habit' }}))
   })
 
   it('adds the habit to the rotation', () => {
     linkHabit(UNLINKED, FAST_ROTATION)
 
-    expect(groups$[FAST_ROTATION].habits[UNLINKED].peek()).toBe(true)
+    expect(store.get(groupsAtom)[FAST_ROTATION].habits[UNLINKED]).toBe(true)
   })
 
   it('records a linked action for undo', () => {
     linkHabit(UNLINKED, FAST_ROTATION)
 
-    expect(lastAction$.peek()).toMatchObject({
+    expect(store.get(lastActionAtom)).toMatchObject({
       type: 'linked',
       habitId: UNLINKED,
       habitName: 'New habit',
@@ -126,7 +131,7 @@ describe('linkHabit', () => {
     linkHabit(UNLINKED, FAST_ROTATION)
     undoLastAction()
 
-    expect(groups$[FAST_ROTATION].habits.peek()).not.toHaveProperty(UNLINKED)
-    expect(habits$[UNLINKED].peek()).toEqual({ name: 'New habit' })
+    expect(store.get(groupsAtom)[FAST_ROTATION].habits).not.toHaveProperty(UNLINKED)
+    expect(store.get(habitsAtom)[UNLINKED]).toEqual({ name: 'New habit' })
   })
 })

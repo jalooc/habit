@@ -1,8 +1,9 @@
 import { View, Text, ScrollView, Switch } from 'react-native'
 import { StyleSheet } from 'react-native-unistyles'
-import { useObservable, useSelector, useValue } from '@legendapp/state/react'
+import { useState } from 'react'
+import { useAtomValue, useSetAtom } from 'jotai'
 import Button from 'src/domains/misc/components/Button'
-import groups$ from 'src/domains/habits/stores/groups'
+import groupsAtom, { withGroupUpdated } from 'src/domains/habits/stores/groups'
 import RecurrenceTypeCard from './RecurrenceTypeCard'
 import NumberStepper from './NumberStepper'
 import DayChips from './DayChips'
@@ -31,42 +32,35 @@ const EditSchedule = ({ route }: Props) => {
   const { groupId } = route.params
   const navigation = useNavigation()
 
-  const initialConfig = useValue(() => groups$[groupId].recurrence.get())
-  const selectedType$ = useObservable<RecurrenceType | null>(initialConfig?.type ?? null)
-  const value$ = useObservable(initialConfig?.value ?? 2)
+  const initialConfig = useAtomValue(groupsAtom)[groupId].recurrence
+  const setGroups = useSetAtom(groupsAtom)
+  const [selectedType, setSelectedType] = useState<RecurrenceType | null>(initialConfig?.type ?? null)
+  const [value, setValue] = useState(initialConfig?.value ?? 2)
   const initialWeekdays = initialConfig?.specificDays ?
     objectKeys(pickBy(initialConfig.specificDays, isTruthy)) :
     []
-  const specificDays$ = useObservable<Weekday[]>(initialWeekdays)
-  const specificDaysEnabled$ = useObservable(!!initialWeekdays.length)
+  const [specificDays, setSpecificDays] = useState<Weekday[]>(initialWeekdays)
+  const [specificDaysEnabled, setSpecificDaysEnabled] = useState(!!initialWeekdays.length)
+  const hasExistingRecurrence = !!initialConfig
 
   const handleSave = () => {
-    const type = selectedType$.get()
-    if (!type) return
+    if (!selectedType) return
 
-    groups$[groupId].recurrence.set({
-      type,
-      value: value$.get(),
-      specificDays: specificDays$.get().length ? objectFromEntries(
-        WEEKDAYS.map(weekday => [
-          weekday,
-          specificDays$.get().includes(weekday),
-        ])
+    const recurrence = {
+      type: selectedType,
+      value,
+      specificDays: specificDaysEnabled && specificDays.length ? objectFromEntries(
+        WEEKDAYS.map(weekday => [weekday, specificDays.includes(weekday)])
       ) : undefined,
-    })
+    }
+    setGroups(groups => withGroupUpdated(groups, groupId, group => ({ ...group, recurrence })))
     navigation.goBack()
   }
 
   const handleClear = () => {
-    groups$[groupId].recurrence.delete()
+    setGroups(groups => withGroupUpdated(groups, groupId, ({ recurrence: _cleared, ...group }) => group))
     navigation.goBack()
   }
-
-  const selectedType = useValue(selectedType$)
-  const value = useValue(value$)
-  const specificDays = useValue(specificDays$)
-  const specificDaysEnabled = useValue(specificDaysEnabled$)
-  const hasExistingRecurrence = useSelector(() => !!groups$[groupId].recurrence.get())
 
   const valueLabel = selectedType ? VALUE_LABELS[selectedType] : 'Value'
 
@@ -82,12 +76,12 @@ const EditSchedule = ({ route }: Props) => {
               type={type}
               isSelected={selectedType === type}
               disabled={!isRecurrenceTypeImplemented(type)}
-              onPress={() => void selectedType$.set(type)}
+              onPress={() => void setSelectedType(type)}
             >
               <NumberStepper
                 value={value}
                 label={valueLabel}
-                onChange={v => void value$.set(v)}
+                onChange={setValue}
                 min={1}
                 max={selectedType === 'times-per-day' ? 12 : 30}
               />
@@ -100,13 +94,13 @@ const EditSchedule = ({ route }: Props) => {
             <Text style={styles.restrictLabel}>Restrict to specific days</Text>
             <Switch
               value={specificDaysEnabled}
-              onValueChange={v => void specificDaysEnabled$.set(v)}
+              onValueChange={setSpecificDaysEnabled}
             />
           </View>
           {specificDaysEnabled && (
             <DayChips
               selected={specificDays}
-              onChange={days => void specificDays$.set(days)}
+              onChange={setSpecificDays}
             />
           )}
         </View>

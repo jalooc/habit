@@ -54,15 +54,15 @@ const buildHomeSections = (params: {
   for (const [groupId, group] of Object.entries(groups)) {
     if (!group) continue
 
-    const habitIds = Object.keys(group.habits)
+    const queue = orderQueue(Object.keys(group.habits), habits)
     const { recurrence, lastServedAt } = group
 
-    if (habitIds.length === 0 || !recurrence) {
+    if (queue.length === 0 || !recurrence) {
       otherGroupIds.push(groupId)
       continue
     }
 
-    const [upNextId] = orderQueue(habitIds, habits)
+    const [upNextId] = queue
     const base: RowBase = {
       groupId,
       groupName: group.name,
@@ -75,7 +75,7 @@ const buildHomeSections = (params: {
 
     if (behind && previousOccurrence) {
       const elapsed = now.diff(previousOccurrence, 'milliseconds')
-      const isNew = habitIds.every(id => habits[id].lastActioned === undefined)
+      const isNew = queue.every(id => habits[id].lastActioned === undefined)
       // A never-actioned rotation is new, not "carried" — it has no history to fall behind on,
       // so surface it at the top of Up next. Once anything in it has been actioned (a skip counts
       // as history, even though it doesn't satisfy the turn) it can fall behind like any other.

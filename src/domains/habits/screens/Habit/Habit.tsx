@@ -1,9 +1,9 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { ScrollView, Text, useWindowDimensions, View } from 'react-native'
 import { StaticScreenProps, useNavigation } from '@react-navigation/native'
 import { StyleSheet } from 'react-native-unistyles'
-import { useObservable, useSelector, useValue } from '@legendapp/state/react'
-import habits$, { HabitsStore } from 'src/domains/habits/stores/habits'
+import { useAtomValue } from 'jotai'
+import habitsAtom, { type HabitsStore } from 'src/domains/habits/stores/habits'
 import Button from 'src/domains/misc/components/Button'
 import Description from 'src/domains/habits/components/Description'
 import HabitEditor from 'src/domains/habits/components/HabitEditor'
@@ -19,16 +19,10 @@ type Props = StaticScreenProps<{
 const Habit = ({ route }: Props) => {
   const { habitId, groupId } = route.params
   const navigation = useNavigation()
-  const habit = useSelector(() => {
-    const habits: Partial<HabitsStore> = habits$.get()
-    const found = habits[habitId]
-    // Spread: Legend State mutates the stored object in place on set, so the selector would
-    // otherwise return the same reference, and edits made in the editor mode would not re-render.
-    return found ? { ...found } : undefined
-  })
+  const habits: Partial<HabitsStore> = useAtomValue(habitsAtom)
+  const habit = habits[habitId]
   const { height } = useWindowDimensions()
-  const mode$ = useObservable<'read' | 'edit'>('read')
-  const mode = useValue(mode$)
+  const [mode, setMode] = useState<'read' | 'edit'>('read')
   const { setVisibleImageIndex, renderImageViewer } = useImageViewer()
 
   useEffect(() => {
@@ -45,8 +39,8 @@ const Habit = ({ route }: Props) => {
       <HabitEditor
         groupId={groupId}
         habitId={habitId}
-        onDone={() => void mode$.set('read')}
-        onCancel={() => void mode$.set('read')}
+        onDone={() => void setMode('read')}
+        onCancel={() => void setMode('read')}
         onRemoved={() => void navigation.goBack()}
       />
     )
@@ -69,7 +63,7 @@ const Habit = ({ route }: Props) => {
     >
       <View style={styles.header}>
         <Text style={styles.kicker}>Habit</Text>
-        <Button title="Edit" variant="secondary" onPress={() => void mode$.set('edit')} />
+        <Button title="Edit" variant="secondary" onPress={() => void setMode('edit')} />
       </View>
       <Text style={styles.name}>{habit.name}</Text>
       {hasImages && (

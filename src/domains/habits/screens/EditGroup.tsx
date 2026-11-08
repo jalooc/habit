@@ -1,16 +1,14 @@
-import { Alert, Text, View } from 'react-native'
+import { useState } from 'react'
+import { Alert, Text, TextInput, View } from 'react-native'
 import { StyleSheet, useUnistyles } from 'react-native-unistyles'
-import { useObservable, useSelector } from '@legendapp/state/react'
-import { $TextInput } from '@legendapp/state/react-native'
-import { File } from 'expo-file-system'
 import { StaticScreenProps, useNavigation } from '@react-navigation/native'
-import { batch } from '@legendapp/state'
+import { atom, useAtomValue, useSetAtom } from 'jotai'
 import { difference, intersection } from 'remeda'
-import habits$ from 'src/domains/habits/stores/habits'
-import groups$ from 'src/domains/habits/stores/groups'
+import habitsAtom from 'src/domains/habits/stores/habits'
+import groupsAtom, { withGroupUpdated } from 'src/domains/habits/stores/groups'
+import lastActionAtom from 'src/domains/habits/stores/lastAction'
 import Button from 'src/domains/misc/components/Button'
-import { imagesDir } from 'src/domains/habits/utils/habitImages'
-import { dismissLastAction } from 'src/domains/habits/utils/habitActions'
+import { deleteImageFiles } from 'src/domains/habits/utils/habitImages'
 import { devLog } from 'src/domains/devTools/utils/devLog'
 import useUnmountPromise from 'src/domains/misc/utils/useUnmountPromise'
 
@@ -18,17 +16,44 @@ type Props = StaticScreenProps<{
   groupId: string,
 }>
 
+// Habits not shared with another rotation go with it. A pending undo is dismissed too: the toast
+// would otherwise keep offering an undo that does nothing.
+const deleteGroupAtom = atom(null, (get, set, groupId: string) => {
+  const groups = get(groupsAtom)
+  const habits = get(habitsAtom)
+  const groupHabitIds = Object.keys(groups[groupId].habits)
+  const otherGroupHabitIds = Object.entries(groups)
+    .filter(([id]) => id !== groupId)
+    .flatMap(([, group]) => Object.keys(group.habits))
+  const orphanedHabitIds = difference(groupHabitIds, otherGroupHabitIds)
+
+  devLog(`Deleting group "${groups[groupId].name}"`, {
+    groupHabitsToDelete: orphanedHabitIds,
+    remainingHabits: intersection(groupHabitIds, otherGroupHabitIds),
+  })
+
+  deleteImageFiles(orphanedHabitIds
+    .filter(habitId => Object.hasOwn(habits, habitId))
+    .flatMap(habitId => habits[habitId].images ?? []))
+
+  set(habitsAtom, Object.fromEntries(Object.entries(habits).filter(([id]) => !orphanedHabitIds.includes(id))))
+  set(groupsAtom, ({ [groupId]: _deleted, ...remaining }) => remaining)
+  set(lastActionAtom, undefined)
+})
+
 const EditGroup = ({ route }: Props) => {
   const { groupId } = route.params
   const { theme } = useUnistyles()
   const navigation = useNavigation()
-  const name$ = useObservable(() => groups$[groupId].name.get())
-  const canSave = useSelector(() => name$.get().trim().length > 0)
+  const initialName = useAtomValue(groupsAtom)[groupId].name
+  const setGroups = useSetAtom(groupsAtom)
+  const deleteGroup = useSetAtom(deleteGroupAtom)
+  const [name, setName] = useState(initialName)
+  const canSave = name.trim().length > 0
   const unmountPromise = useUnmountPromise()
 
   const save = () => {
-    const name = name$.peek().trim()
-    groups$[groupId].name.set(name)
+    setGroups(groups => withGroupUpdated(groups, groupId, group => ({ ...group, name: name.trim() })))
     navigation.goBack()
   }
 
@@ -42,39 +67,12 @@ const EditGroup = ({ route }: Props) => {
           text: 'Delete',
           style: 'destructive',
           onPress: async () => {
-            const groupHabitIds = Object.keys(groups$[groupId].habits.peek())
-            const otherGroupHabitIds = Array.from(new Set(
-              Object.entries(groups$.peek())
-                .filter(([gId]) => gId !== groupId)
-                .flatMap(([, g]) => Object.keys(g.habits))
-            ))
-
             navigation.navigate('Home', undefined, { pop: true })
 
+            // the screens being popped render off this rotation, so it has to stay until they are gone
             await unmountPromise
 
-            // deleting the groups and habits data after this screen is unmounted as it relies on them being present
-            const groupHabitsToDelete = difference(groupHabitIds, otherGroupHabitIds)
-
-            devLog(`Deleting group "${groups$[groupId].name.peek()}"`, {
-              groupHabitsToDelete,
-              remainingHabits: intersection(groupHabitIds, otherGroupHabitIds),
-            })
-
-            batch(() => {
-              groupHabitsToDelete.forEach(habitId => {
-                const images = habits$[habitId].images.peek() ?? []
-                images.forEach(filename => {
-                  const file = new File(imagesDir, filename)
-                  if (file.exists) file.delete()
-                })
-                habits$[habitId].delete()
-              })
-              groups$[groupId].delete()
-              // a pending undo would write the rotation back as a nameless partial, which fails the
-              // schema on the next load and takes every rotation with it
-              dismissLastAction()
-            })
+            deleteGroup(groupId)
           },
         },
       ],
@@ -84,9 +82,10 @@ const EditGroup = ({ route }: Props) => {
   return (
     <View style={styles.sheet}>
       <Text style={styles.kicker}>Edit rotation</Text>
-      <$TextInput
+      <TextInput
         style={styles.input}
-        $value={name$}
+        value={name}
+        onChangeText={setName}
         placeholder="Rotation name"
         placeholderTextColor={theme.colors.textTertiary}
         onKeyPress={e => {

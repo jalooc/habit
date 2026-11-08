@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Pressable, Text, View } from 'react-native'
 import Animated, {
   FadeIn,
@@ -10,10 +10,10 @@ import Animated, {
 } from 'react-native-reanimated'
 import { StackActions } from '@react-navigation/native'
 import { StyleSheet } from 'react-native-unistyles'
-import { useObservable, useValue } from '@legendapp/state/react'
+import { useAtomValue, useSetAtom } from 'jotai'
 import Lucide from '@react-native-vector-icons/lucide'
-import groups$ from 'src/domains/habits/stores/groups'
-import habits$ from 'src/domains/habits/stores/habits'
+import groupsAtom, { withHabitLinked, withHabitUnlinked } from 'src/domains/habits/stores/groups'
+import habitsAtom from 'src/domains/habits/stores/habits'
 import { GROUP_ID_PARAM } from 'src/domains/habits/utils/linking'
 import orderQueue from 'src/domains/habits/utils/orderQueue'
 import formatCadence from 'src/domains/habits/utils/formatCadence'
@@ -28,24 +28,23 @@ type Props = {
 
 const RotationsSection = ({ habitId }: Props) => {
   const navigation = useNativeStackNavigation()
-  const expanded$ = useObservable(false)
-  const manage$ = useObservable(false)
-  const expanded = useValue(expanded$)
-  const manage = useValue(manage$)
-  const groupsMap = useValue(groups$)
-  const habitsMap = useValue(habits$)
+  const [expanded, setExpanded] = useState(false)
+  const [manage, setManage] = useState(false)
+  const groupsMap = useAtomValue(groupsAtom)
+  const habitsMap = useAtomValue(habitsAtom)
+  const setGroups = useSetAtom(groupsAtom)
 
   const memberGroups = Object.keys(groupsMap)
     .filter(id => habitId in groupsMap[id].habits)
     .map(id => {
       const group = groupsMap[id]
-      const habitIds = Object.keys(group.habits)
+      const queue = orderQueue(Object.keys(group.habits), habitsMap)
       return {
         id,
         name: group.name,
         cadenceLabel: group.recurrence ? formatCadence(group.recurrence) : null,
-        count: habitIds.length,
-        standingIndex: orderQueue(habitIds, habitsMap).indexOf(habitId),
+        count: queue.length,
+        standingIndex: queue.indexOf(habitId),
       }
     })
 
@@ -57,7 +56,7 @@ const RotationsSection = ({ habitId }: Props) => {
         id,
         name: group.name,
         cadenceLabel: group.recurrence ? formatCadence(group.recurrence) : null,
-        count: Object.keys(group.habits).length,
+        count: orderQueue(Object.keys(group.habits), habitsMap).length,
       }
     })
 
@@ -104,7 +103,7 @@ const RotationsSection = ({ habitId }: Props) => {
         <Animated.View entering={FadeIn.duration(180)} exiting={FadeOut.duration(120)}>
           <View style={styles.manageHeader}>
             <Text style={styles.kickerPlain}>Manage rotations</Text>
-            <Pressable onPress={() => void manage$.set(false)} hitSlop={8}>
+            <Pressable onPress={() => void setManage(false)} hitSlop={8}>
               {({ pressed }) => (
                 <Text style={[styles.done, pressed && styles.pressedText]}>Done</Text>
               )}
@@ -125,7 +124,7 @@ const RotationsSection = ({ habitId }: Props) => {
                   <RoundToggle
                     kind="remove"
                     disabled={!canRemove}
-                    onPress={() => void groups$[group.id].habits[habitId].delete()}
+                    onPress={() => void setGroups(groups => withHabitUnlinked(groups, group.id, habitId))}
                   />
                 }
               />
@@ -146,7 +145,7 @@ const RotationsSection = ({ habitId }: Props) => {
                     trailing={
                       <RoundToggle
                         kind="add"
-                        onPress={() => void groups$[group.id].habits[habitId].set(true)}
+                        onPress={() => void setGroups(groups => withHabitLinked(groups, group.id, habitId))}
                       />
                     }
                   />
@@ -161,7 +160,7 @@ const RotationsSection = ({ habitId }: Props) => {
           exiting={FadeOut.duration(120)}
           style={styles.collapsed}
         >
-          <Pressable style={styles.header} onPress={() => void expanded$.toggle()}>
+          <Pressable style={styles.header} onPress={() => void setExpanded(value => !value)}>
             {({ pressed }) => (
               <View style={[styles.headerContent, pressed && styles.pressed]}>
                 <Text style={styles.kicker} numberOfLines={1}>
@@ -195,7 +194,7 @@ const RotationsSection = ({ habitId }: Props) => {
               {showManageEntry && (
                 <Pressable
                   style={[styles.addRow, !single && styles.addRowDivider]}
-                  onPress={() => void manage$.set(true)}
+                  onPress={() => void setManage(true)}
                 >
                   {({ pressed }) => (
                     <View style={[styles.addRowContent, pressed && styles.pressed]}>

@@ -1,10 +1,6 @@
-import { observable } from '@legendapp/state'
-import { synced } from '@legendapp/state/sync'
-import { ObservablePersistMMKV } from '@legendapp/state/persist-plugins/mmkv'
 import { z } from 'zod'
-import { devLog } from 'src/domains/devTools/utils/devLog'
-import { serializeError } from 'serialize-error'
 import { parseRRule } from 'src/domains/recurrence/utils/recurrence'
+import atomWithMMKV from 'src/domains/misc/utils/atomWithMMKV'
 
 const groupIdSchema = z.uuid()
 
@@ -30,12 +26,11 @@ const groupObjectSchema = z.object({
   lastServedAt: z.number().nullable(),
 }).strict()
 
-// What may actually be sitting on disk, which is not the same thing. Legend State never writes a
-// load transform's output back and afterwards persists one path at a time, so a group's *fields*
-// migrate independently: a rotation whose recurrence was never rewritten still holds a v1 RRULE
-// string, while a tick since the upgrade has already given the same group a v3 `lastServedAt`. No
-// single schema version describes that group. So versions are not discriminated at all — every
-// field is read in whichever shape it is in and normalised on the way through.
+// What a stored or backed-up group may look like, which is not the same thing: older payloads hold
+// a v1 RRULE string for `recurrence` and no `lastServedAt` at all, and a backup may mix groups of
+// different ages. So versions are not discriminated — every field is read in whichever shape it is
+// in and normalised on the way through. The whole table is written back on the first change, which
+// is what settles the normalised shape on disk.
 const persistedGroupSchema = z.object({
   name: z.string(),
   habits: z.record(z.string(), z.literal(true)),
@@ -43,33 +38,29 @@ const persistedGroupSchema = z.object({
   lastServedAt: z.number().nullable().optional(),
 }).strict()
 
-// Only the keys are validated at this level, so that one unreadable group is the only thing a
-// table-wide schema would take down with it.
-const tableSchema = z.record(groupIdSchema, z.unknown())
+const tableSchema = z.record(z.string(), z.unknown())
 
 const groupSchema = z.record(groupIdSchema, groupObjectSchema) // eslint-disable-line @typescript-eslint/no-unused-vars
 
 type StoreType = z.infer<typeof groupSchema>
 
-export const parsePersistedGroups = (value: unknown): StoreType =>
-  Object.fromEntries(
-    Object.entries(tableSchema.parse(value)).map(([id, group]) => [id, parseGroup(id, group)]),
-  )
+// A group that can't be read is left out and reported rather than failing the table: the table is
+// written back whole on the next change, so failing it would take every rotation with it.
+export const parsePersistedGroups = (
+  value: unknown,
+  onUnreadable: (groupId: string, error: unknown) => unknown,
+): StoreType =>
+  Object.fromEntries(Object.entries(tableSchema.parse(value)).flatMap(([groupId, group]) => {
+    try {
+      return [[groupIdSchema.parse(groupId), parseGroup(group)] as const]
+    } catch (error) {
+      onUnreadable(groupId, error)
+      return []
+    }
+  }))
 
-const parseGroup = (groupId: string, value: unknown): z.infer<typeof groupObjectSchema> => {
-  const parsed = persistedGroupSchema.safeParse(value)
-
-  if (!parsed.success) {
-    devLog('Failed to load a group from storage', {
-      groupId,
-      group: value,
-      error: serializeError(parsed.error),
-    })
-
-    throw parsed.error
-  }
-
-  const { recurrence, lastServedAt, ...group } = parsed.data
+const parseGroup = (value: unknown): z.infer<typeof groupObjectSchema> => {
+  const { recurrence, lastServedAt, ...group } = persistedGroupSchema.parse(value)
 
   return {
     ...group,
@@ -79,28 +70,35 @@ const parseGroup = (groupId: string, value: unknown): z.infer<typeof groupObject
 }
 
 // A rotation that predates the service record comes back as never served, so it falls due once and
-// settles the moment it is. It is tempting to seed it instead from the most recent completion among
-// its habits, which is what dueness used to read, and that is what the first attempt did. It can't
-// work: Legend State merges a load transform's output into the observable but never writes it back,
-// and afterwards diffs only observable against observable — so the migrated shape never reaches
-// storage, and a habits-derived seed would be recomputed on every launch. That is precisely the
-// cross-rotation credit this store exists to get rid of. Never-served is the one answer that is
-// stable under being recomputed.
+// settles the moment it is. Seeding it from the most recent completion among its habits instead
+// would hand it credit for a tick made in another rotation — precisely the cross-rotation credit
+// this record exists to get rid of.
 const NEVER_SERVED = null
 
-const groups$ = observable<
-  StoreType
->(synced({
-  initial: {},
-  persist: {
-    name: 'groups',
-    plugin: ObservablePersistMMKV,
-    transform: {
-      load: parsePersistedGroups,
-    },
-  },
-}))
+const groupsAtom = atomWithMMKV({
+  key: 'groups',
+  initialValue: {},
+  parse: parsePersistedGroups,
+})
 
-export default groups$
+export default groupsAtom
 
-export type GroupsStore = ReturnType<typeof groups$.get>
+export type GroupsStore = StoreType
+
+// A rotation that is no longer there is left alone: writing into it would store a partial group,
+// which the next launch can't read.
+export const withGroupUpdated = (
+  groups: GroupsStore,
+  groupId: string,
+  update: (group: GroupsStore[string]) => GroupsStore[string],
+) => Object.hasOwn(groups, groupId) ? { ...groups, [groupId]: update(groups[groupId]) } : groups
+
+export const withHabitLinked = (groups: GroupsStore, groupId: string, habitId: string) =>
+  withGroupUpdated(groups, groupId, group => ({ ...group, habits: { ...group.habits, [habitId]: true }}))
+
+export const withHabitUnlinked = (groups: GroupsStore, groupId: string, habitId: string) =>
+  withGroupUpdated(groups, groupId, group => {
+    const { [habitId]: _unlinked, ...habits } = group.habits
+
+    return { ...group, habits }
+  })

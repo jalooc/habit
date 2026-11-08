@@ -1,19 +1,15 @@
 import { View, Text } from 'react-native'
-import { useSelector, useValue } from '@legendapp/state/react'
+import { useAtomValue, useSetAtom } from 'jotai'
 import { StyleSheet } from 'react-native-unistyles'
-import dayBoundaries$ from 'src/domains/misc/stores/dayBoundaries'
+import dayBoundariesAtom from 'src/domains/misc/stores/dayBoundaries'
 import TimeSlot from './TimeSlot'
 
 const ActiveHours = () => {
-  const start = useValue(dayBoundaries$.start)
-  const end = useValue(dayBoundaries$.end)
+  const { start, end } = useAtomValue(dayBoundariesAtom)
+  const setDayBoundaries = useSetAtom(dayBoundariesAtom)
 
-  const descriptionText = useSelector(() => {
-    const s = dayBoundaries$.start.get()
-    const e = dayBoundaries$.end.get()
-    const fmt = (h: number, m: number) => `${h}:${String(m).padStart(2, '0')}`
-    return `Pings only between ${fmt(s.hour, s.minute)} and ${fmt(e.hour, e.minute)}. Outside the window the app stays quiet.`
-  })
+  const descriptionText = `Pings only between ${formatTime(start.hour, start.minute)} and ` +
+    `${formatTime(end.hour, end.minute)}. Outside the window the app stays quiet.`
 
   return (
     <View style={styles.container}>
@@ -23,13 +19,13 @@ const ActiveHours = () => {
         <TimeSlot
           label="From"
           value={start}
-          onChange={v => void dayBoundaries$.start.set(v)}
+          onChange={value => void setDayBoundaries(boundaries => ({ ...boundaries, start: value }))}
         />
         <Text style={styles.separator}>–</Text>
         <TimeSlot
           label="Until"
           value={end}
-          onChange={v => void dayBoundaries$.end.set(v)}
+          onChange={value => void setDayBoundaries(boundaries => ({ ...boundaries, end: value }))}
         />
       </View>
     </View>
@@ -37,6 +33,8 @@ const ActiveHours = () => {
 }
 
 export default ActiveHours
+
+const formatTime = (hour: number, minute: number) => `${hour}:${String(minute).padStart(2, '0')}`
 
 const styles = StyleSheet.create(theme => ({
   container: {

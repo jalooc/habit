@@ -1,10 +1,11 @@
-import { firstBy, isEmptyish, keys, map, pipe, sort, take } from 'remeda'
+import { pipe, sort, take } from 'remeda'
 import dayjs, { Dayjs } from 'dayjs'
 
 import { GroupsStore } from 'src/domains/habits/stores/groups'
 import { HabitsStore } from 'src/domains/habits/stores/habits'
 import { createGroupScreenLink } from 'src/domains/habits/utils/linking'
 import nextTurnDueAt from 'src/domains/habits/utils/nextTurnDueAt'
+import orderQueue from 'src/domains/habits/utils/orderQueue'
 
 import getOccurrence from 'src/domains/recurrence/utils/getOccurrence'
 
@@ -23,14 +24,10 @@ export default (
   dayBoundaries: Parameters<typeof getOccurrence['next']>[2],
 ): ScheduledNotification[] => {
   const all = Object.entries(groups).flatMap(([groupId, group]) => {
-    if (!group.recurrence || isEmptyish(group.habits)) return []
+    const upNextId = orderQueue(Object.keys(group.habits), allHabitsMap).at(0)
+    if (!group.recurrence || upNextId === undefined) return []
 
-    const nextNameHabitName = pipe(
-      group.habits,
-      keys(),
-      map(habitId => allHabitsMap[habitId]),
-      firstBy([habit => habit.lastActioned?.timestamp ?? 0, 'asc'])
-    )?.name
+    const nextNameHabitName = allHabitsMap[upNextId].name
 
     /*
       TODO: optimize by calculating occurrences taking into account how far they reach compared to each other, instead of calculating a batch of occurrences for each group and then ignoring the excess

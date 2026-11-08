@@ -1,1 +1,1 @@
-import './habitsNotificationsScheduler'
+export { startNotificationsScheduler } from './habitsNotificationsScheduler'

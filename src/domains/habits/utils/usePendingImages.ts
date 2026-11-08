@@ -1,4 +1,4 @@
-import { useObservable, useSelector } from '@legendapp/state/react'
+import { useState } from 'react'
 import { randomUUID } from 'expo-crypto'
 import { Directory, File, Paths } from 'expo-file-system'
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator'
@@ -10,30 +10,28 @@ const MAX_IMAGE_SIZE = 1200
 const pendingImagesDir = new Directory(Paths.cache, 'pending-images')
 
 export default () => {
-  const pendingImagesUris$ = useObservable<string[]>([])
-  const pendingImages = useSelector(() => pendingImagesUris$.get().map(uri => ({
+  const [pendingImagesUris, setPendingImagesUris] = useState<string[]>([])
+  const pendingImages = pendingImagesUris.map(uri => ({
     uri,
     remove: () => {
       const file = new File(uri)
       if (file.exists) file.delete()
 
-      const idx = pendingImagesUris$.get().indexOf(uri)
-      if (idx !== -1) pendingImagesUris$.splice(idx, 1)
+      setPendingImagesUris(uris => uris.filter(pendingUri => pendingUri !== uri))
     },
-  })))
+  }))
 
   const addImage = async (uri: string) => {
     const pendingUri = await savePendingImageFromUri(uri)
-    pendingImagesUris$.push(pendingUri)
+    setPendingImagesUris(uris => [...uris, pendingUri])
   }
 
   const commitImages = async () => {
-    const uris = pendingImagesUris$.get()
-    if (uris.length === 0) return Promise.resolve([])
+    if (pendingImagesUris.length === 0) return Promise.resolve([])
 
     imagesDir.create({ idempotent: true })
 
-    const filenames = await Promise.all(uris.map(async uri => {
+    const filenames = await Promise.all(pendingImagesUris.map(async uri => {
       const file = new File(uri)
       if (!file.exists) return undefined
       await file.move(new File(imagesDir, file.name))
@@ -45,7 +43,7 @@ export default () => {
 
   const clearImages = () => {
     cleanupPendingImages()
-    pendingImagesUris$.set([])
+    setPendingImagesUris([])
   }
 
   return {

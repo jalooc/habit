@@ -1,4 +1,4 @@
-import { useEffect, type ComponentProps } from 'react'
+import { useEffect, type ComponentProps, useState } from 'react'
 import { AppState, Pressable, Text, View } from 'react-native'
 import { StyleSheet } from 'react-native-unistyles'
 import {
@@ -11,7 +11,6 @@ import { getDocumentAsync } from 'expo-document-picker'
 import * as Clipboard from 'expo-clipboard'
 import { File, Paths } from 'expo-file-system'
 import { randomUUID } from 'expo-crypto'
-import { useObservable, useValue } from '@legendapp/state/react'
 import Lucide from '@react-native-vector-icons/lucide'
 
 type Props = {
@@ -85,8 +84,8 @@ const ImageSourceChips = ({ onAdd, onDone }: Props) => {
 export default ImageSourceChips
 
 const useClipboardHasImage = () => {
-  const has$ = useObservable(false)
-  const check = () => void Clipboard.hasImageAsync().then(has => void has$.set(has))
+  const [hasImage, setHasImage] = useState(false)
+  const check = () => void Clipboard.hasImageAsync().then(setHasImage)
 
   useEffect(() => void check(), [])
 
@@ -97,7 +96,7 @@ const useClipboardHasImage = () => {
     return () => void sub.remove()
   }, [])
 
-  return useValue(has$)
+  return hasImage
 }
 
 type SourceChipProps = {

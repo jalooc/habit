@@ -48,6 +48,19 @@ describe('buildHomeSections', () => {
     expect(result.upNext).toHaveLength(0)
   })
 
+  it('places a group none of whose habits loaded into other', () => {
+    const groups = makeGroups([['g1', { habits: { unloaded: true }, recurrence: timesPerDay(1) }]])
+    const result = build(groups, makeHabits([]), `${MONDAY_DATE} 17:00`)
+    expect(result.otherGroupIds).toContain('g1')
+    expect(result.upNext).toHaveLength(0)
+  })
+
+  it('surfaces the loaded habit of a group that also names one that did not load', () => {
+    const groups = makeGroups([['g1', { habits: { unloaded: true, h1: true }, recurrence: timesPerDay(1) }]])
+    const result = build(groups, makeHabits([['h1', {}]]), `${MONDAY_DATE} 17:00`)
+    expect(result.upNext.map(row => row.habitId)).toEqual(['h1'])
+  })
+
   it('places a group with no recurrence into other', () => {
     const groups = makeGroups([['g1', { habits: { h1: true }}]])
     const habits = makeHabits([['h1', {}]])

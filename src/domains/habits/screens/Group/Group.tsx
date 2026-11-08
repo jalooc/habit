@@ -1,13 +1,14 @@
+import { useEffect } from 'react'
 import { Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native'
-import { StaticScreenProps, useNavigation } from '@react-navigation/native'
+import { StackActions, StaticScreenProps, useNavigation } from '@react-navigation/native'
 import Animated, { LinearTransition } from 'react-native-reanimated'
-import { useSelector, useValue } from '@legendapp/state/react'
+import { useAtomValue } from 'jotai'
 import { StyleSheet } from 'react-native-unistyles'
 import dayjs from 'dayjs'
 
-import dayBoundaries$ from 'src/domains/misc/stores/dayBoundaries'
-import groups$ from 'src/domains/habits/stores/groups'
-import habits$ from 'src/domains/habits/stores/habits'
+import dayBoundariesAtom from 'src/domains/misc/stores/dayBoundaries'
+import groupsAtom, { type GroupsStore } from 'src/domains/habits/stores/groups'
+import habitsAtom from 'src/domains/habits/stores/habits'
 import { GROUP_ID_PARAM } from 'src/domains/habits/utils/linking'
 import UndoToast from 'src/domains/habits/components/UndoToast'
 import { actionHabit } from 'src/domains/habits/utils/habitActions'
@@ -37,21 +38,24 @@ const Group = ({ route }: Props) => {
   const navigation = useNavigation()
   const { width } = useWindowDimensions()
 
-  const { name, recurrence, lastServedAt } = useValue(groups$[groupId])
-  const dayBoundaries = useValue(dayBoundaries$)
+  const groups: Partial<GroupsStore> = useAtomValue(groupsAtom)
+  const group = groups[groupId]
+  const habitsMap = useAtomValue(habitsAtom)
+  const dayBoundaries = useAtomValue(dayBoundariesAtom)
+  const { setVisibleImageIndex, renderImageViewer } = useImageViewer()
 
-  const orderedHabitIds = useSelector(() => {
-    const habitsMap = habits$.get()
-    const groupHabitIds = Object.keys(groups$[groupId].habits.get())
-    return orderQueue(groupHabitIds, habitsMap)
-  })
+  // a notification or a link can outlive its rotation
+  useEffect(() => {
+    if (!group) navigation.dispatch(StackActions.popTo('Home'))
+  }, [group, navigation])
 
-  const orderedHabits = useSelector(() => {
-    const habitsMap = habits$.get()
-    return orderedHabitIds.map(id => {
-      const { name: habitName, description, images } = habitsMap[id]
-      return { id, name: habitName, description, images: images ?? [] }
-    })
+  if (!group) return null
+
+  const { name, recurrence, lastServedAt, habits: groupHabits } = group
+
+  const orderedHabits = orderQueue(Object.keys(groupHabits), habitsMap).map(id => {
+    const { name: habitName, description, images } = habitsMap[id]
+    return { id, name: habitName, description, images: images ?? [] }
   })
 
   const isDue = isGroupDue({ recurrence, lastServedAt, now: dayjs(), dayBoundaries })
@@ -60,8 +64,6 @@ const Group = ({ route }: Props) => {
   const hasHabits = orderedHabits.length > 0
   const upNext = orderedHabits.at(0)
   const queueHabits = orderedHabits.slice(1)
-
-  const { setVisibleImageIndex, renderImageViewer } = useImageViewer()
 
   const cadenceLabel = recurrence ? formatCadence(recurrence) : null
   const habitCount = orderedHabits.length

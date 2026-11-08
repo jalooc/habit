@@ -1,33 +1,33 @@
 import { Text, TextInput, View } from 'react-native'
 import { StyleSheet, useUnistyles } from 'react-native-unistyles'
-import { $TextInput } from '@legendapp/state/react-native'
-import { useObservable } from '@legendapp/state/react'
+import { useSetAtom } from 'jotai'
 import { randomUUID } from 'expo-crypto'
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { useNavigation } from '@react-navigation/native'
 import Button from 'src/domains/misc/components/Button'
-import groups$ from 'src/domains/habits/stores/groups'
+import groupsAtom from 'src/domains/habits/stores/groups'
 
 const NewGroup = () => {
   const navigation = useNavigation()
   const { theme } = useUnistyles()
-  const name$ = useObservable('')
+  const setGroups = useSetAtom(groupsAtom)
+  const [name, setName] = useState('')
   const inputRef = useRef<TextInput>(null)
 
   const create = () => {
-    const name = name$.peek().trim()
-    if (!name) return
+    const trimmedName = name.trim()
+    if (!trimmedName) return
     navigation.goBack()
-    groups$[randomUUID()].set({ name, habits: {}, lastServedAt: null })
+    setGroups(groups => ({ ...groups, [randomUUID()]: { name: trimmedName, habits: {}, lastServedAt: null }}))
   }
 
   return (
     <View style={styles.sheet}>
       <Text style={styles.kicker}>New rotation</Text>
-      <$TextInput
+      <TextInput
         style={styles.input}
-        $value={name$}
-        // @ts-expect-error ref type in Legend State components doesn't match
+        value={name}
+        onChangeText={setName}
         ref={inputRef}
         autoFocus
         placeholder="Rotation name"

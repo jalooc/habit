@@ -1,7 +1,5 @@
-import { observable } from '@legendapp/state'
-import { synced } from '@legendapp/state/sync'
-import { ObservablePersistMMKV } from '@legendapp/state/persist-plugins/mmkv'
 import { z } from 'zod'
+import atomWithMMKV from 'src/domains/misc/utils/atomWithMMKV'
 
 export const dayBoundariesSchema = z.object({
   start: z.object({
@@ -14,15 +12,10 @@ export const dayBoundariesSchema = z.object({
   }),
 })
 
-const dayBoundaries$ = observable<z.infer<typeof dayBoundariesSchema>>(synced({
-  initial: { start: { hour: 7, minute: 0 }, end: { hour: 23, minute: 0 }},
-  persist: {
-    name: 'day-boundaries',
-    plugin: ObservablePersistMMKV,
-    transform: {
-      load: (value: unknown) => dayBoundariesSchema.parse(value),
-    },
-  },
-}))
+const dayBoundariesAtom = atomWithMMKV({
+  key: 'day-boundaries',
+  initialValue: { start: { hour: 7, minute: 0 }, end: { hour: 23, minute: 0 }},
+  parse: data => dayBoundariesSchema.parse(data),
+})
 
-export default dayBoundaries$
+export default dayBoundariesAtom

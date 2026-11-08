@@ -1,9 +1,7 @@
-import { useDeferredValue, useEffect, useRef } from 'react'
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from 'react'
 import { Alert, Text, TextInput, View } from 'react-native'
 import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated'
 import { StyleSheet, useUnistyles } from 'react-native-unistyles'
-import { useObservable, useSelector, useValue } from '@legendapp/state/react'
-import { $TextInput } from '@legendapp/state/react-native'
 import { TextInputWrapper } from 'expo-paste-input'
 import { File } from 'expo-file-system'
 import { randomUUID } from 'expo-crypto'
@@ -11,14 +9,15 @@ import * as Haptics from 'expo-haptics'
 import { EnrichedMarkdownTextInput } from 'react-native-enriched-markdown'
 import type { EnrichedMarkdownTextInputInstance, MarkdownTextInputStyle } from 'react-native-enriched-markdown'
 import type { PasteEventPayload } from 'expo-paste-input'
-import { batch } from '@legendapp/state'
+import { atom, useAtomValue, useSetAtom } from 'jotai'
 import { isNonNullish } from 'remeda'
-import habits$ from 'src/domains/habits/stores/habits'
-import groups$ from 'src/domains/habits/stores/groups'
+import habitsAtom, { type HabitsStore, withHabitUpdated } from 'src/domains/habits/stores/habits'
+import groupsAtom, { withHabitLinked, withHabitUnlinked } from 'src/domains/habits/stores/groups'
+import lastActionAtom from 'src/domains/habits/stores/lastAction'
 import Button from 'src/domains/misc/components/Button'
 import usePendingImages from 'src/domains/habits/utils/usePendingImages'
-import { imageFileUri, imagesDir } from 'src/domains/habits/utils/habitImages'
-import { dismissLastAction, linkHabit } from 'src/domains/habits/utils/habitActions'
+import { deleteImageFiles, imageFileUri } from 'src/domains/habits/utils/habitImages'
+import { linkHabit } from 'src/domains/habits/utils/habitActions'
 import searchHabits from 'src/domains/habits/utils/searchHabits'
 import useUnmountPromise from 'src/domains/misc/utils/useUnmountPromise'
 import PendingImageRow from './PendingImageRow'
@@ -33,84 +32,100 @@ type Props = {
   onRemoved?: () => unknown,
 }
 
+type HabitFields = Omit<HabitsStore[string], 'lastActioned'>
+
+// The habit and its membership land in one write, so nothing derived from the stores sees the
+// rotation point at a habit that isn't there yet.
+const createHabitAtom = atom(null, (_get, set, groupId: string, fields: HabitFields) => {
+  const habitId = randomUUID()
+
+  set(habitsAtom, habits => ({ ...habits, [habitId]: fields }))
+  set(groupsAtom, groups => withHabitLinked(groups, groupId, habitId))
+})
+
+const updateHabitAtom = atom(null, (_get, set, habitId: string, fields: HabitFields) => {
+  set(habitsAtom, habits => withHabitUpdated(habits, habitId, ({ lastActioned }) => ({
+    ...fields,
+    ...(lastActioned && { lastActioned }),
+  })))
+})
+
+// A pending undo is dismissed too: the toast would otherwise keep offering an undo that does nothing.
+const deleteHabitAtom = atom(null, (get, set, habitId: string, groupId: string) => {
+  deleteImageFiles(get(habitsAtom)[habitId].images ?? [])
+
+  set(groupsAtom, groups => withHabitUnlinked(groups, groupId, habitId))
+  set(habitsAtom, ({ [habitId]: _deleted, ...habits }) => habits)
+  set(lastActionAtom, undefined)
+})
+
 const HabitEditor = ({ groupId, habitId, onDone, onCancel, onRemoved }: Props) => {
   const isEditMode = isNonNullish(habitId)
   const { theme } = useUnistyles()
-  const name$ = useObservable(() => habitId ? habits$[habitId].name.get() : '')
-  const suggestionsDismissed$ = useObservable(false)
-  const suggestionsDismissed = useValue(suggestionsDismissed$)
-  const query = useDeferredValue(useSelector(() => name$.get().trim()))
-  const suggestionResults = useSelector(() => isEditMode ? null : searchHabits(groupId, query))
+  const habits = useAtomValue(habitsAtom)
+  const groups = useAtomValue(groupsAtom)
+  const setGroups = useSetAtom(groupsAtom)
+  const createHabit = useSetAtom(createHabitAtom)
+  const updateHabit = useSetAtom(updateHabitAtom)
+  const deleteHabit = useSetAtom(deleteHabitAtom)
+  const editedHabit = habitId ? habits[habitId] : undefined
+  const [name, setName] = useState(editedHabit?.name ?? '')
+  const [suggestionsDismissed, setSuggestionsDismissed] = useState(false)
+  const query = useDeferredValue(name.trim())
+  const suggestionResults = useMemo(
+    () => isEditMode ? null : searchHabits({ habits, groups, groupId, query }),
+    [isEditMode, habits, groups, groupId, query],
+  )
   const showSuggestions = !isEditMode &&
-    query.trim().length > 0 &&
+    query.length > 0 &&
     !!suggestionResults &&
     suggestionResults.length > 0 &&
     !suggestionsDismissed
-  const canSubmit = useSelector(() => name$.get().trim().length > 0)
+  const canSubmit = name.trim().length > 0
   const nameInputRef = useRef<TextInput>(null)
   const descInputRef = useRef<EnrichedMarkdownTextInputInstance | null>(null)
-  const originalFilenames = useRef<string[]>(habitId ? habits$[habitId].images.get() ?? [] : [])
+  const originalFilenames = useRef(editedHabit?.images ?? [])
   const unmountPromise = useUnmountPromise()
 
-  const existingImages$ = useObservable<{ filename: string, uri: string }[]>(
-    () => (habitId ? habits$[habitId].images.get() ?? [] : []).map(f => ({ filename: f, uri: imageFileUri(f) }))
+  const [existingImages, setExistingImages] = useState(
+    () => (editedHabit?.images ?? []).map(filename => ({ filename, uri: imageFileUri(filename) })),
   )
 
-  const existingAsUnified = useSelector(() =>
-    existingImages$.get().map(img => ({
-      uri: img.uri,
-      remove: () => {
-        const idx = existingImages$.peek().findIndex(i => i.filename === img.filename)
-        if (idx !== -1) void existingImages$.splice(idx, 1)
-      },
-    }))
-  )
+  const existingAsUnified = existingImages.map(img => ({
+    uri: img.uri,
+    remove: () => void setExistingImages(images => images.filter(image => image.filename !== img.filename)),
+  }))
 
-  const isInOtherGroup = useSelector(() =>
-    isEditMode && Object.entries(groups$.get()).some(([gId, g]) => gId !== groupId && habitId in g.habits)
+  const isInOtherGroup = isEditMode && Object.entries(groups).some(
+    ([gId, g]) => gId !== groupId && habitId in g.habits
   )
 
   const { pendingImages, addPendingImage, commitPendingImages, clearPendingImages } = usePendingImages()
 
   useEffect(() => () => void clearPendingImages(), [])
 
-  useEffect(() => name$.onChange(() => void suggestionsDismissed$.set(false)), [])
-
-  const dismissSuggestions = () => void suggestionsDismissed$.set(true)
+  const dismissSuggestions = () => void setSuggestionsDismissed(true)
 
   const submit = async () => {
     const [description, newFilenames] = await Promise.all([
       descInputRef.current?.getMarkdown() ?? '',
       commitPendingImages(),
     ])
-    const remainingFilenames = existingImages$.peek().map(i => i.filename)
+    const remainingFilenames = existingImages.map(i => i.filename)
     const images = [...remainingFilenames, ...newFilenames]
-    const name = name$.peek().trim()
-    const filesToDelete = originalFilenames.current.filter(f => !remainingFilenames.includes(f))
+    const fields = {
+      name: name.trim(),
+      ...(description.trim() && { description: description.trim() }),
+      ...(images.length && { images }),
+    }
 
     onDone()
 
     if (isEditMode) {
-      filesToDelete.forEach(filename => {
-        const file = new File(imagesDir, filename)
-        if (file.exists) file.delete()
-      })
-
-      batch(() => {
-        habits$[habitId].name.set(name)
-        habits$[habitId].description.set(description.trim() || undefined)
-        habits$[habitId].images.set(images.length > 0 ? images : undefined)
-      })
+      deleteImageFiles(originalFilenames.current.filter(f => !remainingFilenames.includes(f)))
+      updateHabit(habitId, fields)
     } else {
-      const id = randomUUID()
-      batch(() => {
-        habits$[id].set({
-          name,
-          ...(description.trim() && { description: description.trim() }),
-          ...(images.length && { images }),
-        })
-        groups$[groupId].habits[id].set(true)
-      })
+      createHabit(groupId, fields)
     }
   }
 
@@ -140,7 +155,7 @@ const HabitEditor = ({ groupId, habitId, onDone, onCancel, onRemoved }: Props) =
               onRemoved()
               await unmountPromise
 
-              groups$[groupId].habits[habitId].delete()
+              setGroups(groups => withHabitUnlinked(groups, groupId, habitId))
             },
           },
         ],
@@ -158,17 +173,7 @@ const HabitEditor = ({ groupId, habitId, onDone, onCancel, onRemoved }: Props) =
               onRemoved()
               await unmountPromise
 
-              const images = habits$[habitId].images.peek() ?? []
-              images.forEach(filename => {
-                const file = new File(imagesDir, filename)
-                if (file.exists) file.delete()
-              })
-              batch(() => {
-                groups$[groupId].habits[habitId].delete()
-                habits$[habitId].delete()
-                // a pending undo would write the habit back as a nameless partial
-                dismissLastAction()
-              })
+              deleteHabit(habitId, groupId)
             },
           },
         ],
@@ -190,7 +195,7 @@ const HabitEditor = ({ groupId, habitId, onDone, onCancel, onRemoved }: Props) =
         </View>
         <EnrichedMarkdownTextInput
           ref={descInputRef}
-          defaultValue={habitId ? habits$[habitId].description.peek() : ''}
+          defaultValue={editedHabit?.description ?? ''}
           multiline
           style={styles.descriptionInput}
           placeholder="Form cues, why it matters, links."
@@ -243,10 +248,13 @@ const HabitEditor = ({ groupId, habitId, onDone, onCancel, onRemoved }: Props) =
       <View style={styles.fieldGroup}>
         <Text style={styles.fieldLabel}>Name</Text>
         <TextInputWrapper onPaste={handlePaste}>
-          <$TextInput
+          <TextInput
             style={styles.input}
-            $value={name$}
-            // @ts-expect-error ref type in Legend State components doesn't match
+            value={name}
+            onChangeText={text => {
+              setName(text)
+              setSuggestionsDismissed(false)
+            }}
             ref={nameInputRef}
             autoFocus={!isEditMode}
             placeholder="e.g. Hollow hold"

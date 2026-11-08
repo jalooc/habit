@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { observable } from '@legendapp/state'
+import type { GroupsStore } from 'src/domains/habits/stores/groups'
 import dayjs from 'dayjs'
 
 import buildNotifications from './buildNotifications'
@@ -12,8 +12,8 @@ const timesPerDay = (value: number) => ({ type: 'times-per-day', value } as cons
 
 const everyXDays = (value: number) => ({ type: 'every-x-days', value } as const)
 
-// Group fixtures pass through an observable so they have the exact type and
-// shape buildNotifications receives in production (stores hand it `.get()` output).
+// Group fixtures are checked against the store type so they have the exact shape
+// buildNotifications receives in production.
 const makeFixture = (groupCount: number, habitsPerGroup: number, dailyRate: number) => {
   const groupEntries = Array.from({ length: groupCount }, (_, g) => {
     const habitEntries = Array.from({ length: habitsPerGroup }, (_, h) => [
@@ -36,7 +36,7 @@ const makeFixture = (groupCount: number, habitsPerGroup: number, dailyRate: numb
     }
   })
 
-  const groups = observable(Object.fromEntries(groupEntries.map(e => [e.groupId, e.group]))).get()
+  const groups: GroupsStore = Object.fromEntries(groupEntries.map(e => [e.groupId, e.group]))
   const habits = Object.fromEntries(groupEntries.flatMap(e => e.habitEntries))
   return { groups, habits }
 }
@@ -90,14 +90,14 @@ describe('buildNotifications', () => {
   })
 
   it('prefers a never-actioned habit as the next in queue', () => {
-    const groups = observable({
+    const groups = {
       'group-0': {
         name: 'group 0',
         habits: { 'habit-actioned': true as const, 'habit-fresh': true as const },
         recurrence: timesPerDay(1),
         lastServedAt: Date.now(),
       },
-    }).get()
+    } satisfies GroupsStore
     const habits = {
       'habit-actioned': { name: 'actioned', lastActioned: { timestamp: Date.now(), type: 'completed' as const }},
       'habit-fresh': { name: 'fresh' },
@@ -110,14 +110,14 @@ describe('buildNotifications', () => {
     // timesPerDay(3) → turn 2 opens 12:00, comes due 14:00; completed 13:00 serves it,
     // so the next reminder is turn 3 at 18:00 rather than a ping for what is already done
     vi.setSystemTime(new Date('2026-07-06T13:30:00'))
-    const groups = observable({
+    const groups = {
       'group-0': {
         name: 'group 0',
         habits: { 'habit-0': true as const },
         recurrence: timesPerDay(3),
         lastServedAt: dayjs('2026-07-06 13:00').valueOf(),
       },
-    }).get()
+    } satisfies GroupsStore
     const habits = {
       'habit-0': {
         name: 'habit 0',
@@ -134,7 +134,7 @@ describe('buildNotifications', () => {
     // The scheduler rebuilds on every action, so a skip taken straight from the 14:00 notification
     // rebuilds at 14:00:30 with the turn still unserved. Today's 18:00 reminder has to survive that.
     vi.setSystemTime(new Date('2026-07-06T14:00:30'))
-    const groups = observable({
+    const groups = {
       'group-0': {
         name: 'group 0',
         habits: { 'habit-0': true as const },
@@ -142,7 +142,7 @@ describe('buildNotifications', () => {
         // a skip serves nothing, so the rotation's own record stays empty
         lastServedAt: null,
       },
-    }).get()
+    } satisfies GroupsStore
     const habits = {
       'habit-0': {
         name: 'habit 0',
@@ -156,23 +156,44 @@ describe('buildNotifications', () => {
   })
 
   it('skips groups without a recurrence', () => {
-    const groups = observable({
+    const groups = {
       'group-0': { name: 'group 0', habits: { 'habit-0': true as const }, lastServedAt: null },
-    }).get()
+    } satisfies GroupsStore
 
     expect(buildNotifications(groups, { 'habit-0': { name: 'habit 0' }}, dayBoundaries)).toEqual([])
   })
 
   it('produces nothing for a group with no habits', () => {
-    const groups = observable({
+    const groups = {
       'group-empty': { name: 'empty', habits: {}, recurrence: timesPerDay(1), lastServedAt: null },
-    }).get()
+    } satisfies GroupsStore
 
     expect(buildNotifications(groups, {}, dayBoundaries)).toEqual([])
   })
 
+  it('produces nothing for a group none of whose habits loaded', () => {
+    const groups = {
+      'group-0': { name: 'group 0', habits: { 'habit-unloaded': true }, recurrence: timesPerDay(1), lastServedAt: null },
+    } satisfies GroupsStore
+
+    expect(buildNotifications(groups, {}, dayBoundaries)).toEqual([])
+  })
+
+  it('names the loaded habit of a group that also names one that did not load', () => {
+    const groups = {
+      'group-0': {
+        name: 'group 0',
+        habits: { 'habit-unloaded': true, 'habit-0': true },
+        recurrence: timesPerDay(1),
+        lastServedAt: null,
+      },
+    } satisfies GroupsStore
+
+    expect(buildNotifications(groups, { 'habit-0': { name: 'habit 0' }}, dayBoundaries).at(0)?.body).toBe('habit 0')
+  })
+
   it('interleaves groups by occurrence time', () => {
-    const groups = observable({
+    const groups = {
       'group-once': {
         name: 'once daily',
         habits: { 'habit-once': true as const },
@@ -185,7 +206,7 @@ describe('buildNotifications', () => {
         recurrence: timesPerDay(2),
         lastServedAt: null,
       },
-    }).get()
+    } satisfies GroupsStore
     const habits = { 'habit-once': { name: 'once' }, 'habit-twice': { name: 'twice' }}
 
     const titles = buildNotifications(groups, habits, dayBoundaries).map(notification => notification.title)
@@ -206,14 +227,14 @@ describe('buildNotifications', () => {
 
   it('projects every-x-days reminders from on-time completions', () => {
     vi.setSystemTime(new Date('2026-07-06T06:00:00'))
-    const groups = observable({
+    const groups = {
       'group-0': {
         name: 'every two days',
         habits: { 'habit-0': true as const },
         recurrence: everyXDays(2),
         lastServedAt: null,
       },
-    }).get()
+    } satisfies GroupsStore
     const habits = { 'habit-0': { name: 'habit 0' }}
 
     const dates = buildNotifications(groups, habits, dayBoundaries)

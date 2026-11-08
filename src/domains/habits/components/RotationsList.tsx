@@ -1,13 +1,13 @@
 import { ReactElement } from 'react'
-import { useSelector, useValue } from '@legendapp/state/react'
+import { useAtomValue } from 'jotai'
 import { FlatList, Text, Pressable, View } from 'react-native'
 import { StyleSheet } from 'react-native-unistyles'
 import { useLinkProps } from '@react-navigation/native'
 import dayjs from 'dayjs'
 
-import dayBoundaries$ from 'src/domains/misc/stores/dayBoundaries'
-import groups$ from 'src/domains/habits/stores/groups'
-import habits$ from 'src/domains/habits/stores/habits'
+import dayBoundariesAtom from 'src/domains/misc/stores/dayBoundaries'
+import groupsAtom from 'src/domains/habits/stores/groups'
+import habitsAtom from 'src/domains/habits/stores/habits'
 import orderQueue from 'src/domains/habits/utils/orderQueue'
 import OrbitMini from 'src/domains/habits/components/OrbitMini'
 import isGroupDue from 'src/domains/habits/utils/isGroupDue'
@@ -57,29 +57,17 @@ type GroupCardProps = {
 
 const GroupCard = ({ id }: GroupCardProps) => {
   const linkProps = useLinkProps({ screen: 'Group', params: { id }})
-  const { recurrence } = useValue(groups$[id])
+  const { name, recurrence, lastServedAt, habits: groupHabits } = useAtomValue(groupsAtom)[id]
+  const habitsMap = useAtomValue(habitsAtom)
+  const dayBoundaries = useAtomValue(dayBoundariesAtom)
 
-  const cardData = useSelector(() => {
-    const group = groups$[id].get()
-    const habitsMap = habits$.get()
-    const habitIds = Object.keys(group.habits)
-    const ordered = orderQueue(habitIds, habitsMap)
+  const queue = orderQueue(Object.keys(groupHabits), habitsMap)
+  const upNextId = queue.at(0)
+  const upNextName = upNextId ? habitsMap[upNextId].name : null
+  const due = isGroupDue({ recurrence, lastServedAt, now: dayjs(), dayBoundaries })
+  const cadenceLabel = recurrence ? formatCadence(recurrence) : null
+  const habitCount = queue.length
 
-    const upNextId = ordered[0]
-    const upNextName = upNextId ? habitsMap[upNextId].name : null
-    const due = isGroupDue({
-      recurrence,
-      lastServedAt: group.lastServedAt,
-      now: dayjs(),
-      dayBoundaries: dayBoundaries$.get(),
-    })
-    const cadenceLabel = recurrence ? formatCadence(recurrence) : null
-    const habitCount = habitIds.length
-
-    return { name: group.name, habitCount, cadenceLabel, upNextName, due }
-  })
-
-  const { name, habitCount, cadenceLabel, upNextName, due } = cardData
   const metaLine = cadenceLabel ?
     `${cadenceLabel} · ${habitCount} ${habitCount === 1 ? 'habit' : 'habits'}` :
     `${habitCount} ${habitCount === 1 ? 'habit' : 'habits'}`

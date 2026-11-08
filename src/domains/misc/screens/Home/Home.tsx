@@ -1,7 +1,7 @@
 import { useCallback } from 'react'
 import { Text, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
-import { useValue } from '@legendapp/state/react'
+import { atom, useAtomValue, useSetAtom } from 'jotai'
 import { StyleSheet } from 'react-native-unistyles'
 import { useFocusEffect, useNavigation } from '@react-navigation/native'
 import dayjs from 'dayjs'
@@ -15,38 +15,38 @@ import RotationsLink from './RotationsLink'
 import TodaySections from './TodaySections'
 import OtherRotationsHeader from './OtherRotationsHeader'
 import DevToolsLink from 'src/domains/devTools/components/DevToolsLink'
-import dayBoundaries$ from 'src/domains/misc/stores/dayBoundaries'
-import groups$ from 'src/domains/habits/stores/groups'
-import habits$ from 'src/domains/habits/stores/habits'
+import dayBoundariesAtom from 'src/domains/misc/stores/dayBoundaries'
+import groupsAtom from 'src/domains/habits/stores/groups'
+import habitsAtom from 'src/domains/habits/stores/habits'
 import buildHomeSections from './buildHomeSections'
-import { computed } from '@legendapp/state'
 
 const NOW_REFRESH_MS = 60_000
 
-const now$ = computed(() => dayjs())
-const homeSections$ = computed(() => buildHomeSections({
-  groups: groups$.get(),
-  habits: habits$.get(),
-  dayBoundaries: dayBoundaries$.get(),
-  now: now$.get(),
+const nowAtom = atom(dayjs())
+const homeSectionsAtom = atom(get => buildHomeSections({
+  groups: get(groupsAtom),
+  habits: get(habitsAtom),
+  dayBoundaries: get(dayBoundariesAtom),
+  now: get(nowAtom),
 }))
 
 const Home = () => {
   const navigation = useNavigation()
   const { top } = useSafeAreaInsets()
 
-  const groups = useValue(groups$)
-  const dayBoundaries = useValue(dayBoundaries$)
+  const groups = useAtomValue(groupsAtom)
+  const dayBoundaries = useAtomValue(dayBoundariesAtom)
+  const setNow = useSetAtom(nowAtom)
 
   // `now` drives the carried/up-next buckets; refresh on focus and on a slow tick
   // so a "now" row ages into "carried" and upcoming turns surface without a store change.
   useFocusEffect(useCallback(() => {
-    now$.set(dayjs())
-    const interval = setInterval(() => void now$.set(dayjs()), NOW_REFRESH_MS)
+    setNow(dayjs())
+    const interval = setInterval(() => void setNow(dayjs()), NOW_REFRESH_MS)
     return () => void clearInterval(interval)
-  }, []))
+  }, [setNow]))
 
-  const sections = useValue(homeSections$)
+  const sections = useAtomValue(homeSectionsAtom)
 
   const hasNoGroups = Object.keys(groups).length === 0
   const hasSurfaced = sections.carried.length > 0 || sections.upNext.length > 0

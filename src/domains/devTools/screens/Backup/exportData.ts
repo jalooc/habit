@@ -1,21 +1,27 @@
 import { Directory, File, Paths } from 'expo-file-system'
 import { zip } from 'react-native-zip-archive'
 import { randomUUID } from 'expo-crypto'
-import habits$ from 'src/domains/habits/stores/habits'
-import groups$ from 'src/domains/habits/stores/groups'
-import dayBoundaries$ from 'src/domains/misc/stores/dayBoundaries'
+import { getDefaultStore } from 'jotai'
+import habitsAtom from 'src/domains/habits/stores/habits'
+import groupsAtom from 'src/domains/habits/stores/groups'
+import dayBoundariesAtom from 'src/domains/misc/stores/dayBoundaries'
+import { getUnreadableCopies } from 'src/domains/misc/utils/atomWithMMKV'
 import { imagesDir } from 'src/domains/habits/utils/habitImages'
 import { devLog } from 'src/domains/devTools/utils/devLog'
 import { serializeError } from 'serialize-error'
 import { toNativePath } from './backupUtils'
 
 export const exportData = async () => {
+  const store = getDefaultStore()
+
   const payload = {
     version: 2,
     exportedAt: new Date().toISOString(),
-    habits: habits$.get(),
-    groups: groups$.get(),
-    dayBoundaries: dayBoundaries$.get(),
+    habits: store.get(habitsAtom),
+    groups: store.get(groupsAtom),
+    dayBoundaries: store.get(dayBoundariesAtom),
+    // what the app couldn't read lives only on this device otherwise; import ignores it
+    unreadable: getUnreadableCopies(),
   }
 
   const tempDir = new Directory(Paths.cache, `export-${randomUUID()}`)

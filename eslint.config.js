@@ -111,12 +111,7 @@ export default [
         }],
         '@stylistic/jsx-indent-props': ['error', 2],
         '@stylistic/jsx-one-expression-per-line': ['error', { allow: 'single-line' }],
-        '@stylistic/jsx-pascal-case': ['error', {
-          allowNamespace: true,
-          ignore: [
-            '$[[:upper:]]*', // for the Legend State components
-          ],
-        }],
+        '@stylistic/jsx-pascal-case': ['error', { allowNamespace: true }],
         '@stylistic/jsx-tag-spacing': ['error', {
           closingSlash: 'never',
           beforeSelfClosing: 'always',
