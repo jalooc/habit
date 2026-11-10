@@ -27,6 +27,7 @@ const UndoToast = ({ bottomOffset = 14 }: Props) => {
 
   const label = {
     linked: `Added · ${action.habitName}`,
+    deleted: `Deleted · ${action.habitName}`,
     completed: `Logged · ${action.habitName}`,
     skipped: `Skipped · ${action.habitName}`,
   }[action.type]

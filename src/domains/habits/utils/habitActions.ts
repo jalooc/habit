@@ -42,6 +42,16 @@ const linkHabitAtom = atom(null, (get, set, habitId: string, groupId: string) =>
   set(groupsAtom, groups => withHabitLinked(groups, groupId, habitId))
 })
 
+const deleteHabitAtom = atom(null, (get, set, habitId: string) => {
+  const habit = get(habitsAtom)[habitId]
+  const rotations = get(groupsAtom)
+  const groupIds = Object.keys(rotations).filter(groupId => habitId in rotations[groupId].habits)
+
+  set(lastActionAtom, { type: 'deleted', habitId, habitName: habit.name, habit, groupIds, at: Date.now() })
+  set(groupsAtom, groups => groupIds.reduce((rest, groupId) => withHabitUnlinked(rest, groupId, habitId), groups))
+  set(habitsAtom, ({ [habitId]: _deleted, ...habits }) => habits)
+})
+
 const undoLastActionAtom = atom(null, (get, set) => {
   const action = get(lastActionAtom)
   if (!action) {
@@ -51,6 +61,12 @@ const undoLastActionAtom = atom(null, (get, set) => {
 
   if (action.type === 'linked') {
     set(groupsAtom, groups => withHabitUnlinked(groups, action.groupId, action.habitId))
+  } else if (action.type === 'deleted') {
+    set(habitsAtom, habits => ({ ...habits, [action.habitId]: action.habit }))
+    set(groupsAtom, groups => action.groupIds.reduce(
+      (restored, groupId) => withHabitLinked(restored, groupId, action.habitId),
+      groups,
+    ))
   } else {
     set(habitsAtom, habits => withHabitUpdated(habits, action.habitId, ({ lastActioned: _undone, ...habit }) =>
       action.prevLastActioned === undefined ? habit : { ...habit, lastActioned: action.prevLastActioned }))
@@ -67,6 +83,8 @@ export const actionHabit = (habitId: string, type: 'completed' | 'skipped', grou
   void store.set(actionHabitAtom, habitId, type, groupId)
 
 export const linkHabit = (habitId: string, groupId: string) => void store.set(linkHabitAtom, habitId, groupId)
+
+export const deleteHabit = (habitId: string) => void store.set(deleteHabitAtom, habitId)
 
 export const undoLastAction = () => void store.set(undoLastActionAtom)
 

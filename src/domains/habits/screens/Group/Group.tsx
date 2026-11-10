@@ -113,7 +113,7 @@ const Group = ({ route }: Props) => {
                   size={ringSize}
                   kicker={isDue ? 'Your turn' : 'Up next'}
                   kickerAccent={isDue}
-                  onPressName={() => void navigation.navigate('Habit', { habitId: upNext.id, groupId })}
+                  onPressName={() => void navigation.navigate('Habit', { habitId: upNext.id })}
                 />
                 {upNext.images.length > 0 && (
                   <HeroImageStrip
@@ -136,7 +136,7 @@ const Group = ({ route }: Props) => {
         {upNext?.description && (
           <HabitNoteCard
             description={upNext.description}
-            onOpen={() => void navigation.navigate('Habit', { habitId: upNext.id, groupId })}
+            onOpen={() => void navigation.navigate('Habit', { habitId: upNext.id })}
           />
         )}
 

@@ -3,11 +3,13 @@ import { getDefaultStore } from 'jotai'
 
 vi.mock('react-native-mmkv')
 vi.mock('src/domains/devTools/utils/devLog', () => ({ devLog: () => undefined }))
+vi.mock('src/domains/habits/utils/habitImages', () => ({ deleteImageFiles: vi.fn() }))
 
-import habitsAtom from 'src/domains/habits/stores/habits'
-import groupsAtom from 'src/domains/habits/stores/groups'
+import habitsAtom, { type HabitsStore } from 'src/domains/habits/stores/habits'
+import groupsAtom, { withHabitLinked } from 'src/domains/habits/stores/groups'
 import lastActionAtom from 'src/domains/habits/stores/lastAction'
-import { actionHabit, linkHabit, undoLastAction } from './habitActions'
+import { deleteImageFiles } from 'src/domains/habits/utils/habitImages'
+import { actionHabit, deleteHabit, dismissLastAction, linkHabit, undoLastAction } from './habitActions'
 
 const SHARED_HABIT = 'habit-shared'
 const FAST_ROTATION = 'group-fast'
@@ -100,6 +102,87 @@ describe('undoLastAction', () => {
     undoLastAction()
 
     expect(store.get(habitsAtom)).not.toHaveProperty(SHARED_HABIT)
+  })
+})
+
+describe('deleteHabit', () => {
+  const OTHER_HABIT = 'habit-other'
+  const IMAGES = ['one.jpg', 'two.jpg']
+  const deletedHabit = {
+    name: 'Shared',
+    images: IMAGES,
+    lastActioned: { timestamp: SERVED_YESTERDAY, type: 'completed' },
+  } as const satisfies HabitsStore[string]
+
+  beforeEach(() => {
+    store.set(habitsAtom, {
+      [SHARED_HABIT]: { ...deletedHabit, images: [...IMAGES] },
+      [OTHER_HABIT]: { name: 'Other', images: ['other.jpg'] },
+    })
+    store.set(groupsAtom, groups => withHabitLinked(groups, FAST_ROTATION, OTHER_HABIT))
+    vi.mocked(deleteImageFiles).mockClear()
+  })
+
+  it('removes the habit from every rotation it is in', () => {
+    deleteHabit(SHARED_HABIT)
+
+    expect(store.get(habitsAtom)).not.toHaveProperty(SHARED_HABIT)
+    expect(store.get(groupsAtom)[FAST_ROTATION].habits).not.toHaveProperty(SHARED_HABIT)
+    expect(store.get(groupsAtom)[SLOW_ROTATION].habits).not.toHaveProperty(SHARED_HABIT)
+  })
+
+  it('leaves the images on disk while the undo is on offer', () => {
+    deleteHabit(SHARED_HABIT)
+
+    expect(deleteImageFiles).not.toHaveBeenCalled()
+  })
+
+  it('undoes by restoring the habit, its queue history and every rotation', () => {
+    deleteHabit(SHARED_HABIT)
+    undoLastAction()
+
+    expect(store.get(habitsAtom)[SHARED_HABIT]).toEqual(deletedHabit)
+    expect(store.get(groupsAtom)[FAST_ROTATION].habits[SHARED_HABIT]).toBe(true)
+    expect(store.get(groupsAtom)[SLOW_ROTATION].habits[SHARED_HABIT]).toBe(true)
+    expect(store.get(lastActionAtom)).toBeUndefined()
+  })
+
+  it('keeps the images when undone', () => {
+    deleteHabit(SHARED_HABIT)
+    undoLastAction()
+
+    expect(deleteImageFiles).not.toHaveBeenCalled()
+  })
+
+  it('does not resurrect a rotation deleted while the undo was pending', () => {
+    deleteHabit(SHARED_HABIT)
+    store.set(groupsAtom, ({ [FAST_ROTATION]: _deleted, ...groups }) => groups)
+
+    undoLastAction()
+
+    expect(store.get(groupsAtom)).not.toHaveProperty(FAST_ROTATION)
+    expect(store.get(groupsAtom)[SLOW_ROTATION].habits[SHARED_HABIT]).toBe(true)
+  })
+
+  it('removes the images once the offer expires', () => {
+    deleteHabit(SHARED_HABIT)
+    dismissLastAction()
+
+    expect(deleteImageFiles).toHaveBeenCalledExactlyOnceWith(IMAGES)
+  })
+
+  it('removes the images when a newer action replaces the offer', () => {
+    deleteHabit(SHARED_HABIT)
+    actionHabit(OTHER_HABIT, 'completed', FAST_ROTATION)
+
+    expect(deleteImageFiles).toHaveBeenCalledExactlyOnceWith(IMAGES)
+  })
+
+  it('removes only the earlier habit\'s images when another habit is deleted next', () => {
+    deleteHabit(SHARED_HABIT)
+    deleteHabit(OTHER_HABIT)
+
+    expect(deleteImageFiles).toHaveBeenCalledExactlyOnceWith(IMAGES)
   })
 })
 

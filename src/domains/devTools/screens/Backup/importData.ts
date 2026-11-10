@@ -28,12 +28,13 @@ type ParsedBackup = {
 
 // One write, so that nothing derived from the stores ever sees the imported habits next to the
 // previous rotations. A pending undo would write its target back into the imported data, so it
-// goes in the same write.
+// goes in the same write. It goes last because clearing last action on a deleted habit removes the
+// habit's images, unless the backup has just brought that habit back.
 const applyBackupAtom = atom(null, (_get, set, backup: ParsedBackup) => {
-  set(lastActionAtom, undefined)
   set(habitsAtom, backup.habits)
   set(groupsAtom, backup.groups)
   set(dayBoundariesAtom, backup.dayBoundaries)
+  set(lastActionAtom, undefined)
 })
 
 export const importData = async () => {

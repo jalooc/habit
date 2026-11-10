@@ -10,14 +10,12 @@ import { EnrichedMarkdownTextInput } from 'react-native-enriched-markdown'
 import type { EnrichedMarkdownTextInputInstance, MarkdownTextInputStyle } from 'react-native-enriched-markdown'
 import type { PasteEventPayload } from 'expo-paste-input'
 import { atom, useAtomValue, useSetAtom } from 'jotai'
-import { isNonNullish } from 'remeda'
 import habitsAtom, { type HabitsStore, withHabitUpdated } from 'src/domains/habits/stores/habits'
-import groupsAtom, { withHabitLinked, withHabitUnlinked } from 'src/domains/habits/stores/groups'
-import lastActionAtom from 'src/domains/habits/stores/lastAction'
+import groupsAtom, { withHabitLinked } from 'src/domains/habits/stores/groups'
 import Button from 'src/domains/misc/components/Button'
 import usePendingImages from 'src/domains/habits/utils/usePendingImages'
 import { deleteImageFiles, imageFileUri } from 'src/domains/habits/utils/habitImages'
-import { linkHabit } from 'src/domains/habits/utils/habitActions'
+import { deleteHabit, linkHabit } from 'src/domains/habits/utils/habitActions'
 import searchHabits from 'src/domains/habits/utils/searchHabits'
 import useUnmountPromise from 'src/domains/misc/utils/useUnmountPromise'
 import PendingImageRow from './PendingImageRow'
@@ -25,12 +23,12 @@ import HabitSuggestions from './HabitSuggestions'
 import AnimatedKicker from './AnimatedKicker'
 
 type Props = {
-  groupId: string,
-  habitId?: string,
   onDone: () => unknown,
   onCancel: () => unknown,
-  onRemoved?: () => unknown,
-}
+} & (
+  { groupId: string, habitId?: undefined, onRemoved?: undefined } |
+  { groupId?: undefined, habitId: string, onRemoved: () => unknown }
+)
 
 type HabitFields = Omit<HabitsStore[string], 'lastActioned'>
 
@@ -50,24 +48,13 @@ const updateHabitAtom = atom(null, (_get, set, habitId: string, fields: HabitFie
   })))
 })
 
-// A pending undo is dismissed too: the toast would otherwise keep offering an undo that does nothing.
-const deleteHabitAtom = atom(null, (get, set, habitId: string, groupId: string) => {
-  deleteImageFiles(get(habitsAtom)[habitId].images ?? [])
-
-  set(groupsAtom, groups => withHabitUnlinked(groups, groupId, habitId))
-  set(habitsAtom, ({ [habitId]: _deleted, ...habits }) => habits)
-  set(lastActionAtom, undefined)
-})
-
 const HabitEditor = ({ groupId, habitId, onDone, onCancel, onRemoved }: Props) => {
-  const isEditMode = isNonNullish(habitId)
+  const isEditMode = habitId !== undefined
   const { theme } = useUnistyles()
   const habits = useAtomValue(habitsAtom)
   const groups = useAtomValue(groupsAtom)
-  const setGroups = useSetAtom(groupsAtom)
   const createHabit = useSetAtom(createHabitAtom)
   const updateHabit = useSetAtom(updateHabitAtom)
-  const deleteHabit = useSetAtom(deleteHabitAtom)
   const editedHabit = habitId ? habits[habitId] : undefined
   const [name, setName] = useState(editedHabit?.name ?? '')
   const [suggestionsDismissed, setSuggestionsDismissed] = useState(false)
@@ -95,10 +82,6 @@ const HabitEditor = ({ groupId, habitId, onDone, onCancel, onRemoved }: Props) =
     uri: img.uri,
     remove: () => void setExistingImages(images => images.filter(image => image.filename !== img.filename)),
   }))
-
-  const isInOtherGroup = isEditMode && Object.entries(groups).some(
-    ([gId, g]) => gId !== groupId && habitId in g.habits
-  )
 
   const { pendingImages, addPendingImage, commitPendingImages, clearPendingImages } = usePendingImages()
 
@@ -129,9 +112,9 @@ const HabitEditor = ({ groupId, habitId, onDone, onCancel, onRemoved }: Props) =
     }
   }
 
-  const handleLink = (linkedHabitId: string) => {
+  const handleLink = (targetGroupId: string) => (linkedHabitId: string) => {
     void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)
-    linkHabit(linkedHabitId, groupId)
+    linkHabit(linkedHabitId, targetGroupId)
     onDone()
   }
 
@@ -141,44 +124,28 @@ const HabitEditor = ({ groupId, habitId, onDone, onCancel, onRemoved }: Props) =
     payload.uris.forEach(uri => void new File(uri).delete())
   }
 
-  const handleRemove = (habitId: string, onRemoved: () => unknown) => () => {
-    if (isInOtherGroup) {
-      Alert.alert(
-        'Remove from rotation?',
-        'This habit will be removed from this rotation but remain in others.',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Remove',
-            style: 'destructive',
-            onPress: async () => {
-              onRemoved()
-              await unmountPromise
+  const confirmDelete = (habitId: string, onRemoved: () => unknown) => () => {
+    const rotationCount = Object.values(groups).filter(group => habitId in group.habits).length
 
-              setGroups(groups => withHabitUnlinked(groups, groupId, habitId))
-            },
-          },
-        ],
-      )
-    } else {
-      Alert.alert(
-        'Delete habit?',
-        'This habit isn\'t in any other rotation. It will be permanently deleted.',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Delete',
-            style: 'destructive',
-            onPress: async () => {
-              onRemoved()
-              await unmountPromise
+    Alert.alert(
+      'Delete habit?',
+      rotationCount > 1 ?
+        `This habit is in ${rotationCount} rotations. It will be deleted from all of them.` :
+        'This habit isn\'t in any other rotation. It will be deleted.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            onRemoved()
+            await unmountPromise
 
-              deleteHabit(habitId, groupId)
-            },
+            deleteHabit(habitId)
           },
-        ],
-      )
-    }
+        },
+      ],
+    )
   }
 
   const formSections = (
@@ -227,12 +194,8 @@ const HabitEditor = ({ groupId, habitId, onDone, onCancel, onRemoved }: Props) =
           />
         </View>
       </View>
-      {isEditMode && onRemoved && (
-        <Button
-          title={isInOtherGroup ? 'Remove from rotation' : 'Delete habit'}
-          onPress={handleRemove(habitId, onRemoved)}
-          variant="secondary"
-        />
+      {isEditMode && (
+        <Button title="Delete habit" onPress={confirmDelete(habitId, onRemoved)} variant="secondary" />
       )}
     </Animated.View>
   )
@@ -269,7 +232,7 @@ const HabitEditor = ({ groupId, habitId, onDone, onCancel, onRemoved }: Props) =
       {showSuggestions ? (
         <HabitSuggestions
           habitSuggestions={suggestionResults}
-          onLink={handleLink}
+          onLink={handleLink(groupId)}
           onDismiss={dismissSuggestions}
         />
       ) : formSections}

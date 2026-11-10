@@ -13,11 +13,10 @@ import RotationsSection from './RotationsSection'
 
 type Props = StaticScreenProps<{
   habitId: string,
-  groupId: string,
 }>
 
 const Habit = ({ route }: Props) => {
-  const { habitId, groupId } = route.params
+  const { habitId } = route.params
   const navigation = useNavigation()
   const habits: Partial<HabitsStore> = useAtomValue(habitsAtom)
   const habit = habits[habitId]
@@ -37,7 +36,6 @@ const Habit = ({ route }: Props) => {
   if (mode === 'edit') {
     return (
       <HabitEditor
-        groupId={groupId}
         habitId={habitId}
         onDone={() => void setMode('read')}
         onCancel={() => void setMode('read')}

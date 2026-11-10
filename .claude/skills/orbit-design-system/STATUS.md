@@ -29,7 +29,7 @@ Update this file whenever a DS feature lands or a new gap is identified.
   into a Manage view (− to leave a rotation; + to join available ones), hidden only when in a single
   rotation with nowhere else to add (its last membership can't be removed here — deletion lives in the Edit
   sheet). Never a stacked sheet; the − removes immediately (no confirm — re-adding is one tap), while the
-  Edit sheet's remove/delete still confirms via the shared `utils/removeHabit`.
+  Edit sheet's "Delete habit" confirms, removes the habit from every rotation and can be undone from the toast.
   Reanimated layout + fade animations smooth the expand/manage switches and the `fitToContents` sheet grows
   to follow.
 - **Rotations index (Home)** — `◯ ORBIT` status strip + date, list cards with OrbitMini, cadence·count meta,
