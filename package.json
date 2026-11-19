@@ -6,6 +6,8 @@
     "start": "WITH_ROZENITE=true expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
+    "build-preview:android": "eas build --platform android --profile preview --local --output build-$(date +%s)-$npm_package_version.apk",
+    "install-preview-latest-build-over-cable:android": "adb -d install -r \"$(ls -t build-*.apk | head -1)\"",
     "type-check": "tsc --noEmit",
     "lint": "eslint . --report-unused-disable-directives --max-warnings 0",
     "test": "vitest"
