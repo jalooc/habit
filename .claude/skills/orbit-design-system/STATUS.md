@@ -19,7 +19,7 @@ Update this file whenever a DS feature lands or a new gap is identified.
   into the editor (`habits/components/HabitEditor`) — no stacked sheets. A collapsible **rotations section**
   (`screens/Habit/RotationsSection`) lists every rotation the habit lives in: "In _Core_ rotation" (single)
   or "In _2_ rotations" (multi, count in coral), each row an `OrbitMini` slot badge (the habit's standing
-  lit) + `cadence · standing` ("up next" coral / "3rd in line"). Tapping a row opens that Group (a `card`
+  lit) + `cadence · place` ("up next of 6" with "up next" coral / "3rd of 4"). Tapping a row opens that Group (a `card`
   push from within the sheet — sanctioned, not a stacked sheet): if the Group is already below in the stack
   it pops the sheet down onto it, otherwise it dismisses the sheet then pushes the Group on the next frame
   (forward nav straight out of a formSheet doesn't animate on Android, and inserting the Group beneath the
@@ -32,6 +32,15 @@ Update this file whenever a DS feature lands or a new gap is identified.
   Edit sheet's "Delete habit" confirms, removes the habit from every rotation and can be undone from the toast.
   Reanimated layout + fade animations smooth the expand/manage switches and the `fitToContents` sheet grows
   to follow.
+- **Habit search** (`habits/screens/Search`) — opened only from the round search button left of `DEV` on Home.
+  A `slide_from_bottom` stack screen, not a `fullScreenModal`: on iOS a card can't sit above a modal. Pill field
+  (accent border while focused), Fuse.js over habit names only, one card per habit with a line per rotation
+  ("up next of 6" / "3rd of 4"), Recently opened (5, persisted, dimmed until the query matches them, order
+  frozen while Search is open) when the field is empty, plain no-match copy, Reanimated layout animations on
+  the list. A result opens the Habit sheet with its rotations expanded; a rotation row then replaces Search
+  with the Group (Back goes to Home), which scrolls the habit into view, tints its queue row (not the hero:
+  too heavy) and nudges its swipe control or the hero's slider (`useArrivalNudge`). Small text on the page uses the text-only `textSecondaryStrong` / `accentText` shades
+  (4.5:1 in light). No paused state: the data model has no pause.
 - **Rotations index (Home)** — `◯ ORBIT` status strip + date, list cards with OrbitMini, cadence·count meta,
   due-aware "Up next" line, Literary empty state. The card list is the shared `habits/components/RotationsList`.
 - **All-rotations index screen + link** — the DS `RotationsLink` ("All rotations →", coral ring + count,

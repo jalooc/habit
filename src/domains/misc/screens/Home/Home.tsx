@@ -12,6 +12,7 @@ import UndoToast from 'src/domains/habits/components/UndoToast'
 import RotationsList from 'src/domains/habits/components/RotationsList'
 import AddRotationCard from 'src/domains/habits/components/AddRotationCard'
 import RotationsLink from './RotationsLink'
+import SearchButton from './SearchButton'
 import TodaySections from './TodaySections'
 import OtherRotationsHeader from './OtherRotationsHeader'
 import DevToolsLink from 'src/domains/devTools/components/DevToolsLink'
@@ -63,6 +64,7 @@ const Home = () => {
         </View>
         <View style={homeStyles.stripRight}>
           <Text style={homeStyles.date}>{dayjs().format('ddd · MMM D')}</Text>
+          <SearchButton />
           <DevToolsLink />
         </View>
       </View>

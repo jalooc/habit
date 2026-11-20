@@ -85,6 +85,9 @@ const light = {
     text: '#1a1814',
     textSecondary: '#7a766e',
     textTertiary: '#b5b0a6',
+    // text-only shades: textSecondary and accent fall short of 4.5:1 as small text on the page
+    textSecondaryStrong: '#716d65',
+    accentText: '#b05232',
     accent: '#c96442',
     accentDim: '#e7dccf',
     accentSubtle: '#f4dccf',
@@ -110,6 +113,8 @@ const dark = {
     text: '#ece8e2',
     textSecondary: '#9a958c',
     textTertiary: '#5d594f',
+    textSecondaryStrong: '#9a958c',
+    accentText: '#e3a37a',
     accent: '#e3a37a',
     accentDim: '#3a342d',
     accentSubtle: '#2b2723',

@@ -1,10 +1,12 @@
 import { Pressable, Text, View } from 'react-native'
+import type { SharedValue } from 'react-native-reanimated'
 import { StyleSheet } from 'react-native-unistyles'
 import { useNavigation } from '@react-navigation/native'
 import { actionHabit } from 'src/domains/habits/utils/habitActions'
 import useImageViewer from 'src/domains/habits/utils/useImageViewer'
 import SwipeToLog from 'src/domains/habits/components/SwipeToLog'
 import QueueMosaic from './QueueMosaic'
+import NudgeTint from './NudgeTint'
 
 type Props = {
   id: string,
@@ -13,38 +15,49 @@ type Props = {
   hasNote: boolean,
   isFirst: boolean,
   groupId: string,
+  nudge?: {
+    tint: SharedValue<number>,
+    offset: SharedValue<number>,
+  },
 }
 
-const QueueRow = ({ id, name, images, hasNote, isFirst, groupId }: Props) => {
+const QueueRow = ({ id, name, images, hasNote, isFirst, groupId, nudge }: Props) => {
   const navigation = useNavigation()
 
   const { setVisibleImageIndex, renderImageViewer } = useImageViewer()
 
   return (
     <>
-      <SwipeToLog label="Logged" onTrigger={() => void actionHabit(id, 'completed', groupId)}>
+      <SwipeToLog
+        label="Logged"
+        onTrigger={() => void actionHabit(id, 'completed', groupId)}
+        nudgeOffset={nudge?.offset}
+      >
         <Pressable
           onPress={() => void navigation.navigate('Habit', { habitId: id })}
           style={[styles.row, !isFirst && styles.rowBorder]}
         >
           {({ pressed }) => (
-            <View style={[styles.rowContent, pressed && styles.contentPressed]}>
-              <View style={styles.indicatorSlot}>
-                <View style={styles.hollowDot} />
+            <>
+              {nudge && <NudgeTint tint={nudge.tint} />}
+              <View style={[styles.rowContent, pressed && styles.contentPressed]}>
+                <View style={styles.indicatorSlot}>
+                  <View style={styles.hollowDot} />
+                </View>
+                <View style={styles.content}>
+                  <Text style={styles.habitName} numberOfLines={2}>
+                    {name}
+                    {hasNote && <Text style={styles.noteHint}>{'  ¶'}</Text>}
+                  </Text>
+                  {images.length > 0 && (
+                    <QueueMosaic
+                      images={images}
+                      onOpen={index => void setVisibleImageIndex(index)}
+                    />
+                  )}
+                </View>
               </View>
-              <View style={styles.content}>
-                <Text style={styles.habitName} numberOfLines={2}>
-                  {name}
-                  {hasNote && <Text style={styles.noteHint}>{'  ¶'}</Text>}
-                </Text>
-                {images.length > 0 && (
-                  <QueueMosaic
-                    images={images}
-                    onOpen={index => void setVisibleImageIndex(index)}
-                  />
-                )}
-              </View>
-            </View>
+            </>
           )}
         </Pressable>
       </SwipeToLog>

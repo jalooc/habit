@@ -3,6 +3,7 @@ import { Text, View } from 'react-native'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import Animated, {
   Easing,
+  type SharedValue,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -21,9 +22,11 @@ type Props = {
   label: string,
   doneLabel: string,
   onConfirm: () => unknown,
+  // an offset animated from outside, added to the handle's, which a touch settles back to 0
+  nudgeOffset?: SharedValue<number>,
 }
 
-const SlideToConfirm = ({ label, doneLabel, onConfirm }: Props) => {
+const SlideToConfirm = ({ label, doneLabel, onConfirm, nudgeOffset }: Props) => {
   const [trackWidth, setTrackWidth] = useState(0)
   const [done, setDone] = useState(false)
   const travel = Math.max(1, trackWidth - HANDLE_SIZE - 2 * HANDLE_MARGIN)
@@ -44,6 +47,9 @@ const SlideToConfirm = ({ label, doneLabel, onConfirm }: Props) => {
     .enabled(!done && trackWidth > 0)
     .activeOffsetX([-8, 8])
     .failOffsetY([-12, 12])
+    .onBegin(() => {
+      if (nudgeOffset) nudgeOffset.value = withTiming(0, { duration: 120 })
+    })
     .onStart(() => {
       startPos.value = pos.value
     })
@@ -60,13 +66,16 @@ const SlideToConfirm = ({ label, doneLabel, onConfirm }: Props) => {
     })
 
   const handleStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: pos.value }],
+    transform: [{ translateX: pos.value + (nudgeOffset?.value ?? 0) }],
   }))
-  const fillStyle = useAnimatedStyle(() => ({
-    width: pos.value + HANDLE_SIZE / 2 + HANDLE_MARGIN,
-    // hidden at rest — otherwise the trail peeks around the handle as a dark crescent
-    opacity: pos.value < 1 ? 0 : 0.92,
-  }))
+  const fillStyle = useAnimatedStyle(() => {
+    const shownPos = pos.value + (nudgeOffset?.value ?? 0)
+    return {
+      width: shownPos + HANDLE_SIZE / 2 + HANDLE_MARGIN,
+      // hidden at rest — otherwise the trail peeks around the handle as a dark crescent
+      opacity: shownPos < 1 ? 0 : 0.92,
+    }
+  })
   const labelStyle = useAnimatedStyle(() => ({
     opacity: done ? 1 : Math.max(0.35, 1 - (pos.value / travel) * 0.6),
   }))

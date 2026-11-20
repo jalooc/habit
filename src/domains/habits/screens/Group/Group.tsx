@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { Pressable, ScrollView, Text, useWindowDimensions, View } from 'react-native'
+import { Pressable, Text, useWindowDimensions, View } from 'react-native'
 import { StackActions, StaticScreenProps, useNavigation } from '@react-navigation/native'
 import Animated, { LinearTransition } from 'react-native-reanimated'
 import { useAtomValue } from 'jotai'
@@ -25,16 +25,18 @@ import AddHabitFooter from './AddHabitFooter'
 import QueueRow from './QueueRow'
 import HeroImageStrip from './HeroImageStrip'
 import HabitNoteCard from './HabitNoteCard'
+import useArrivalNudge from './useArrivalNudge'
 
 const SCREEN_PADDING = 22
 const CARD_PADDING = 16
 
 type Props = StaticScreenProps<{
   [GROUP_ID_PARAM]: string,
+  nudgedHabitId?: string,
 }>
 
 const Group = ({ route }: Props) => {
-  const groupId = route.params.id
+  const { id: groupId, nudgedHabitId } = route.params
   const navigation = useNavigation()
   const { width } = useWindowDimensions()
 
@@ -43,6 +45,11 @@ const Group = ({ route }: Props) => {
   const habitsMap = useAtomValue(habitsAtom)
   const dayBoundaries = useAtomValue(dayBoundariesAtom)
   const { setVisibleImageIndex, renderImageViewer } = useImageViewer()
+  const isNudging = nudgedHabitId !== undefined &&
+    Object.hasOwn(habitsMap, nudgedHabitId) &&
+    !!group?.habits[nudgedHabitId]
+  const nudge = useArrivalNudge(isNudging)
+  const nudgeFor = (habitId: string) => isNudging && habitId === nudgedHabitId ? nudge : undefined
 
   // a notification or a link can outlive its rotation
   useEffect(() => {
@@ -81,8 +88,10 @@ const Group = ({ route }: Props) => {
   }
 
   return (
-    <View style={styles.screenRoot}>
-      <ScrollView
+    <View style={styles.screenRoot} ref={nudge.viewportRef} onLayout={nudge.measureTarget}>
+      <Animated.ScrollView
+        ref={nudge.scrollRef}
+        onContentSizeChange={nudge.onContentSizeChange}
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -104,7 +113,7 @@ const Group = ({ route }: Props) => {
           />
         </View>
 
-        <View style={styles.heroCardShadow}>
+        <View style={styles.heroCardShadow} ref={upNext && nudgeFor(upNext.id)?.targetRef}>
           <View style={styles.heroCardInner}>
             {upNext ? (
               <>
@@ -121,7 +130,12 @@ const Group = ({ route }: Props) => {
                     onOpen={index => void setVisibleImageIndex(index)}
                   />
                 )}
-                <SlideToConfirm label="Slide to log" doneLabel="Logged" onConfirm={handleMarkDone} />
+                <SlideToConfirm
+                  label="Slide to log"
+                  doneLabel="Logged"
+                  onConfirm={handleMarkDone}
+                  nudgeOffset={nudgeFor(upNext.id)?.offset}
+                />
                 <Button title="Skip this turn" variant="ghost" onPress={handleSkip} />
                 {nextTurnLabel && (
                   <Text style={styles.nextTurn}>{`Next turn - ${nextTurnLabel}`}</Text>
@@ -147,14 +161,17 @@ const Group = ({ route }: Props) => {
               <View style={styles.queueCardInner}>
                 {queueHabits.map((habit, index) => (
                   <Animated.View key={habit.id} layout={listTransition}>
-                    <QueueRow
-                      id={habit.id}
-                      name={habit.name}
-                      images={habit.images}
-                      hasNote={!!habit.description}
-                      isFirst={index === 0}
-                      groupId={groupId}
-                    />
+                    <View ref={nudgeFor(habit.id)?.targetRef}>
+                      <QueueRow
+                        id={habit.id}
+                        name={habit.name}
+                        images={habit.images}
+                        hasNote={!!habit.description}
+                        isFirst={index === 0}
+                        groupId={groupId}
+                        nudge={nudgeFor(habit.id)}
+                      />
+                    </View>
                   </Animated.View>
                 ))}
               </View>
@@ -163,7 +180,7 @@ const Group = ({ route }: Props) => {
         )}
 
         <AddHabitFooter groupId={groupId} hasHabits={hasHabits} />
-      </ScrollView>
+      </Animated.ScrollView>
 
       {upNext && upNext.images.length > 0 && renderImageViewer(upNext.images)}
 

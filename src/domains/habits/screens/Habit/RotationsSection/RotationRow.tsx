@@ -6,8 +6,7 @@ import OrbitMini from 'src/domains/habits/components/OrbitMini'
 type Props = {
   name: string,
   cadenceLabel: string | null,
-  meta: string,
-  emphasizeMeta?: boolean,
+  meta: ReactNode,
   count: number,
   litIndex?: number | null,
   onPress?: () => void,
@@ -19,7 +18,6 @@ const RotationRow = ({
   name,
   cadenceLabel,
   meta,
-  emphasizeMeta,
   count,
   litIndex,
   onPress,
@@ -40,7 +38,7 @@ const RotationRow = ({
         <Text style={styles.name} numberOfLines={1}>{name}</Text>
         <Text style={styles.meta} numberOfLines={1}>
           {cadenceLabel ? `${cadenceLabel} · ` : ''}
-          <Text style={emphasizeMeta ? styles.metaEmphasis : undefined}>{meta}</Text>
+          {meta}
         </Text>
       </View>
       {trailing}
@@ -97,9 +95,5 @@ const styles = StyleSheet.create(theme => ({
     letterSpacing: 0.2,
     color: theme.colors.textSecondary,
     marginTop: 3,
-  },
-  metaEmphasis: {
-    fontFamily: theme.fonts.sansMedium,
-    color: theme.colors.accent,
   },
 }))

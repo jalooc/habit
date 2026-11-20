@@ -3,6 +3,7 @@ import { Text, View } from 'react-native'
 import { Gesture, GestureDetector } from 'react-native-gesture-handler'
 import Animated, {
   Easing,
+  type SharedValue,
   useAnimatedStyle,
   useSharedValue,
   withTiming,
@@ -19,9 +20,11 @@ type Props = {
   label: string,
   onTrigger: () => unknown,
   children: ReactNode,
+  // an offset animated from outside, added to the finger's, which a touch settles back to 0
+  nudgeOffset?: SharedValue<number>,
 }
 
-const SwipeToLog = ({ label, onTrigger, children }: Props) => {
+const SwipeToLog = ({ label, onTrigger, children, nudgeOffset }: Props) => {
   const width = useSharedValue(0)
   const tx = useSharedValue(0)
 
@@ -33,6 +36,9 @@ const SwipeToLog = ({ label, onTrigger, children }: Props) => {
   const pan = Gesture.Pan()
     .activeOffsetX([-14, 14])
     .failOffsetY([-12, 12])
+    .onBegin(() => {
+      if (nudgeOffset) nudgeOffset.value = withTiming(0, { duration: 120 })
+    })
     .onUpdate(e => {
       const w = width.value || 1
       const cap = w * RUBBER_BAND_START
@@ -51,10 +57,10 @@ const SwipeToLog = ({ label, onTrigger, children }: Props) => {
     })
 
   const rowStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: tx.value }],
+    transform: [{ translateX: tx.value + (nudgeOffset?.value ?? 0) }],
   }))
   const paneContentStyle = useAnimatedStyle(() => {
-    const progress = tx.value / (width.value || 1)
+    const progress = (tx.value + (nudgeOffset?.value ?? 0)) / (width.value || 1)
     return {
       opacity: Math.min(1, 0.6 + progress * 0.8),
       transform: [{ scale: 0.92 + Math.min(progress / TRIGGER_THRESHOLD, 1) * 0.16 }],

@@ -17,18 +17,21 @@ import habitsAtom from 'src/domains/habits/stores/habits'
 import { GROUP_ID_PARAM } from 'src/domains/habits/utils/linking'
 import orderQueue from 'src/domains/habits/utils/orderQueue'
 import formatCadence from 'src/domains/habits/utils/formatCadence'
-import { formatStanding } from './rotationStanding'
+import QueuePlace from 'src/domains/habits/components/QueuePlace'
 import RotationRow from './RotationRow'
 import { useNativeStackNavigation } from 'src/domains/misc/utils/navigation'
 import RoundToggle from 'src/domains/habits/components/RoundToggle'
 
 type Props = {
   habitId: string,
+  initiallyExpanded?: boolean,
+  rowPressReplacesScreenBelow?: boolean,
+  rowPressNudgesHabit?: boolean,
 }
 
-const RotationsSection = ({ habitId }: Props) => {
+const RotationsSection = ({ habitId, initiallyExpanded, rowPressReplacesScreenBelow, rowPressNudgesHabit }: Props) => {
   const navigation = useNativeStackNavigation()
-  const [expanded, setExpanded] = useState(false)
+  const [expanded, setExpanded] = useState(initiallyExpanded ?? false)
   const [manage, setManage] = useState(false)
   const groupsMap = useAtomValue(groupsAtom)
   const habitsMap = useAtomValue(habitsAtom)
@@ -79,6 +82,16 @@ const RotationsSection = ({ habitId }: Props) => {
   // commits, else they batch into a non-animating replace. Final stack matches replace's, so Back
   // still skips the sheet.
   const goToGroup = (groupId: string) => {
+    const groupParams = { [GROUP_ID_PARAM]: groupId, ...(rowPressNudgesHabit && { nudgedHabitId: habitId }) }
+
+    // The screen below is dropped from the history, so Back from the Group skips it. Same two commits as the
+    // push below, for the same reason: a replace straight out of a formSheet doesn't animate on Android.
+    if (rowPressReplacesScreenBelow) {
+      navigation.goBack()
+      requestAnimationFrame(() => void navigation.dispatch(StackActions.replace('Group', groupParams)))
+      return
+    }
+
     const { routes } = navigation.getState()
     const targetIndex = routes.findLastIndex(
       route => route.name === 'Group' && getRouteGroupId(route.params) === groupId,
@@ -91,7 +104,7 @@ const RotationsSection = ({ habitId }: Props) => {
 
     navigation.goBack()
     requestAnimationFrame(() =>
-      void navigation.dispatch(StackActions.push('Group', { [GROUP_ID_PARAM]: groupId })),
+      void navigation.dispatch(StackActions.push('Group', groupParams)),
     )
   }
 
@@ -115,8 +128,7 @@ const RotationsSection = ({ habitId }: Props) => {
               <RotationRow
                 name={group.name}
                 cadenceLabel={group.cadenceLabel}
-                meta={formatStanding(group.standingIndex)}
-                emphasizeMeta={group.standingIndex === 0}
+                meta={<QueuePlace index={group.standingIndex} count={group.count} upNextStyle={styles.upNext} />}
                 count={group.count}
                 litIndex={group.standingIndex}
                 divider={index > 0 ? 'solid' : undefined}
@@ -180,8 +192,7 @@ const RotationsSection = ({ habitId }: Props) => {
                   <RotationRow
                     name={group.name}
                     cadenceLabel={group.cadenceLabel}
-                    meta={formatStanding(group.standingIndex)}
-                    emphasizeMeta={group.standingIndex === 0}
+                    meta={<QueuePlace index={group.standingIndex} count={group.count} upNextStyle={styles.upNext} />}
                     count={group.count}
                     litIndex={group.standingIndex}
                     divider={index > 0 ? 'dashed' : undefined}
@@ -351,6 +362,10 @@ const styles = StyleSheet.create(theme => ({
     justifyContent: 'center',
   },
   addCircleIcon: {
+    color: theme.colors.accent,
+  },
+  upNext: {
+    fontFamily: theme.fonts.sansMedium,
     color: theme.colors.accent,
   },
   addLabel: {

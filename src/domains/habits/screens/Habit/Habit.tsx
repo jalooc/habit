@@ -13,10 +13,18 @@ import RotationsSection from './RotationsSection'
 
 type Props = StaticScreenProps<{
   habitId: string,
+  withRotationsInitiallyExpanded?: boolean,
+  rotationRowPressReplacesScreenBelow?: boolean,
+  rotationRowPressNudgesHabit?: boolean,
 }>
 
 const Habit = ({ route }: Props) => {
-  const { habitId } = route.params
+  const {
+    habitId,
+    withRotationsInitiallyExpanded,
+    rotationRowPressReplacesScreenBelow,
+    rotationRowPressNudgesHabit,
+  } = route.params
   const navigation = useNavigation()
   const habits: Partial<HabitsStore> = useAtomValue(habitsAtom)
   const habit = habits[habitId]
@@ -78,7 +86,12 @@ const Habit = ({ route }: Props) => {
       ) : (
         <Text style={styles.emptyNote}>No note yet.</Text>
       )}
-      <RotationsSection habitId={habitId} />
+      <RotationsSection
+        habitId={habitId}
+        initiallyExpanded={withRotationsInitiallyExpanded}
+        rowPressReplacesScreenBelow={rotationRowPressReplacesScreenBelow}
+        rowPressNudgesHabit={rotationRowPressNudgesHabit}
+      />
     </ScrollView>
   )
 }

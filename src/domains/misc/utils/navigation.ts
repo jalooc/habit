@@ -7,6 +7,7 @@ import EditGroup from 'src/domains/habits/screens/EditGroup'
 import NewHabit from 'src/domains/habits/screens/NewHabit'
 import EditSchedule from 'src/domains/habits/screens/EditSchedule'
 import Habit from 'src/domains/habits/screens/Habit'
+import Search from 'src/domains/habits/screens/Search'
 import ActiveHours from 'src/domains/misc/screens/ActiveHours'
 import { groupScreenLinkingConfig } from 'src/domains/habits/utils/linking'
 import DevTools from 'src/domains/devTools/screens/DevTools'
@@ -30,6 +31,16 @@ const RootStack = createNativeStackNavigator({
       screen: Group,
       options: { headerTitle: '' },
       linking: groupScreenLinkingConfig,
+    },
+    // Not a fullScreenModal: on iOS a card can't sit above a modal, so leaving search for a Group (a replace)
+    // would play the modal's dismissal, then Home, then the push.
+    Search: {
+      screen: Search,
+      options: {
+        headerShown: false,
+        animation: 'slide_from_bottom',
+        gestureEnabled: false,
+      },
     },
     Groups: {
       screen: Groups,
