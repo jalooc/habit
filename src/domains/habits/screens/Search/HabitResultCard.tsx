@@ -2,20 +2,27 @@ import { Pressable, Text, View } from 'react-native'
 import { StyleSheet } from 'react-native-unistyles'
 import QueuePlace from 'src/domains/habits/components/QueuePlace'
 import { describeHabitCard, type HabitCard } from './habitCards'
+import type searchHabits from './searchHabits'
+import splitMatches from './splitMatches'
 
 type Props = {
   card: HabitCard,
+  nameMatches: ReturnType<typeof searchHabits>[number]['nameMatches'],
   onPress: () => unknown,
 }
 
-const HabitResultCard = ({ card, onPress }: Props) => (
+const HabitResultCard = ({ card, nameMatches, onPress }: Props) => (
   <Pressable
     onPress={onPress}
     accessibilityRole="button"
     accessibilityLabel={describeHabitCard(card)}
     style={({ pressed }) => [styles.card, pressed && styles.pressed]}
   >
-    <Text style={styles.name}>{card.name}</Text>
+    <Text style={styles.name}>
+      {splitMatches(card.name, nameMatches).map(run => (
+        <Text key={run.start} style={run.isMatch && styles.match}>{run.text}</Text>
+      ))}
+    </Text>
     {card.rotations.map(rotation => (
       <View key={rotation.groupId} style={styles.rotation}>
         <Text style={styles.rotationName} numberOfLines={1}>{rotation.groupName}</Text>
@@ -45,6 +52,9 @@ const styles = StyleSheet.create(theme => ({
     fontSize: 17,
     lineHeight: 23,
     color: theme.colors.text,
+  },
+  match: {
+    color: theme.colors.accentText,
   },
   rotation: {
     flexDirection: 'row',

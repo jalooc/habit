@@ -34,7 +34,7 @@ Update this file whenever a DS feature lands or a new gap is identified.
   to follow.
 - **Habit search** (`habits/screens/Search`) — opened only from the round search button left of `DEV` on Home.
   A `slide_from_bottom` stack screen, not a `fullScreenModal`: on iOS a card can't sit above a modal. Pill field
-  (accent border while focused), Fuse.js over habit names only, one card per habit with a line per rotation
+  (accent border while focused), Fuse.js over habit names only (matched letters set in `accentText`), one card per habit with a line per rotation
   ("up next of 6" / "3rd of 4"), Recently opened (5, persisted, dimmed until the query matches them, order
   frozen while Search is open) when the field is empty, plain no-match copy, Reanimated layout animations on
   the list. A result opens the Habit sheet with its rotations expanded; a rotation row then replaces Search

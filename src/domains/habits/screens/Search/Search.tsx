@@ -45,10 +45,12 @@ const Search = () => {
   const [recentlyOpenedIdsOnOpen] = useState(recentlyOpenedIds)
 
   const isSearching = deferredQuery.length > 0
-  const resultCards = useMemo(
-    () => searchHabits(deferredQuery, habitIndex, habitId => isUpNextAnywhere(cards[habitId])).map(id => cards[id]),
+  const results = useMemo(
+    () => searchHabits(deferredQuery, habitIndex, habitId => isUpNextAnywhere(cards[habitId])),
     [deferredQuery, habitIndex, cards],
   )
+  const resultCards = results.map(({ habitId }) => cards[habitId])
+  const nameMatchesById = new Map(results.map(({ habitId, nameMatches }) => [habitId, nameMatches]))
   const recentCards = getRecentlyOpened(keepShownOrder(recentlyOpenedIds, recentlyOpenedIdsOnOpen), habits)
     .map(id => cards[id])
   const listedCards = isSearching ? resultCards : recentCards
@@ -120,7 +122,11 @@ const Search = () => {
               <Animated.View key={card.habitId} entering={fadeInAt(index)} exiting={fadeOut} layout={cardTransition}>
                 {/* the dim lives on its own view: a fade-in ends at full opacity and would override it */}
                 <Animated.View style={{ opacity: isSearching ? 1 : DIMMED_OPACITY, ...opacityTransition }}>
-                  <HabitResultCard card={card} onPress={() => void openHabit(card.habitId)} />
+                  <HabitResultCard
+                    card={card}
+                    nameMatches={nameMatchesById.get(card.habitId) ?? []}
+                    onPress={() => void openHabit(card.habitId)}
+                  />
                 </Animated.View>
               </Animated.View>
             ))}

@@ -24,11 +24,17 @@ const makeGroups = (...rotations: [groupId: string, habitIds: string[]][]): Grou
     },
   ]))
 
-const search = (query: string, habits: HabitsStore, groups: GroupsStore = {}) => {
+const searchResults = (query: string, habits: HabitsStore, groups: GroupsStore = {}) => {
   const cards = buildHabitCards(habits, groups)
 
   return searchHabits(query, createHabitIndex(habits), habitId => isUpNextAnywhere(cards[habitId]))
 }
+
+const search = (query: string, habits: HabitsStore, groups: GroupsStore = {}) =>
+  searchResults(query, habits, groups).map(({ habitId }) => habitId)
+
+const nameMatches = (query: string, name: string) =>
+  searchResults(query, makeHabits([[id(1), name]])).map(result => result.nameMatches)
 
 describe('searchHabits', () => {
   it('tolerates a typo', () => {
@@ -78,6 +84,22 @@ describe('searchHabits', () => {
 
   it.each(['', '   '])('returns nothing for the blank query %j', query => {
     expect(search(query, makeHabits([[id(1), 'Plank']]))).toEqual([])
+  })
+
+  it('reports where the query matched in the name', () => {
+    expect(nameMatches('plank', 'Side plank')).toEqual([[[5, 10]]])
+  })
+
+  it('reports every place the query appears', () => {
+    expect(nameMatches('hol', 'Hollow hold')).toEqual([[[0, 3], [7, 10]]])
+  })
+
+  it('reports the stretch a typo matched', () => {
+    expect(nameMatches('hollw', 'Hollow hold, 45s')).toEqual([[[0, 6]]])
+  })
+
+  it('reports matches in the name as written, not as folded', () => {
+    expect(nameMatches('strasse', 'Straße stretch')).toEqual([[[0, 6]]])
   })
 
   it('returns nothing for a short query with no exact substring', () => {
